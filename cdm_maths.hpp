@@ -30,7 +30,7 @@ Written by Charles Seizilles de Mazancourt
 #include <utility>
 
 #ifndef CDM_PI
-#define CDM_PI 3.14159265f
+#define CDM_PI (3.14159265f)
 #endif
 
 #ifndef CDM_FLT_EPSILON

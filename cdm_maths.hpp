@@ -133,10 +133,19 @@ struct radian
 
 	operator float();
 	operator float() const;
+
+	radian& operator+=(float f);
+	radian& operator-=(float f);
+	radian& operator*=(float f);
+	radian& operator/=(float f);
+
+	radian operator-();
 };
 
 radian operator+(const radian&, const radian&);
+radian operator-(const radian&, const radian&);
 radian operator*(const radian&, const radian&);
+radian operator/(const radian&, const radian&);
 radian operator*(const radian&, float);
 radian operator*(float, const radian&);
 
@@ -151,10 +160,19 @@ struct degree
 
 	operator float();
 	operator float() const;
+
+	degree& operator+=(float f);
+	degree& operator-=(float f);
+	degree& operator*=(float f);
+	degree& operator/=(float f);
+
+	degree operator-();
 };
 
 degree operator+(const degree&, const degree&);
+degree operator-(const degree&, const degree&);
 degree operator*(const degree&, const degree&);
+degree operator/(const degree&, const degree&);
 degree operator*(const degree&, float);
 degree operator*(float, const degree&);
 
@@ -662,6 +680,13 @@ inline radian::radian(const degree& d) : angle(d.angle * CDM_DEG_TO_RAD) {}
 inline radian::operator float() { return angle; }
 inline radian::operator float() const { return angle; }
 
+inline radian& radian::operator+=(float f) { angle += f; return *this; }
+inline radian& radian::operator-=(float f) { angle -= f; return *this; }
+inline radian& radian::operator*=(float f) { angle *= f; return *this; }
+inline radian& radian::operator/=(float f) { angle /= f; return *this; }
+			   
+inline radian radian::operator-() { return radian(-angle); }
+
 inline degree::degree(float f) : angle(f) {}
 inline degree::degree(const degree& d) : angle(d.angle) {}
 inline degree::degree(const radian& r) : angle(r.angle * CDM_RAD_TO_DEG) {}
@@ -669,13 +694,24 @@ inline degree::degree(const radian& r) : angle(r.angle * CDM_RAD_TO_DEG) {}
 inline degree::operator float() { return angle; }
 inline degree::operator float() const { return angle; }
 
+inline degree& degree::operator+=(float f) { angle += f; return *this; }
+inline degree& degree::operator-=(float f) { angle -= f; return *this; }
+inline degree& degree::operator*=(float f) { angle *= f; return *this; }
+inline degree& degree::operator/=(float f) { angle /= f; return *this; }
+
+inline degree degree::operator-() { return radian(-angle); }
+
 inline radian operator+(const radian& r1, const radian& r2) { return radian(r1.angle + r2.angle); }
+inline radian operator-(const radian& r1, const radian& r2) { return radian(r1.angle - r2.angle); }
 inline radian operator*(const radian& r1, const radian& r2) { return radian(r1.angle * r2.angle); }
+inline radian operator/(const radian& r1, const radian& r2) { return radian(r1.angle / r2.angle); }
 inline radian operator*(const radian& r, float f) { return radian(r.angle * f); }
 inline radian operator*(float f, const radian& r) { return radian(r.angle * f); }
 
 inline degree operator+(const degree& d1, const degree& d2) { return degree(d1.angle + d2.angle); }
+inline degree operator-(const degree& d1, const degree& d2) { return degree(d1.angle - d2.angle); }
 inline degree operator*(const degree& d1, const degree& d2) { return degree(d1.angle * d2.angle); }
+inline degree operator/(const degree& d1, const degree& d2) { return degree(d1.angle / d2.angle); }
 inline degree operator*(const degree& d, float f) { return degree(d.angle * f); }
 inline degree operator*(float f, const degree& d) { return degree(d.angle * f); }
 

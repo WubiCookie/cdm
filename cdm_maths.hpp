@@ -1319,25 +1319,25 @@ inline matrix3 matrix3::operator*(float f) const
 inline vector3 matrix3::operator*(const vector3& v) const
 {
 	return {
-		m00 * v.x + m01 * v.y + m02 * v.z,
-		m10 * v.x + m11 * v.y + m12 * v.z,
-		m20 * v.x + m21 * v.y + m22 * v.z
+		m00 * v.x + m10 * v.y + m20 * v.z,
+		m01 * v.x + m11 * v.y + m21 * v.z,
+		m02 * v.x + m12 * v.y + m22 * v.z
 	};
 }
 inline matrix3 matrix3::operator*(const matrix3& m) const
 {
 	return {
-		m00 * m.m00 + m01 * m.m10 + m02 * m.m20,
-		m00 * m.m01 + m01 * m.m11 + m02 * m.m21,
-		m00 * m.m02 + m01 * m.m12 + m02 * m.m22,
+		m00 * m.m00 + m10 * m.m01 + m20 * m.m02,
+		m00 * m.m10 + m10 * m.m11 + m20 * m.m12,
+		m00 * m.m20 + m10 * m.m21 + m20 * m.m22,
 
-		m10 * m.m00 + m11 * m.m10 + m12 * m.m20,
-		m10 * m.m01 + m11 * m.m11 + m12 * m.m21,
-		m10 * m.m02 + m11 * m.m12 + m12 * m.m22,
+		m01 * m.m00 + m11 * m.m01 + m21 * m.m02,
+		m01 * m.m10 + m11 * m.m11 + m21 * m.m12,
+		m01 * m.m20 + m11 * m.m21 + m21 * m.m22,
 
-		m20 * m.m00 + m21 * m.m10 + m22 * m.m20,
-		m20 * m.m01 + m21 * m.m11 + m22 * m.m21,
-		m20 * m.m02 + m21 * m.m12 + m22 * m.m22
+		m02 * m.m00 + m12 * m.m01 + m22 * m.m02,
+		m02 * m.m10 + m12 * m.m11 + m22 * m.m12,
+		m02 * m.m20 + m12 * m.m21 + m22 * m.m22
 	};
 }
 
@@ -1691,34 +1691,34 @@ inline float matrix4::get_determinant() const
 inline vector4 matrix4::operator*(const vector4& v) const
 {
 	return {
-		m00 * v.x + m01 * v.y + m02 * v.z + m02 * v.w,
-		m10 * v.x + m11 * v.y + m12 * v.z + m12 * v.w,
-		m20 * v.x + m21 * v.y + m22 * v.z + m22 * v.w,
-		m30 * v.x + m31 * v.y + m32 * v.z + m32 * v.w
+		m00 * v.x + m10 * v.y + m20 * v.z + m20 * v.w,
+		m01 * v.x + m11 * v.y + m21 * v.z + m21 * v.w,
+		m02 * v.x + m12 * v.y + m22 * v.z + m22 * v.w,
+		m03 * v.x + m13 * v.y + m23 * v.z + m23 * v.w
 	};
 }
 inline matrix4 matrix4::operator*(const matrix4& m) const
 {
 	return {
-		m00 * m.m00 + m01 * m.m10 + m02 * m.m20 + m03 * m.m30,
-		m00 * m.m01 + m01 * m.m11 + m02 * m.m21 + m03 * m.m31,
-		m00 * m.m02 + m01 * m.m12 + m02 * m.m22 + m03 * m.m32,
-		m00 * m.m03 + m01 * m.m13 + m02 * m.m23 + m03 * m.m33,
+		m.m00 * m00 + m.m01 * m10 + m.m02 * m20 + m.m03 * m30,
+		m.m10 * m00 + m.m11 * m10 + m.m12 * m20 + m.m13 * m30,
+		m.m20 * m00 + m.m21 * m10 + m.m22 * m20 + m.m23 * m30,
+		m.m30 * m00 + m.m31 * m10 + m.m32 * m20 + m.m33 * m30,
 
-		m10 * m.m00 + m11 * m.m10 + m12 * m.m20 + m13 * m.m30,
-		m10 * m.m01 + m11 * m.m11 + m12 * m.m21 + m13 * m.m31,
-		m10 * m.m02 + m11 * m.m12 + m12 * m.m22 + m13 * m.m32,
-		m10 * m.m03 + m11 * m.m13 + m12 * m.m23 + m13 * m.m33,
+		m.m00 * m01 + m.m01 * m11 + m.m02 * m21 + m.m03 * m31,
+		m.m10 * m01 + m.m11 * m11 + m.m12 * m21 + m.m13 * m31,
+		m.m20 * m01 + m.m21 * m11 + m.m22 * m21 + m.m23 * m31,
+		m.m30 * m01 + m.m31 * m11 + m.m32 * m21 + m.m33 * m31,
 
-		m20 * m.m00 + m21 * m.m10 + m22 * m.m20 + m23 * m.m30,
-		m20 * m.m01 + m21 * m.m11 + m22 * m.m21 + m23 * m.m31,
-		m20 * m.m02 + m21 * m.m12 + m22 * m.m22 + m23 * m.m32,
-		m20 * m.m03 + m21 * m.m13 + m22 * m.m23 + m23 * m.m33,
+		m.m00 * m02 + m.m01 * m12 + m.m02 * m22 + m.m03 * m32,
+		m.m10 * m02 + m.m11 * m12 + m.m12 * m22 + m.m13 * m32,
+		m.m20 * m02 + m.m21 * m12 + m.m22 * m22 + m.m23 * m32,
+		m.m30 * m02 + m.m31 * m12 + m.m32 * m22 + m.m33 * m32,
 
-		m30 * m.m00 + m31 * m.m10 + m32 * m.m20 + m33 * m.m30,
-		m30 * m.m01 + m31 * m.m11 + m32 * m.m21 + m33 * m.m31,
-		m30 * m.m02 + m31 * m.m12 + m32 * m.m22 + m33 * m.m32,
-		m30 * m.m03 + m31 * m.m13 + m32 * m.m23 + m33 * m.m33
+		m.m00 * m03 + m.m01 * m13 + m.m02 * m23 + m.m03 * m33,
+		m.m10 * m03 + m.m11 * m13 + m.m12 * m23 + m.m13 * m33,
+		m.m20 * m03 + m.m21 * m13 + m.m22 * m23 + m.m23 * m33,
+		m.m30 * m03 + m.m31 * m13 + m.m32 * m23 + m.m33 * m33
 	};
 }
 

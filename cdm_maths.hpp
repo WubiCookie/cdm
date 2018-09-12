@@ -110,6 +110,8 @@ struct complex
 	complex operator+(const complex& c) const;
 	complex operator-(const complex& c) const;
 
+	complex& operator+=(const complex& c);
+	complex& operator-=(const complex& c);
 	complex& operator*=(const complex& c);
 
 	complex& operator=(const complex&) = default;
@@ -117,6 +119,7 @@ struct complex
 };
 
 complex operator*(const complex& c1, const complex& c2);
+complex operator*(const complex& c, float f);
 complex operator*(const normalized<complex>& c1, const complex& c2);
 complex operator*(const complex& c1, const normalized<complex>& c2);
 normalized<complex> operator*(const normalized<complex>& c1, const normalized<complex>& c2);
@@ -647,6 +650,8 @@ inline complex complex::operator-(const complex& c) const
 	};
 }
 
+inline complex& complex::operator+=(const complex& c) { return *this = *this + c; }
+inline complex& complex::operator-=(const complex& c) { return *this = *this - c; }
 inline complex& complex::operator*=(const complex& c) { return *this = *this * c; }
 
 inline complex operator*(const complex& c1, const complex& c2)
@@ -656,6 +661,7 @@ inline complex operator*(const complex& c1, const complex& c2)
 		c1.r * c2.i + c1.i * c2.r
 	};
 }
+inline complex operator*(const complex& c, float f) { return {c.r * f, c.i * f}; }
 inline complex operator*(const normalized<complex>& c1, const complex& c2) { return *c1 * c2; }
 inline complex operator*(const complex& c1, const normalized<complex>& c2) { return c1 * *c2; }
 inline normalized<complex> operator*(const normalized<complex>& c1, const normalized<complex>& c2)
@@ -684,7 +690,7 @@ inline radian& radian::operator+=(float f) { angle += f; return *this; }
 inline radian& radian::operator-=(float f) { angle -= f; return *this; }
 inline radian& radian::operator*=(float f) { angle *= f; return *this; }
 inline radian& radian::operator/=(float f) { angle /= f; return *this; }
-			   
+
 inline radian radian::operator-() { return radian(-angle); }
 
 inline degree::degree(float f) : angle(f) {}

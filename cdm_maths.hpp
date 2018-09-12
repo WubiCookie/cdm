@@ -438,6 +438,7 @@ struct matrix4
 	static matrix4 identity();
 	static matrix4 rotation(const euler_angles& r);
 	static matrix4 rotation(const quaternion& q);
+	static matrix4 translation(const vector3& t);
 	static matrix4 perspective(const radian& angle, float ratio, float near_plane, float far_plane);
 	bool is_orthogonal() const;
 	bool is_homogenous() const;
@@ -1424,6 +1425,7 @@ inline matrix4 matrix4::zero() { return {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0
 inline matrix4 matrix4::identity() { return {1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f}; }
 inline matrix4 matrix4::rotation(const euler_angles& r) { return matrix3::rotation(r); }
 inline matrix4 matrix4::rotation(const quaternion& q) { return matrix3::rotation(q); }
+inline matrix4 matrix4::translation(const vector3& t) { return {1.0f, 0.0f, 0.0f, t.x, 0.0f, 1.0f, 0.0f, t.y, 0.0f, 0.0f, 1.0f, t.z, 0.0f, 0.0f, 0.0f, 1.0f}; }
 inline matrix4 matrix4::perspective(const radian& angle, float ratio, float near_plane, float far_plane)
 {
 	const float invTanHalfFovy = 1.0f / tanf(angle * 0.5f);

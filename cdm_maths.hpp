@@ -371,6 +371,9 @@ struct matrix2
 	matrix2 get_transposed() const;
 	float get_determinant() const;
 
+	float& at(uint8_t x, uint8_t y);
+	const float& at(uint8_t x, uint8_t y) const;
+
 	vector2 operator*(const vector2& v) const;
 	matrix2 operator*(const matrix2& m) const;
 };
@@ -410,6 +413,9 @@ struct matrix3
 	float get_determinant() const;
 	bool is_orthogonal() const;
 
+	float& at(uint8_t x, uint8_t y);
+	const float& at(uint8_t x, uint8_t y) const;
+
 	matrix3 operator*(float f) const;
 	vector3 operator*(const vector3& v) const;
 	matrix3 operator*(const matrix3& m) const;
@@ -447,6 +453,9 @@ struct matrix4
 	matrix4& transpose();
 	matrix4 get_transposed() const;
 	float get_determinant() const;
+
+	float& at(uint8_t x, uint8_t y);
+	const float& at(uint8_t x, uint8_t y) const;
 
 	vector4 operator*(const vector4& v) const;
 	matrix4 operator*(const matrix4& m) const;
@@ -1076,6 +1085,10 @@ inline matrix2 matrix2::get_transposed() const
 		m10, m11
 	};
 }
+
+inline float& matrix2::at(uint8_t x, uint8_t y) { return reinterpret_cast<float*>(this)[x + 2 * y]; }
+inline const float& matrix2::at(uint8_t x, uint8_t y) const { return reinterpret_cast<const float*>(this)[x + 2 * y]; }
+
 inline vector2 matrix2::operator*(const vector2& v) const
 {
 	return {
@@ -1307,6 +1320,9 @@ inline bool matrix3::is_orthogonal() const
 		nearly_equal(m01 * m01 + m11 * m11 + m21 * m21, 1.0f) &&
 		nearly_equal(m02 * m02 + m12 * m12 + m22 * m22, 1.0f);
 }
+
+inline float& matrix3::at(uint8_t x, uint8_t y) { return reinterpret_cast<float*>(this)[x + 3 * y]; }
+inline const float& matrix3::at(uint8_t x, uint8_t y) const { return reinterpret_cast<const float*>(this)[x + 3 * y]; }
 
 inline matrix3 matrix3::operator*(float f) const
 {
@@ -1687,6 +1703,9 @@ inline float matrix4::get_determinant() const
 	float det4 = m01 * (m12 * m23 - m22 * m13) - m11 * (m02 * m23 - m22 * m03) + m21 * (m02 * m13 - m12 * m03);
 	return m00 * det1 - m10 * det2 + m20 * det3 - m30 * det4;
 }
+
+inline float& matrix4::at(uint8_t x, uint8_t y) { return reinterpret_cast<float*>(this)[x + 4 * y]; }
+inline const float& matrix4::at(uint8_t x, uint8_t y) const { return reinterpret_cast<const float*>(this)[x + 4 * y]; }
 
 inline vector4 matrix4::operator*(const vector4& v) const
 {

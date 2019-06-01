@@ -850,9 +850,9 @@ struct unscaled_transform3d
 template<typename T>
 constexpr T constants<T>::Pi() { return static_cast<T>(3.141592653589793238462643); }
 template<typename T>
-constexpr T constants<T>::deg_to_rad() { return static_cast<T>(Pi() * 180); }
+constexpr T constants<T>::deg_to_rad() { return static_cast<T>(Pi() / 180.0); }
 template<typename T>
-constexpr T constants<T>::rad_to_deg() { return static_cast<T>(180 / Pi()); }
+constexpr T constants<T>::rad_to_deg() { return static_cast<T>(180.0 / Pi()); }
 
 inline complex::complex(float real, float imaginary) : r(real), i(imaginary) {}
 inline complex::complex(const radian& angle) : r(cosf(angle)), i(sinf(angle)) {}

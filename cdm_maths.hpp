@@ -1,4 +1,4 @@
-/* cdm_maths - v0.1 - geometric library - https://github.com/WubiCookie/cdm
+/* cdm_maths - v0.2 - geometric library - https://github.com/WubiCookie/cdm
    no warranty implied; use at your own risk
 
 LICENSE
@@ -30,13 +30,22 @@ Written by Charles Seizilles de Mazancourt
 #include <cmath>
 #include <cstdint>
 #include <limits>
+#include <ostream>
 #include <utility>
 #include <vector>
 
+#ifdef min
 #undef min
+#endif
+#ifdef max
 #undef max
+#endif
+#ifdef near
 #undef near
+#endif
+#ifdef far
 #undef far
+#endif
 
 namespace cdm
 {
@@ -133,10 +142,10 @@ struct complex
 
 complex operator*(complex c1, complex c2);
 complex operator*(complex c, float f);
-complex operator*(const normalized<complex>& c1, complex c2);
-complex operator*(complex c1, const normalized<complex>& c2);
-normalized<complex> operator*(const normalized<complex>& c1, const normalized<complex>& c2);
-vector2 operator*(const normalized<complex>& c, vector2 v);
+complex operator*(normalized<complex> c1, complex c2);
+complex operator*(complex c1, normalized<complex> c2);
+normalized<complex> operator*(normalized<complex> c1, normalized<complex> c2);
+vector2 operator*(normalized<complex> c, vector2 v);
 
 struct radian
 {
@@ -303,6 +312,9 @@ struct vector2
 	//bool lies_on(const ellipe& e);
 	//bool lies_on(const aa_ellipe& e);
 
+	float& operator[](size_t i);
+	float operator[](size_t i) const;
+
 	vector2 operator+(vector2 v) const;
 	vector2 operator-(vector2 v) const;
 	vector2 operator*(float f) const;
@@ -349,6 +361,12 @@ struct vector3
 	vector3 to(vector3 v) const;
 	radian angle(vector3 v) const;
 	radian angle_around_axis(vector3 v, vector3 axis);
+	static bool nearly_equal(vector3 v1, vector3 v2, float epsilon = std::numeric_limits<float>::epsilon());
+
+	vector2 xy() const;
+
+	float& operator[](size_t i);
+	float operator[](size_t i) const;
 
 	vector3 operator+(vector3 v) const;
 	vector3 operator-(vector3 v) const;
@@ -468,7 +486,7 @@ struct matrix2
 	static matrix2 zero(void);
 	static matrix2 identity(void);
 	static matrix2 rotation(radian angle);
-	static matrix2 rotation(const normalized<complex>& angle);
+	static matrix2 rotation(normalized<complex> angle);
 	matrix2& transpose();
 	matrix2 get_transposed() const;
 	float get_determinant() const;
@@ -552,9 +570,9 @@ struct matrix3x4
 	static matrix3x4 rotation_around_x(radian angle);
 	static matrix3x4 rotation_around_y(radian angle);
 	static matrix3x4 rotation_around_z(radian angle);
-	static matrix3x4 rotation_around_x(const normalized<complex>& angle);
-	static matrix3x4 rotation_around_y(const normalized<complex>& angle);
-	static matrix3x4 rotation_around_z(const normalized<complex>& angle);
+	static matrix3x4 rotation_around_x(normalized<complex> angle);
+	static matrix3x4 rotation_around_y(normalized<complex> angle);
+	static matrix3x4 rotation_around_z(normalized<complex> angle);
 	matrix4x3 get_transposed() const;
 
 	float& at(uint8_t x, uint8_t y);
@@ -593,9 +611,9 @@ struct matrix4x3
 	static matrix4x3 rotation_around_x(radian angle);
 	static matrix4x3 rotation_around_y(radian angle);
 	static matrix4x3 rotation_around_z(radian angle);
-	static matrix4x3 rotation_around_x(const normalized<complex>& angle);
-	static matrix4x3 rotation_around_y(const normalized<complex>& angle);
-	static matrix4x3 rotation_around_z(const normalized<complex>& angle);
+	static matrix4x3 rotation_around_x(normalized<complex> angle);
+	static matrix4x3 rotation_around_y(normalized<complex> angle);
+	static matrix4x3 rotation_around_z(normalized<complex> angle);
 	matrix3x4 get_transposed() const;
 
 	float& at(uint8_t x, uint8_t y);
@@ -633,15 +651,16 @@ struct matrix4
 	static matrix4 rotation(euler_angles r);
 	static matrix4 rotation(quaternion q);
 	static matrix4 translation(vector3 t);
+	static matrix4 translation(float x, float y, float z);
 	static matrix4 scale(vector3 t);
 	static matrix4 look_at(vector3 from, vector3 to, vector3 up = { 0.0f, 1.0f, 0.0f });
 	static matrix4 orthographic(float left, float right, float top, float bottom, float near, float far);
 	static matrix4 rotation_around_x(radian angle);
 	static matrix4 rotation_around_y(radian angle);
 	static matrix4 rotation_around_z(radian angle);
-	static matrix4 rotation_around_x(const normalized<complex>& angle);
-	static matrix4 rotation_around_y(const normalized<complex>& angle);
-	static matrix4 rotation_around_z(const normalized<complex>& angle);
+	static matrix4 rotation_around_x(normalized<complex> angle);
+	static matrix4 rotation_around_y(normalized<complex> angle);
+	static matrix4 rotation_around_z(normalized<complex> angle);
 	bool is_orthogonal() const;
 	bool is_homogenous() const;
 	matrix4& inverse();
@@ -750,6 +769,7 @@ struct quaternion
 
 	quaternion& operator+=(quaternion q);
 	quaternion& operator-=(quaternion q);
+	quaternion& operator*=(quaternion q);
 	quaternion& operator*=(float f);
 	quaternion& operator/=(float f);
 
@@ -819,12 +839,26 @@ inline bool collides(vector2 v, line l);
 
 struct plane
 {
-	vector3 normal;
-	float distance = 0.0f;
+	vector3 origin;
+	normalized<vector3> normal;
+
+	float evaluate(vector3 point) const;
+	vector3 project3d(vector3 point) const;
+	vector2 project2d(vector3 point, normalized<vector3> plane_tangent) const;
+	vector3 unproject(vector2 point, normalized<vector3> plane_tangent) const;
 };
 
-inline float distance_between(const plane& p, vector3 v);
-inline float distance_between(vector3 v, const plane& p);
+struct ray2d
+{
+	vector2 origin;
+	normalized<vector2> direction;
+};
+
+struct ray3d
+{
+	vector3 origin;
+	normalized<vector3> direction;
+};
 
 //struct rect
 //{
@@ -915,22 +949,11 @@ inline bool collides(vector2 v, const circle& c);
 //inline bool collides(const aa_ellipse& e, vector2 v);
 //inline bool collides(vector2 v, const aa_ellipse& e);
 
-struct ray2d
-{
-	vector2 origin;
-	normalized<vector2> direction;
-};
-
-struct ray3d
-{
-	vector3 origin;
-	normalized<vector3> direction;
-};
-
 inline bool collides(const ray3d& r, const plane& p);
 inline bool collides(const ray3d& r, const plane& p, vector3& intersection);
 inline bool collides(const plane& p, const ray3d& r);
 inline bool collides(const plane& p, const ray3d& r, vector3& intersection);
+inline bool collides_bidirectional(const plane& p, const ray3d& r, vector3& intersection);
 
 struct aabb
 {
@@ -1098,16 +1121,16 @@ inline complex operator*(complex c1, complex c2)
 	};
 }
 inline complex operator*(complex c, float f) { return {c.r * f, c.i * f}; }
-inline complex operator*(const normalized<complex>& c1, complex c2) { return *c1 * c2; }
-inline complex operator*(complex c1, const normalized<complex>& c2) { return c1 * *c2; }
-inline normalized<complex> operator*(const normalized<complex>& c1, const normalized<complex>& c2)
+inline complex operator*(normalized<complex> c1, complex c2) { return *c1 * c2; }
+inline complex operator*(complex c1, normalized<complex> c2) { return c1 * *c2; }
+inline normalized<complex> operator*(normalized<complex> c1, normalized<complex> c2)
 {
 	return normalized<complex>::already_normalized(complex(
 		c1->r * c2->r - c1->i * c2->i,
 		c1->r * c2->i + c1->i * c2->r
 	));
 }
-inline vector2 operator*(const normalized<complex>& c, vector2 v)
+inline vector2 operator*(normalized<complex> c, vector2 v)
 {
 	return {
 		c->r * v.x - c->i * v.y,
@@ -1319,6 +1342,9 @@ inline bool vector2::lies_on(const aa_rect& r)
 //bool vector2::lies_on(const ellipe& e)
 //bool vector2::lies_on(const aa_ellipe& e)
 
+inline float& vector2::operator[](size_t i) { return reinterpret_cast<float*>(this)[i]; }
+inline float vector2::operator[](size_t i) const { return reinterpret_cast<const float*>(this)[i]; }
+
 inline vector2 vector2::operator+(vector2 v) const { return {x + v.x, y + v.y}; }
 inline vector2 vector2::operator-(vector2 v) const { return {x - v.x, y - v.y}; }
 inline vector2 vector2::operator*(float f) const { return {x * f, y * f}; }
@@ -1411,6 +1437,17 @@ inline radian vector3::angle_around_axis(vector3 v, vector3 axis)
 	float angle = atan2f(c.norm(), dot(v));
 	return radian(c.dot(axis) < 0.0f ? -angle : angle);
 }
+inline bool vector3::nearly_equal(const vector3& v1, const vector3& v2, float epsilon)
+{
+	return nearly_equal_epsilon(v1.x, v2.x, epsilon) &&
+	       nearly_equal_epsilon(v1.y, v2.y, epsilon) &&
+	       nearly_equal_epsilon(v1.z, v2.z, epsilon);
+}
+
+inline vector2 vector3::xy() const { return {x, y}; }
+
+inline float& vector3::operator[](size_t i) { return reinterpret_cast<float*>(this)[i]; }
+inline float vector3::operator[](size_t i) const { return reinterpret_cast<const float*>(this)[i]; }
 
 inline vector3 vector3::operator+(vector3 v) const { return {x + v.x, y + v.y, z + v.z}; }
 inline vector3 vector3::operator-(vector3 v) const { return {x - v.x, y - v.y, z - v.z}; }
@@ -1591,7 +1628,7 @@ inline matrix2 matrix2::rotation(radian angle)
 		s, c
 	};
 }
-inline matrix2 matrix2::rotation(const normalized<complex>& angle)
+inline matrix2 matrix2::rotation(normalized<complex> angle)
 {
 	return {
 		angle->r, -angle->i,
@@ -1992,9 +2029,9 @@ inline matrix3x4 matrix3x4::rotation(quaternion q) { return matrix3x4(matrix3::r
 inline matrix3x4 matrix3x4::rotation_around_x(radian angle) { return matrix3x4(matrix3::rotation_around_x(angle)); }
 inline matrix3x4 matrix3x4::rotation_around_y(radian angle) { return matrix3x4(matrix3::rotation_around_y(angle)); }
 inline matrix3x4 matrix3x4::rotation_around_z(radian angle) { return matrix3x4(matrix3::rotation_around_z(angle)); }
-inline matrix3x4 matrix3x4::rotation_around_x(const normalized<complex>& angle) { return matrix3x4(matrix3::rotation_around_x(angle)); }
-inline matrix3x4 matrix3x4::rotation_around_y(const normalized<complex>& angle) { return matrix3x4(matrix3::rotation_around_y(angle)); }
-inline matrix3x4 matrix3x4::rotation_around_z(const normalized<complex>& angle) { return matrix3x4(matrix3::rotation_around_z(angle)); }
+inline matrix3x4 matrix3x4::rotation_around_x(normalized<complex> angle) { return matrix3x4(matrix3::rotation_around_x(angle)); }
+inline matrix3x4 matrix3x4::rotation_around_y(normalized<complex> angle) { return matrix3x4(matrix3::rotation_around_y(angle)); }
+inline matrix3x4 matrix3x4::rotation_around_z(normalized<complex> angle) { return matrix3x4(matrix3::rotation_around_z(angle)); }
 inline matrix4x3 matrix3x4::get_transposed() const
 {
 	return {
@@ -2158,9 +2195,9 @@ inline matrix4x3 matrix4x3::translation(vector3 t) { return { 1.0f, 0.0f, 0.0f, 
 inline matrix4x3 matrix4x3::rotation_around_x(radian angle) { return matrix4x3(matrix3::rotation_around_x(angle)); }
 inline matrix4x3 matrix4x3::rotation_around_y(radian angle) { return matrix4x3(matrix3::rotation_around_y(angle)); }
 inline matrix4x3 matrix4x3::rotation_around_z(radian angle) { return matrix4x3(matrix3::rotation_around_z(angle)); }
-inline matrix4x3 matrix4x3::rotation_around_x(const normalized<complex>& angle) { return matrix4x3(matrix3::rotation_around_x(angle)); }
-inline matrix4x3 matrix4x3::rotation_around_y(const normalized<complex>& angle) { return matrix4x3(matrix3::rotation_around_y(angle)); }
-inline matrix4x3 matrix4x3::rotation_around_z(const normalized<complex>& angle) { return matrix4x3(matrix3::rotation_around_z(angle)); }
+inline matrix4x3 matrix4x3::rotation_around_x(normalized<complex> angle) { return matrix4x3(matrix3::rotation_around_x(angle)); }
+inline matrix4x3 matrix4x3::rotation_around_y(normalized<complex> angle) { return matrix4x3(matrix3::rotation_around_y(angle)); }
+inline matrix4x3 matrix4x3::rotation_around_z(normalized<complex> angle) { return matrix4x3(matrix3::rotation_around_z(angle)); }
 inline matrix3x4 matrix4x3::get_transposed() const
 {
 	return {
@@ -2312,6 +2349,7 @@ inline matrix4 matrix4::identity() { return {1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f,
 inline matrix4 matrix4::rotation(euler_angles r) { return matrix4(matrix3::rotation(r)); }
 inline matrix4 matrix4::rotation(quaternion q) { return matrix4(matrix3::rotation(q)); }
 inline matrix4 matrix4::translation(vector3 t) { return {1.0f, 0.0f, 0.0f, t.x, 0.0f, 1.0f, 0.0f, t.y, 0.0f, 0.0f, 1.0f, t.z, 0.0f, 0.0f, 0.0f, 1.0f}; }
+inline matrix4 matrix4::translation(float x, float y, float z) { return translation({x, y, z}); }
 inline matrix4 matrix4::scale(vector3 s) { return {s.x, 0.0f, 0.0f, 0.0f, 0.0f, s.y, 0.0f, 0.0f, 0.0f, 0.0f, s.z, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f}; }
 inline matrix4 matrix4::look_at(vector3 from, vector3 to, vector3 up)
 {
@@ -2342,9 +2380,9 @@ inline matrix4 matrix4::orthographic(float left, float right, float top, float b
 inline matrix4 matrix4::rotation_around_x(radian angle) { return matrix4(matrix3::rotation_around_x(angle)); }
 inline matrix4 matrix4::rotation_around_y(radian angle) { return matrix4(matrix3::rotation_around_y(angle)); }
 inline matrix4 matrix4::rotation_around_z(radian angle) { return matrix4(matrix3::rotation_around_z(angle)); }
-inline matrix4 matrix4::rotation_around_x(const normalized<complex>& angle) { return matrix4(matrix3::rotation_around_x(angle)); }
-inline matrix4 matrix4::rotation_around_y(const normalized<complex>& angle) { return matrix4(matrix3::rotation_around_y(angle)); }
-inline matrix4 matrix4::rotation_around_z(const normalized<complex>& angle) { return matrix4(matrix3::rotation_around_z(angle)); }
+inline matrix4 matrix4::rotation_around_x(normalized<complex> angle) { return matrix4(matrix3::rotation_around_x(angle)); }
+inline matrix4 matrix4::rotation_around_y(normalized<complex> angle) { return matrix4(matrix3::rotation_around_y(angle)); }
+inline matrix4 matrix4::rotation_around_z(normalized<complex> angle) { return matrix4(matrix3::rotation_around_z(angle)); }
 inline bool matrix4::is_orthogonal() const
 {
 	return
@@ -2991,6 +3029,7 @@ inline vector3 operator*(const normalized<quaternion>& q, vector3 v)
 
 inline quaternion& quaternion::operator+=(quaternion q) { *this = *this + q; return *this; }
 inline quaternion& quaternion::operator-=(quaternion q) { *this = *this - q; return *this; }
+inline quaternion& quaternion::operator*=(quaternion q) { *this = *this * q; return *this; }
 inline quaternion& quaternion::operator*=(float f) { *this = *this * f; return *this; }
 inline quaternion& quaternion::operator/=(float f) { *this = *this / f; return *this; }
 
@@ -3137,6 +3176,88 @@ inline bool collides(const ray3d& r, const plane& p, vector3& intersection)
 }
 inline bool collides(const plane& p, const ray3d& r) { return collides(r, p); }
 inline bool collides(const plane& p, const ray3d& r, vector3& intersection) { return collides(r, p, intersection); }
+
+inline float plane::evaluate(vector3 point) const
+{
+	return normal->x * (point.x - origin.x) +
+	       normal->y * (point.y - origin.y) +
+	       normal->z * (point.z - origin.z);
+}
+inline vector3 plane::project3d(vector3 point) const
+{
+	float distance = evaluate(point);
+	return point - normal * distance;
+}
+inline vector2 plane::project2d(vector3 point, normalized<vector3> plane_tangent) const
+{
+	normalized<vector3> bitangent = normal->cross(plane_tangent);
+	normalized<vector3> tangent = bitangent->cross(normal);
+
+	matrix3 TBN(tangent->x,   tangent->y,   tangent->z,
+	            bitangent->x, bitangent->y, bitangent->z,
+	            normal->x,    normal->y,    normal->z
+	);
+
+	vector3 plane_space_point = point - origin;
+
+	return (TBN * plane_space_point).xy();
+}
+inline vector3 plane::unproject(vector2 point, normalized<vector3> plane_tangent) const
+{
+	normalized<vector3> bitangent = normal->cross(plane_tangent);
+	normalized<vector3> tangent = bitangent->cross(normal);
+
+	matrix3 invTBN = matrix3(tangent->x,   tangent->y,   tangent->z,
+	                         bitangent->x, bitangent->y, bitangent->z,
+	                         normal->x,    normal->y,    normal->z
+	).get_inversed();
+
+	vector3 plane_space_point = vector3(point, 0.0f);
+
+	return (invTBN * plane_space_point) + origin;
+}
+
+inline bool collides(const plane& plane, const ray3d& r, vector3& collision_point)
+{
+	float denom = plane.normal->dot(r.direction);
+	if (abs(denom) > 0.0001f)
+	{
+		float t = -(plane.origin - r.origin).dot(plane.normal) / denom;
+		if (t >= 0.0f)
+		{
+			collision_point = r.origin + r.direction * t;
+			return true;
+		}
+	}
+	return false;
+}
+inline bool collides_bidirectional(const plane& plane, const ray3d& r, vector3& collision_point)
+{
+	float denom = plane.normal->dot(r.direction);
+	if (abs(denom) > 0.0001f)
+	{
+		float t = -(plane.origin - r.origin).dot(plane.normal) / denom;
+		//if (t >= 0.0f)
+		//{
+			collision_point = r.origin + r.direction * t;
+			return true;
+		//}
+		//else
+		//{
+		//	collision_point = r.origin - r.direction * t;
+		//	return true;
+		//}
+	}
+	return false;
+}
+//inline bool collides(const plane& p, const ray3d& r, vector3& collision_point)
+//{
+//	p.
+//}
+//inline bool collides(const ray3d& r, const plane& p, vector3& collision_point)
+//{
+//	return collides(p, r, collision_point);
+//}
 
 inline bool aabb::contains(vector3 p) const
 {
@@ -3372,6 +3493,36 @@ inline unscaled_transform3d unscaled_transform3d::operator*(const unscaled_trans
 inline vector3 unscaled_transform3d::operator*(vector3 v) const { return rotation * v + position; }
 inline quaternion unscaled_transform3d::operator*(quaternion q) const { return rotation * q; }
 
+inline std::ostream& operator<<(std::ostream& os, vector2 v)
+{
+	return os << "vector2(" << v.x << ", " << v.y << ")";
+}
+inline std::ostream& operator<<(std::ostream& os, vector3 v)
+{
+	return os << "vector3(" << v.x << ", " << v.y << ", " << v.z << ")";
+}
+inline std::ostream& operator<<(std::ostream& os, vector4 v)
+{
+	return os << "vector4(" << v.x << ", " << v.y << ", " << v.z << ", " << v.w << ")";
+}
+inline std::ostream& operator<<(std::ostream& os, quaternion q)
+{
+	return os << "quaternion({" << q.x << ", " << q.y << ", " << q.z << "}, " << q.w << ")";
+}
+inline std::ostream& operator<<(std::ostream& os, plane p)
+{
+	return os << "plane(origin = " << p.origin << ", normal = " << p.normal << ")";
+}
+
+inline std::ostream& operator<<(std::ostream& os, const cdm::matrix4& m)
+{
+	return os << "matrix4(" << m.m00 << "\t" << m.m10 << "\t" << m.m20 << "\t" << m.m30
+		    << "\n        " << m.m01 << "\t" << m.m11 << "\t" << m.m21 << "\t" << m.m31
+			<< "\n        " << m.m02 << "\t" << m.m12 << "\t" << m.m22 << "\t" << m.m32
+			<< "\n        " << m.m03 << "\t" << m.m13 << "\t" << m.m23 << "\t" << m.m33
+			<< ")";
+}
+
 namespace detail
 {
 template<unsigned char x, unsigned char y>
@@ -3465,13 +3616,16 @@ std::vector<std::vector<vector3>> function3D_sampler(const Functor& functor, vec
 
 	return res;
 }
-} // namespace cdm
 
+namespace literals
+{
 inline cdm::radian operator""_rad(long double d) { return cdm::radian(static_cast<float>(d)); }
 inline cdm::radian operator""_rad(unsigned long long int i) { return cdm::radian(static_cast<float>(i)); }
 inline cdm::radian operator""_pi(long double d) { return cdm::radian(static_cast<float>(d) * cdm::pi); }
 inline cdm::radian operator""_pi(unsigned long long int i) { return cdm::radian(static_cast<float>(i) * cdm::pi); }
 inline cdm::degree operator""_deg(long double d) { return cdm::degree(static_cast<float>(d)); }
 inline cdm::degree operator""_deg(unsigned long long int i) { return cdm::degree(static_cast<float>(i)); }
+} // namespace literals
+} // namespace cdm
 
 #endif // CDM_MATHS_HPP

@@ -1,4 +1,4 @@
-/* cdm_maths - v0.2 - geometric library - https://github.com/WubiCookie/cdm
+/* cdm_maths - v0.2.1 - geometric library - https://github.com/WubiCookie/cdm
    no warranty implied; use at your own risk
 
 LICENSE
@@ -1437,7 +1437,7 @@ inline radian vector3::angle_around_axis(vector3 v, vector3 axis)
 	float angle = atan2f(c.norm(), dot(v));
 	return radian(c.dot(axis) < 0.0f ? -angle : angle);
 }
-inline bool vector3::nearly_equal(const vector3& v1, const vector3& v2, float epsilon)
+inline bool vector3::nearly_equal(vector3 v1, vector3 v2, float epsilon)
 {
 	return nearly_equal_epsilon(v1.x, v2.x, epsilon) &&
 	       nearly_equal_epsilon(v1.y, v2.y, epsilon) &&
@@ -3125,7 +3125,7 @@ inline bool collides(vector2 v, const line& l)
 
 inline float distance_between(const plane& p, vector3 v)
 {
-	return -v.x * p.normal.x - v.y * p.normal.y - v.z * p.normal.z;
+	return -v.x * p.normal->x - v.y * p.normal->y - v.z * p.normal->z;
 }
 inline float distance_between(vector3 v, const plane& p)
 {
@@ -3153,29 +3153,29 @@ inline bool collides(vector2 v, const aa_rect& r)
 	return collides(r, v);
 }
 
-inline bool collides(const ray3d& r, const plane& p)
-{
-	float DdotN = r.direction->dot(p.normal);
-	if (std::abs(DdotN) > std::numeric_limits<float>::epsilon())
-	{
-		float t = -(r.origin.dot(p.normal) + p.distance) / DdotN;
-		return t >= 0;
-	}
-	return false;
-}
-inline bool collides(const ray3d& r, const plane& p, vector3& intersection)
-{
-	float DdotN = r.direction->dot(p.normal);
-	if (std::abs(DdotN) > std::numeric_limits<float>::epsilon())
-	{
-		float t = -(r.origin.dot(p.normal) + p.distance) / DdotN;
-		intersection = r.origin + t * r.direction;
-		return t >= 0;
-	}
-	return false;
-}
-inline bool collides(const plane& p, const ray3d& r) { return collides(r, p); }
-inline bool collides(const plane& p, const ray3d& r, vector3& intersection) { return collides(r, p, intersection); }
+//inline bool collides(const ray3d& r, const plane& p)
+//{
+//	float DdotN = r.direction->dot(p.normal);
+//	if (std::abs(DdotN) > std::numeric_limits<float>::epsilon())
+//	{
+//		float t = -(r.origin.dot(p.normal) + p.distance) / DdotN;
+//		return t >= 0;
+//	}
+//	return false;
+//}
+//inline bool collides(const ray3d& r, const plane& p, vector3& intersection)
+//{
+//	float DdotN = r.direction->dot(p.normal);
+//	if (std::abs(DdotN) > std::numeric_limits<float>::epsilon())
+//	{
+//		float t = -(r.origin.dot(p.normal) + p.distance) / DdotN;
+//		intersection = r.origin + t * r.direction;
+//		return t >= 0;
+//	}
+//	return false;
+//}
+//inline bool collides(const plane& p, const ray3d& r) { return collides(r, p); }
+//inline bool collides(const plane& p, const ray3d& r, vector3& intersection) { return collides(r, p, intersection); }
 
 inline float plane::evaluate(vector3 point) const
 {

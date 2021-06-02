@@ -1,4 +1,4 @@
-/* cdm_maths - v0.2 - geometric library - https://github.com/WubiCookie/cdm
+/* cdm_maths - v0.2.1 - geometric library - https://github.com/WubiCookie/cdm
    no warranty implied; use at your own risk
 
 LICENSE
@@ -645,6 +645,8 @@ struct matrix4
 	explicit matrix4(const transform3d& t);
 	explicit matrix4(const uniform_transform3d& t);
 	explicit matrix4(const unscaled_transform3d& t);
+	explicit matrix4(const std::array<float, 16>& a);
+	explicit matrix4(const std::array<double, 16>& a);
 
 	static matrix4 zero();
 	static matrix4 identity();
@@ -677,6 +679,9 @@ struct matrix4
 	vector4 operator*(vector4 v) const;
 	matrix3x4 operator*(const matrix3x4& m) const;
 	matrix4 operator*(const matrix4& m) const;
+
+	operator std::array<float, 16>() const;
+	operator std::array<double, 16>() const;
 };
 
 struct perspective
@@ -1437,7 +1442,7 @@ inline radian vector3::angle_around_axis(vector3 v, vector3 axis)
 	float angle = atan2f(c.norm(), dot(v));
 	return radian(c.dot(axis) < 0.0f ? -angle : angle);
 }
-inline bool vector3::nearly_equal(const vector3& v1, const vector3& v2, float epsilon)
+inline bool vector3::nearly_equal(vector3 v1, vector3 v2, float epsilon)
 {
 	return nearly_equal_epsilon(v1.x, v2.x, epsilon) &&
 	       nearly_equal_epsilon(v1.y, v2.y, epsilon) &&
@@ -2343,6 +2348,8 @@ inline matrix4::matrix4(const unscaled_transform3d& t)
 		0.0f,                      0.0f,                      0.0f,                      1.0f
 	};
 }
+inline matrix4::matrix4(const std::array<float, 16>& a) : matrix4(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12], a[13], a[14], a[15]) {}
+inline matrix4::matrix4(const std::array<double, 16>& a) : matrix4(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12], a[13], a[14], a[15]) {}
 
 inline matrix4 matrix4::zero() { return {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}; }
 inline matrix4 matrix4::identity() { return {1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f}; }
@@ -2707,6 +2714,29 @@ inline matrix4 matrix4::operator*(const matrix4& m) const
 		m.m20 * m03 + m.m21 * m13 + m.m22 * m23 + m.m23 * m33,
 		m.m30 * m03 + m.m31 * m13 + m.m32 * m23 + m.m33 * m33
 	};
+}
+
+inline matrix4::operator std::array<float, 16>() const
+{
+	std::array<float, 16> res {
+		m00, m10, m20, m30,
+		m01, m11, m21, m31,
+		m02, m12, m22, m32,
+		m03, m13, m23, m33
+	};
+
+	return res;
+}
+inline matrix4::operator std::array<double, 16>() const
+{
+	std::array<double, 16> res {
+		m00, m10, m20, m30,
+		m01, m11, m21, m31,
+		m02, m12, m22, m32,
+		m03, m13, m23, m33
+	};
+
+	return res;
 }
 
 inline perspective::perspective(radian angle, float ratio, float near, float far) :
@@ -3125,7 +3155,7 @@ inline bool collides(vector2 v, const line& l)
 
 inline float distance_between(const plane& p, vector3 v)
 {
-	return -v.x * p.normal.x - v.y * p.normal.y - v.z * p.normal.z;
+	return -v.x * p.normal->x - v.y * p.normal->y - v.z * p.normal->z;
 }
 inline float distance_between(vector3 v, const plane& p)
 {
@@ -3153,29 +3183,29 @@ inline bool collides(vector2 v, const aa_rect& r)
 	return collides(r, v);
 }
 
-inline bool collides(const ray3d& r, const plane& p)
-{
-	float DdotN = r.direction->dot(p.normal);
-	if (std::abs(DdotN) > std::numeric_limits<float>::epsilon())
-	{
-		float t = -(r.origin.dot(p.normal) + p.distance) / DdotN;
-		return t >= 0;
-	}
-	return false;
-}
-inline bool collides(const ray3d& r, const plane& p, vector3& intersection)
-{
-	float DdotN = r.direction->dot(p.normal);
-	if (std::abs(DdotN) > std::numeric_limits<float>::epsilon())
-	{
-		float t = -(r.origin.dot(p.normal) + p.distance) / DdotN;
-		intersection = r.origin + t * r.direction;
-		return t >= 0;
-	}
-	return false;
-}
-inline bool collides(const plane& p, const ray3d& r) { return collides(r, p); }
-inline bool collides(const plane& p, const ray3d& r, vector3& intersection) { return collides(r, p, intersection); }
+//inline bool collides(const ray3d& r, const plane& p)
+//{
+//	float DdotN = r.direction->dot(p.normal);
+//	if (std::abs(DdotN) > std::numeric_limits<float>::epsilon())
+//	{
+//		float t = -(r.origin.dot(p.normal) + p.distance) / DdotN;
+//		return t >= 0;
+//	}
+//	return false;
+//}
+//inline bool collides(const ray3d& r, const plane& p, vector3& intersection)
+//{
+//	float DdotN = r.direction->dot(p.normal);
+//	if (std::abs(DdotN) > std::numeric_limits<float>::epsilon())
+//	{
+//		float t = -(r.origin.dot(p.normal) + p.distance) / DdotN;
+//		intersection = r.origin + t * r.direction;
+//		return t >= 0;
+//	}
+//	return false;
+//}
+//inline bool collides(const plane& p, const ray3d& r) { return collides(r, p); }
+//inline bool collides(const plane& p, const ray3d& r, vector3& intersection) { return collides(r, p, intersection); }
 
 inline float plane::evaluate(vector3 point) const
 {

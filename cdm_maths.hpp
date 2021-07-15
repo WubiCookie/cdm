@@ -98,7 +98,7 @@ inline constexpr float epsilon = 1.0e-05f;
 
 constexpr float clamp(float f, float min, float max);
 
-constexpr bool nearly_equal(float f1, float f2, float e = epsilon);
+bool nearly_equal(float f1, float f2, float e = epsilon);
 
 template<typename T>
 constexpr int sign(T val);
@@ -315,7 +315,7 @@ vector2 operator*(float f, vector2 v);
 
 float norm(vector2 v);
 float norm_squared(vector2 v);
-vector2& normalize(vector2& vector2 v);
+vector2& normalize(vector2& v);
 vector2& clamp(vector2& v, vector2 min, vector2 max);
 vector2& negate(vector2& v);
 float dot(vector2 lhs, vector2 rhs);
@@ -367,7 +367,7 @@ vector3 operator*(float f, vector3 v);
 
 float norm(vector3 v);
 float norm_squared(vector3 v);
-vector3& normalize(vector3& vector3 min);
+vector3& normalize(vector3& v);
 vector3& clamp(vector3& v, vector3 min, vector3 max);
 vector3& negate(vector3& v);
 float dot(vector3 lhs, vector3 rhs);
@@ -416,7 +416,7 @@ float dot(vector4 lhs, vector4 rhs);
 
 float norm(vector4 v);
 float norm_squared(vector4 v);
-vector4& normalize(vector4& vector4 min);
+vector4& normalize(vector4& v);
 vector4& clamp(vector4& v, vector4 min, vector4 max);
 vector4& negate(vector4& v);
 float dot(vector4 lhs, vector4 rhs);
@@ -688,7 +688,7 @@ private:
 	float m_inv_ratio = 1.0f;
 	float m_near = 0.01f;
 	float m_far = 10000.0f;
-	float m_invTanHalfFovy = 1.0f / (m_angle / 2.0f).tan();
+	float m_invTanHalfFovy = 1.0f / tan(m_angle / 2.0f);
 
 public:
 	perspective() = default;
@@ -842,7 +842,7 @@ struct segment2d
 {
 	vector2 origin;
 	vector2 end;
-}
+};
 
 struct plane
 {
@@ -1069,7 +1069,7 @@ constexpr float clamp(float f, float min, float max)
 	return std::min(std::max(f, min), max);
 }
 
-constexpr bool nearly_equal(float f1, float f2, float e)
+bool nearly_equal(float f1, float f2, float e)
 {
 	return std::abs(f1 - f2) < e;
 }

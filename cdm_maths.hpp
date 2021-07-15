@@ -1,4 +1,4 @@
-/* cdm_maths - v0.2.1 - geometric library - https://github.com/WubiCookie/cdm
+/* cdm_maths - v1.0.0 - geometric library - https://github.com/WubiCookie/cdm
    no warranty implied; use at your own risk
 
 LICENSE
@@ -68,6 +68,7 @@ struct quaternion;
 struct cartesian_direction2d;
 struct polar_direction2d;
 struct line;
+struct segment2d;
 struct plane;
 //struct rect;
 struct aa_rect;
@@ -93,18 +94,11 @@ float get_quaternion_matrix_element(quaternion q);
 inline constexpr float pi = 3.141592653589793238462643f;
 inline constexpr float deg_to_rad = pi / 180.0f;
 inline constexpr float rad_to_deg = 180.0f / pi;
+inline constexpr float epsilon = 1.0e-05f;
 
-template<typename T>
-T clamp(T f, T min_, T max_) { return std::min(max_, std::max(min_, f)); }
+constexpr float clamp(float f, float min, float max);
 
-template<typename T, typename U>
-T lerp(T begin, T end, U percent) { return (end - begin) * percent + begin; }
-
-template<typename T>
-bool nearly_equal_epsilon(T f1, T f2, T epsilon) { return std::abs(f1 - f2) < epsilon; }
-
-template<typename T>
-bool nearly_equal(T f1, T f2) { return nearly_equal_epsilon(f1, f2, std::numeric_limits<float>::epsilon()); }
+constexpr bool nearly_equal(float f1, float f2, float e = epsilon);
 
 template<typename T>
 constexpr int sign(T val);
@@ -122,11 +116,7 @@ struct complex
 	complex(float real, float imaginary);
 	explicit complex(radian angle);
 
-	float norm() const;
-	float norm_squared() const;
-	complex& normalize();
 	complex get_normalized() const;
-	complex& conjugate();
 	complex get_conjugated() const;
 
 	complex operator+(complex c) const;
@@ -147,6 +137,11 @@ complex operator*(complex c1, normalized<complex> c2);
 normalized<complex> operator*(normalized<complex> c1, normalized<complex> c2);
 vector2 operator*(normalized<complex> c, vector2 v);
 
+float norm(complex c);
+float norm_squared(complex c);
+complex& normalize(complex& c);
+complex& conjugate(complex& c);
+
 struct radian
 {
 	float angle = 0.0f;
@@ -157,19 +152,6 @@ struct radian
 	radian(degree d);
 
 	explicit operator float() const;
-
-	float sin() const;
-	float cos() const;
-	float tan() const;
-	float asin() const;
-	float acos() const;
-	float atan() const;
-	float sinh() const;
-	float cosh() const;
-	float tanh() const;
-	float asinh() const;
-	float acosh() const;
-	float atanh() const;
 
 	radian& operator+=(float f);
 	radian& operator+=(radian r);
@@ -213,6 +195,19 @@ bool operator!=(radian, radian);
 bool operator>=(radian, radian);
 bool operator<=(radian, radian);
 
+float sin(radian r);
+float cos(radian r);
+float tan(radian r);
+float asin(radian r);
+float acos(radian r);
+float atan(radian r);
+float sinh(radian r);
+float cosh(radian r);
+float tanh(radian r);
+float asinh(radian r);
+float acosh(radian r);
+float atanh(radian r);
+
 struct degree
 {
 	float angle = 0.0f;
@@ -223,19 +218,6 @@ struct degree
 	degree(radian r);
 
 	explicit operator float() const;
-
-	float sin() const;
-	float cos() const;
-	float tan() const;
-	float asin() const;
-	float acos() const;
-	float atan() const;
-	float sinh() const;
-	float cosh() const;
-	float tanh() const;
-	float asinh() const;
-	float acosh() const;
-	float atanh() const;
 
 	degree& operator+=(float f);
 	degree& operator+=(degree d);
@@ -279,6 +261,19 @@ bool operator!=(degree, degree);
 bool operator>=(degree, degree);
 bool operator<=(degree, degree);
 
+float sin(degree d);
+float cos(degree d);
+float tan(degree d);
+float asin(degree d);
+float acos(degree d);
+float atan(degree d);
+float sinh(degree d);
+float cosh(degree d);
+float tanh(degree d);
+float asinh(degree d);
+float acosh(degree d);
+float atanh(degree d);
+
 struct vector2
 {
 	float x = 0.0f, y = 0.0f;
@@ -286,24 +281,9 @@ struct vector2
 	vector2() = default;
 	vector2(float x, float y);
 
-	float norm() const;
-	float norm_squared() const;
-	vector2& normalize();
 	vector2 get_normalized() const;
-	vector2& clamp(vector2 min, vector2 max);
 	vector2 get_clamped(vector2 min, vector2 max) const;
-	vector2& negate();
 	vector2 get_negated() const;
-	float dot(vector2 v) const;
-	static vector2 lerp(vector2 begin, vector2 end, float percent);
-	static vector2 nlerp(vector2 begin, vector2 end, float percent);
-	static vector2 slerp(vector2 begin, vector2 end, float percent);
-	float distance_from(vector2 v) const;
-	static float distance_between(vector2 v1, vector2 v2);
-	static vector2 from_to(vector2 from, vector2 to);
-	vector2 to(vector2 v) const;
-	static radian angle(vector2 v1, vector2 v2);
-	static bool nearly_equal(vector2 v1, vector2 v2);
 
 	bool lies_on(const line& l);
 	//bool lies_on(const rect& r);
@@ -332,7 +312,22 @@ struct vector2
 };
 
 vector2 operator*(float f, vector2 v);
+
+float norm(vector2 v);
+float norm_squared(vector2 v);
+vector2& normalize(vector2& vector2 v);
+vector2& clamp(vector2& v, vector2 min, vector2 max);
+vector2& negate(vector2& v);
 float dot(vector2 lhs, vector2 rhs);
+float cross(vector2 lhs, vector2 rhs);
+vector2 lerp(vector2 begin, vector2 end, float percent);
+vector2 nlerp(vector2 begin, vector2 end, float percent);
+vector2 slerp(vector2 begin, vector2 end, float percent);
+float distance_between(vector2 v1, vector2 v2);
+float distance_squared_between(vector2 v1, vector2 v2);
+vector2 from_to(vector2 from, vector2 to);
+radian angle_between(vector2 v1, vector2 v2);
+bool nearly_equal(vector2 v1, vector2 v2, float e = epsilon);
 
 struct vector3
 {
@@ -342,26 +337,10 @@ struct vector3
 	vector3(float x, float y, float z);
 	vector3(vector2 v, float z);
 
-	float norm() const;
-	float norm_squared() const;
-	vector3& normalize();
 	vector3 get_normalized() const;
-	vector3& clamp(vector3 min, vector3 max);
 	vector3 get_clamped(vector3 min, vector3 max) const;
-	vector3& negate();
 	vector3 get_negated() const;
-	float dot(vector3 v) const;
-	vector3 cross(vector3 v) const;
-	static vector3 lerp(vector3 begin, vector3 end, float percent);
-	static vector3 nlerp(vector3 begin, vector3 end, float percent);
-	float distance_from(vector3 v) const;
-	static float distance_between(vector3 v1, vector3 v2);
-	static float distance_squared_between(vector3 v1, vector3 v2);
-	static vector3 from_to(vector3 from, vector3 to);
-	vector3 to(vector3 v) const;
-	radian angle(vector3 v) const;
 	radian angle_around_axis(vector3 v, vector3 axis);
-	static bool nearly_equal(vector3 v1, vector3 v2, float epsilon = std::numeric_limits<float>::epsilon());
 
 	vector2 xy() const;
 
@@ -385,7 +364,21 @@ struct vector3
 };
 
 vector3 operator*(float f, vector3 v);
+
+float norm(vector3 v);
+float norm_squared(vector3 v);
+vector3& normalize(vector3& vector3 min);
+vector3& clamp(vector3& v, vector3 min, vector3 max);
+vector3& negate(vector3& v);
 float dot(vector3 lhs, vector3 rhs);
+vector3 cross(vector3 lhs, vector3 rhs);
+vector3 lerp(vector3 begin, vector3 end, float percent);
+vector3 nlerp(vector3 begin, vector3 end, float percent);
+float distance_between(vector3 v1, vector3 v2);
+float distance_squared_between(vector3 v1, vector3 v2);
+vector3 from_to(vector3 from, vector3 to);
+radian angle_between(vector3 v1, vector3 v2);
+bool nearly_equal(vector3 v1, vector3 v2, float e = epsilon);
 
 struct vector4
 {
@@ -396,22 +389,9 @@ struct vector4
 	vector4(vector2 v, float z, float w);
 	vector4(vector3 v, float w);
 
-	float norm() const;
-	float norm_squared() const;
-	vector4& normalize();
 	vector4 get_normalized() const;
-	vector4& clamp(vector4 min, vector4 max);
 	vector4 get_clamped(vector4 min, vector4 max) const;
-	vector4& negate();
 	vector4 get_negated() const;
-	float dot(vector4 v) const;
-	static vector4 lerp(vector4 begin, vector4 end, float percent);
-	static vector4 nlerp(vector4 begin, vector4 end, float percent);
-	float distance_from(vector4 v) const;
-	static float distance_between(vector4 v1, vector4 v2);
-	static vector4 from_to(vector4 from, vector4 to);
-	vector4 to(vector4 v) const;
-	static radian angle(vector4 v1, vector4 v2);
 
 	vector2 xy() const;
 	vector3 xyz() const;
@@ -433,6 +413,22 @@ struct vector4
 };
 
 float dot(vector4 lhs, vector4 rhs);
+
+float norm(vector4 v);
+float norm_squared(vector4 v);
+vector4& normalize(vector4& vector4 min);
+vector4& clamp(vector4& v, vector4 min, vector4 max);
+vector4& negate(vector4& v);
+float dot(vector4 lhs, vector4 rhs);
+// vector4 cross(vector4 lhs, vector4 rhs);
+vector4 lerp(vector4 begin, vector4 end, float percent);
+vector4 nlerp(vector4 begin, vector4 end, float percent);
+// vector4 slerp(vector4 begin, vector4 end, float percent);
+float distance_between(vector4 v1, vector4 v2);
+float distance_squared_between(vector4 v1, vector4 v2);
+vector4 from_to(vector4 from, vector4 to);
+// radian angle_between(vector4 lhs, vector4 rhs);
+bool nearly_equal(vector4 v1, vector4 v2, float e = epsilon);
 
 template<typename T>
 class normalized
@@ -834,13 +830,19 @@ struct line
 	float coefficient;
 	float offset;
 
-	static bool is_parallel(line l1, line l2);
+	static bool are_parallel(line l1, line l2);
 };
 
 inline bool collides(line l1, line l2);
 inline bool collides(line l1, line l2, vector2& intersection);
 inline bool collides(line l, vector2 v);
 inline bool collides(vector2 v, line l);
+
+struct segment2d
+{
+	vector2 origin;
+	vector2 end;
+}
 
 struct plane
 {
@@ -1062,6 +1064,16 @@ struct unscaled_transform3d
 	quaternion operator*(quaternion q) const;
 };
 
+constexpr float clamp(float f, float min, float max)
+{
+	return std::min(std::max(f, min), max);
+}
+
+constexpr bool nearly_equal(float f1, float f2, float e)
+{
+	return std::abs(f1 - f2) < e;
+}
+
 template<typename T>
 constexpr int sign(T val)
 {
@@ -1076,22 +1088,12 @@ constexpr int signnum(T val)
 inline complex::complex(float real, float imaginary) : r(real), i(imaginary) {}
 inline complex::complex(radian angle) : r(angle.cos()), i(angle.sin()) {}
 
-inline float complex::norm() const { return sqrtf(norm_squared()); }
-inline float complex::norm_squared() const { return r * r + i * i; }
-inline complex& complex::normalize()
-{
-	float n = norm();
-	r /= n;
-	i /= n;
-	return *this;
-}
 inline complex complex::get_normalized() const
 {
 	complex res = *this;
 	res.normalize();
 	return res;
 }
-inline complex& complex::conjugate() { i = -i; return *this; }
 inline complex complex::get_conjugated() const
 {
 	complex res = *this;
@@ -1143,24 +1145,22 @@ inline vector2 operator*(normalized<complex> c, vector2 v)
 	};
 }
 
+inline float norm(complex c) { return std::sqrtf(c.norm_squared()); }
+inline float norm_squared(complex c) { return c.r * c.r + c.i * c.i; }
+inline complex& normalize(complex& c)
+{
+	float n = norm(c);
+	c.r /= n;
+	c.i /= n;
+	return c;
+}
+inline complex& conjugate(complex& c) { c.i = -c.i; return c; }
+
 inline radian::radian(float f) : angle(f) {}
 inline radian::radian(const radian& r) : angle(r.angle) {}
 inline radian::radian(degree d) : angle(d.angle * deg_to_rad) {}
 
 inline radian::operator float() const { return angle; }
-
-inline float radian::sin() const { return std::sinf(angle); }
-inline float radian::cos() const { return std::cosf(angle); }
-inline float radian::tan() const { return std::tanf(angle); }
-inline float radian::asin() const { return std::asinf(angle); }
-inline float radian::acos() const { return std::acosf(angle); }
-inline float radian::atan() const { return std::atanf(angle); }
-inline float radian::sinh() const { return std::sinhf(angle); }
-inline float radian::cosh() const { return std::coshf(angle); }
-inline float radian::tanh() const { return std::tanhf(angle); }
-inline float radian::asinh() const { return std::asinhf(angle); }
-inline float radian::acosh() const { return std::acoshf(angle); }
-inline float radian::atanh() const { return std::atanhf(angle); }
 
 inline radian& radian::operator+=(float f) { angle += f; return *this; }
 inline radian& radian::operator+=(radian r) { angle += r.angle; return *this; }
@@ -1175,39 +1175,6 @@ inline radian radian::operator-() const { return radian(-angle); }
 
 inline radian& radian::operator=(radian r) { angle = r.angle; return *this; }
 inline radian& radian::operator=(degree d) { angle = d.angle * deg_to_rad; return *this; }
-
-inline degree::degree(float f) : angle(f) {}
-inline degree::degree(const degree& d) : angle(d.angle) {}
-inline degree::degree(radian r) : angle(r.angle * rad_to_deg) {}
-
-inline degree::operator float() const { return angle; }
-
-inline float degree::sin() const { return radian(*this).sin(); }
-inline float degree::cos() const { return radian(*this).cos(); }
-inline float degree::tan() const { return radian(*this).tan(); }
-inline float degree::asin() const { return radian(*this).asin(); }
-inline float degree::acos() const { return radian(*this).acos(); }
-inline float degree::atan() const { return radian(*this).atan(); }
-inline float degree::sinh() const { return radian(*this).sinh(); }
-inline float degree::cosh() const { return radian(*this).cosh(); }
-inline float degree::tanh() const { return radian(*this).tanh(); }
-inline float degree::asinh() const { return radian(*this).asinh(); }
-inline float degree::acosh() const { return radian(*this).acosh(); }
-inline float degree::atanh() const { return radian(*this).atanh(); }
-
-inline degree& degree::operator+=(float f) { angle += f; return *this; }
-inline degree& degree::operator+=(degree d) { angle += d.angle; return *this; }
-inline degree& degree::operator-=(float f) { angle -= f; return *this; }
-inline degree& degree::operator-=(degree d) { angle -= d.angle; return *this; }
-inline degree& degree::operator*=(float f) { angle *= f; return *this; }
-inline degree& degree::operator*=(degree d) { angle *= d.angle; return *this; }
-inline degree& degree::operator/=(float f) { angle /= f; return *this; }
-inline degree& degree::operator/=(degree d) { angle /= d.angle; return *this; }
-
-inline degree degree::operator-() const { return radian(-angle); }
-
-inline degree& degree::operator=(degree d) { angle = d.angle; return *this; }
-inline degree& degree::operator=(radian r) { angle = r.angle * rad_to_deg; return *this; }
 
 inline radian operator+(radian r1, radian r2) { return radian(r1.angle + r2.angle); }
 inline radian operator-(radian r1, radian r2) { return radian(r1.angle - r2.angle); }
@@ -1236,6 +1203,39 @@ inline bool operator!=(radian lhs, radian rhs) { return float(lhs) != float(rhs)
 inline bool operator>=(radian lhs, radian rhs) { return float(lhs) >= float(rhs); }
 inline bool operator<=(radian lhs, radian rhs) { return float(lhs) <= float(rhs); }
 
+inline float sin(radian r) { return std::sinf(r.angle); }
+inline float cos(radian r) { return std::cosf(r.angle); }
+inline float tan(radian r) { return std::tanf(r.angle); }
+inline float asin(radian r) { return std::asinf(r.angle); }
+inline float acos(radian r) { return std::acosf(r.angle); }
+inline float atan(radian r) { return std::atanf(r.angle); }
+inline float sinh(radian r) { return std::sinhf(r.angle); }
+inline float cosh(radian r) { return std::coshf(r.angle); }
+inline float tanh(radian r) { return std::tanhf(r.angle); }
+inline float asinh(radian r) { return std::asinhf(r.angle); }
+inline float acosh(radian r) { return std::acoshf(r.angle); }
+inline float atanh(radian r) { return std::atanhf(r.angle); }
+
+inline degree::degree(float f) : angle(f) {}
+inline degree::degree(const degree& d) : angle(d.angle) {}
+inline degree::degree(radian r) : angle(r.angle * rad_to_deg) {}
+
+inline degree::operator float() const { return angle; }
+
+inline degree& degree::operator+=(float f) { angle += f; return *this; }
+inline degree& degree::operator+=(degree d) { angle += d.angle; return *this; }
+inline degree& degree::operator-=(float f) { angle -= f; return *this; }
+inline degree& degree::operator-=(degree d) { angle -= d.angle; return *this; }
+inline degree& degree::operator*=(float f) { angle *= f; return *this; }
+inline degree& degree::operator*=(degree d) { angle *= d.angle; return *this; }
+inline degree& degree::operator/=(float f) { angle /= f; return *this; }
+inline degree& degree::operator/=(degree d) { angle /= d.angle; return *this; }
+
+inline degree degree::operator-() const { return radian(-angle); }
+
+inline degree& degree::operator=(degree d) { angle = d.angle; return *this; }
+inline degree& degree::operator=(radian r) { angle = r.angle * rad_to_deg; return *this; }
+
 inline degree operator+(degree d1, degree d2) { return degree(d1.angle + d2.angle); }
 inline degree operator-(degree d1, degree d2) { return degree(d1.angle - d2.angle); }
 inline degree operator*(degree d1, degree d2) { return degree(d1.angle * d2.angle); }
@@ -1263,28 +1263,26 @@ inline bool operator!=(degree lhs, degree rhs) { return float(lhs) != float(rhs)
 inline bool operator>=(degree lhs, degree rhs) { return float(lhs) >= float(rhs); }
 inline bool operator<=(degree lhs, degree rhs) { return float(lhs) <= float(rhs); }
 
+inline float sin(degree d) { return sin(radian(d)); }
+inline float cos(degree d) { return cos(radian(d)); }
+inline float tan(degree d) { return tan(radian(d)); }
+inline float asin(degree d) { return asin(radian(d)); }
+inline float acos(degree d) { return acos(radian(d)); }
+inline float atan(degree d) { return atan(radian(d)); }
+inline float sinh(degree d) { return sinh(radian(d)); }
+inline float cosh(degree d) { return cosh(radian(d)); }
+inline float tanh(degree d) { return tanh(radian(d)); }
+inline float asinh(degree d) { return asinh(radian(d)); }
+inline float acosh(degree d) { return acosh(radian(d)); }
+inline float atanh(degree d) { return atanh(radian(d)); }
+
 inline vector2::vector2(float x_, float y_) : x(x_), y(y_) {}
 
-inline float vector2::norm() const { return sqrtf(norm_squared()); }
-inline float vector2::norm_squared() const { return x * x + y * y; }
-inline vector2& vector2::normalize()
-{
-	float n = norm();
-	x /= n;
-	y /= n;
-	return *this;
-}
 inline vector2 vector2::get_normalized() const
 {
 	vector2 res = *this;
 	res.normalize();
 	return res;
-}
-inline vector2& vector2::clamp(vector2 min, vector2 max)
-{
-	x = cdm::clamp(x, min.x, max.x);
-	y = cdm::clamp(y, min.y, max.y);
-	return *this;
 }
 inline vector2 vector2::get_clamped(vector2 min, vector2 max) const
 {
@@ -1292,49 +1290,12 @@ inline vector2 vector2::get_clamped(vector2 min, vector2 max) const
 	res.clamp(min, max);
 	return res;
 }
-inline vector2& vector2::negate()
-{
-	x = -x;
-	y = -y;
-	return *this;
-}
 inline vector2 vector2::get_negated() const
 {
 	vector2 res = *this;
 	res.negate();
 	return res;
 }
-inline float vector2::dot(vector2 v) const { return x * v.x + y * v.y; }
-inline vector2 vector2::lerp(vector2 begin, vector2 end, float percent) {	return (end - begin) * percent + begin; }
-inline vector2 vector2::nlerp(vector2 begin, vector2 end, float percent) { return lerp(begin, end, percent).get_normalized(); }
-inline vector2 vector2::slerp(vector2 begin, vector2 end, float percent)
-{
-	const radian angle = vector2::angle(begin, end) * percent;
-	const float s = angle.sin();
-	const float c = angle.cos();
-
-	/*vector2 res{
-		c * begin.x - s * begin.y,
-		s * begin.x + c * begin.y
-	};
-	res.normalize();*/
-
-	normalized<vector2> res {
-		{
-			c * begin.x - s * begin.y,
-			s * begin.x + c * begin.y
-		}
-	};
-
-	float f = cdm::lerp(begin.norm(), end.norm(), percent);
-	return res * f;
-}
-inline float vector2::distance_from(vector2 v) const { return distance_between(*this, v); }
-inline float vector2::distance_between(vector2 v1, vector2 v2) { return (v1 - v2).norm(); }
-inline vector2 vector2::from_to(vector2 from, vector2 to) { return {to.x - from.x, to.y - from.y}; }
-inline vector2 vector2::to(vector2 v) const { return from_to(*this, v); }
-inline radian vector2::angle(vector2 v1, vector2 v2) { return radian(atan2f(v2.y, v2.x) - atan2f(v1.y, v1.x)); }
-inline bool vector2::nearly_equal(vector2 v1, vector2 v2) { return cdm::nearly_equal(v1.x, v2.x) && cdm::nearly_equal(v1.y, v2.y); }
 
 inline bool vector2::lies_on(const line& l) { return cdm::nearly_equal(l.coefficient * x + l.offset, y); }
 //bool vector2::lies_on(const rect& r)
@@ -1367,33 +1328,60 @@ inline bool vector2::operator!=(vector2 v) const { return !operator==(v); }
 
 inline vector2 operator*(float f, vector2 v) { return v * f; }
 
-inline float dot(vector2 lhs, vector2 rhs) { return lhs.dot(rhs); }
+inline float norm(vector2 v) { return std::sqrtf(norm_squared(v)); }
+inline float norm_squared(vector2 v) { return v.x * v.x + v.y * v.y; }
+inline vector2& normalize(vector2& vector2 v)
+{
+	float n = norm(v);
+	v.x /= n;
+	v.y /= n;
+	return v;
+}
+inline vector2& clamp(vector2& v, vector2 min, vector2 max)
+{
+	v.x = cdm::clamp(v.x, min.x, max.x);
+	v.y = cdm::clamp(v.y, min.y, max.y);
+	return v;
+}
+inline vector2& negate(vector2& v)
+{
+	v.x = -v.x;
+	v.y = -v.y;
+	return v;
+}
+inline float dot(vector2 lhs, vector2 rhs) { return lhs.x * rhs.x + lhs.y * rhs.y; }
+inline float cross(vector2 lhs, vector2 rhs) { return lhs.x * rhs.y - lhs.y * rhs.x; }
+inline vector2 lerp(vector2 begin, vector2 end, float percent) { return (end - begin) * percent + begin; }
+inline vector2 nlerp(vector2 begin, vector2 end, float percent) { return lerp(begin, end, percent).get_normalized(); }
+inline vector2 slerp(vector2 begin, vector2 end, float percent)
+{
+	const radian angle = angle_between(begin, end) * percent;
+	const float s = angle.sin();
+	const float c = angle.cos();
+
+	normalized<vector2> res {
+		{
+			c * begin.x - s * begin.y,
+			s * begin.x + c * begin.y
+		}
+	};
+
+	float f = cdm::lerp(begin.norm(), end.norm(), percent);
+	return res * f;
+}
+inline float distance_between(vector2 v1, vector2 v2) { return norm((v1 - v2)); }
+inline vector2 from_to(vector2 from, vector2 to) { return {to.x - from.x, to.y - from.y}; }
+inline radian angle_between(vector2 v1, vector2 v2) { return radian(atan2f(v2.y, v2.x) - atan2f(v1.y, v1.x)); }
+inline bool nearly_equal(vector2 v1, vector2 v2, float e) { return cdm::nearly_equal(v1.x, v2.x, e) && cdm::nearly_equal(v1.y, v2.y, e); }
 
 inline vector3::vector3(float x_, float y_, float z_) : x(x_), y(y_), z(z_) {}
 inline vector3::vector3(vector2 v, float z_) : vector3(v.x, v.y, z_) {}
 
-inline float vector3::norm() const { return sqrtf(norm_squared()); }
-inline float vector3::norm_squared() const { return x * x + y * y + z * z; }
-inline vector3& vector3::normalize()
-{
-	float n = norm();
-	x /= n;
-	y /= n;
-	z /= n;
-	return *this;
-}
 inline vector3 vector3::get_normalized() const
 {
 	vector3 res = *this;
 	res.normalize();
 	return res;
-}
-inline vector3& vector3::clamp(vector3 min, vector3 max)
-{
-	x = cdm::clamp(x, min.x, max.x);
-	y = cdm::clamp(y, min.y, max.y);
-	z = cdm::clamp(z, min.z, max.z);
-	return *this;
 }
 inline vector3 vector3::get_clamped(vector3 min, vector3 max) const
 {
@@ -1401,52 +1389,17 @@ inline vector3 vector3::get_clamped(vector3 min, vector3 max) const
 	res.clamp(min, max);
 	return res;
 }
-inline vector3& vector3::negate()
-{
-	x = -x;
-	y = -y;
-	z = -z;
-	return *this;
-}
 inline vector3 vector3::get_negated() const
 {
 	vector3 res = *this;
 	res.negate();
 	return res;
 }
-inline float vector3::dot(vector3 v) const { return x * v.x + y * v.y + z * v.z; }
-inline vector3 vector3::cross(vector3 v) const
-{
-	return {
-		y * v.z - z * v.y,
-		z * v.x - x * v.z,
-		x * v.y - y * v.x
-	};
-}
-inline vector3 vector3::lerp(vector3 begin, vector3 end, float percent) {	return (end - begin) * percent + begin; }
-inline vector3 vector3::nlerp(vector3 begin, vector3 end, float percent) { return lerp(begin, end, percent).get_normalized(); }
-inline float vector3::distance_from(vector3 v) const { return distance_between(*this, v); }
-inline float vector3::distance_between(vector3 v1, vector3 v2) { return (v1 - v2).norm(); }
-inline float vector3::distance_squared_between(vector3 v1, vector3 v2) { return (v1 - v2).norm_squared(); }
-inline vector3 vector3::from_to(vector3 from, vector3 to) { return {to.x - from.x, to.y - from.y, to.z - from.z}; }
-inline vector3 vector3::to(vector3 v) const { return from_to(*this, v); }
-inline radian vector3::angle(vector3 v) const
-{
-	float divisor = sqrtf(norm_squared() * v.norm_squared());
-	float alpha = dot(v) / divisor;
-	return radian(acosf(cdm::clamp(alpha, -1.0f, 1.0f)));
-}
 inline radian vector3::angle_around_axis(vector3 v, vector3 axis)
 {
 	vector3 c = cross(v);
 	float angle = atan2f(c.norm(), dot(v));
 	return radian(c.dot(axis) < 0.0f ? -angle : angle);
-}
-inline bool vector3::nearly_equal(vector3 v1, vector3 v2, float epsilon)
-{
-	return nearly_equal_epsilon(v1.x, v2.x, epsilon) &&
-	       nearly_equal_epsilon(v1.y, v2.y, epsilon) &&
-	       nearly_equal_epsilon(v1.z, v2.z, epsilon);
 }
 
 inline vector2 vector3::xy() const { return {x, y}; }
@@ -1471,36 +1424,66 @@ inline bool vector3::operator!=(vector3 v) const { return !operator==(v); }
 
 inline vector3 operator*(float f, vector3 v) { return v * f; }
 
-inline float dot(vector3 lhs, vector3 rhs) { return lhs.dot(rhs); }
+inline float norm(vector3 v) const { return std::sqrtf(norm_squared(v)); }
+inline float norm_squared(vector3 v) const { return v.x * v.x + v.y * v.y + v.z * v.z; }
+inline vector3& normalize(vector3& v)
+{
+	float n = norm(v);
+	v.x /= n;
+	v.y /= n;
+	v.z /= n;
+	return v;
+}
+inline vector3& clamp(vector3& v, vector3 min, vector3 max)
+{
+	v.x = cdm::clamp(v.x, min.x, max.x);
+	v.y = cdm::clamp(v.y, min.y, max.y);
+	v.z = cdm::clamp(v.z, min.z, max.z);
+	return v;
+}
+inline vector3& negate(vector3& v)
+{
+	v.x = -v.x;
+	v.y = -v.y;
+	v.z = -v.z;
+	return v;
+}
+inline float dot(vector3 lhs, vector3 rhs) { return lhs.x * rhs.x + lhs.y * rhs.y + lhs.z * rhs.z; }
+inline vector3 cross(vector3 lhs, vector3 rhs)
+{
+	return {
+		lhs.y * rhs.z - lhs.z * rhs.y,
+		lhs.z * rhs.x - lhs.x * rhs.z,
+		lhs.x * rhs.y - lhs.y * rhs.x
+	};
+}
+inline vector3 lerp(vector3 begin, vector3 end, float percent) { return (end - begin) * percent + begin; }
+inline vector3 nlerp(vector3 begin, vector3 end, float percent) { return lerp(begin, end, percent).get_normalized(); }
+inline float distance_between(vector3 v1, vector3 v2) { return norm(v1 - v2); }
+inline float distance_squared_between(vector3 v1, vector3 v2) { return norm_squared(v1 - v2); }
+inline vector3 from_to(vector3 from, vector3 to) { return {to.x - from.x, to.y - from.y, to.z - from.z}; }
+inline radian angle_between(vector3 v1, vector3 v2) const
+{
+	float divisor = std::sqrtf(norm_squared(v1) * norm_squared(v2));
+	float alpha = dot(v1, v2) / divisor;
+	return radian(std::acosf(cdm::clamp(alpha, -1.0f, 1.0f)));
+}
+inline bool nearly_equal(vector3 v1, vector3 v2, float e)
+{
+	return nearly_equal(v1.x, v2.x, e) &&
+	       nearly_equal(v1.y, v2.y, e) &&
+	       nearly_equal(v1.z, v2.z, e);
+}
 
 inline vector4::vector4(float x_, float y_, float z_, float w_) : x(x_), y(y_), z(z_), w(w_) {}
 inline vector4::vector4(vector2 v, float z_, float w_) : vector4(v.x, v.y, z_, w_) {}
 inline vector4::vector4(vector3 v, float w_) : vector4(v.x, v.y, v.z, w_) {}
 
-inline float vector4::norm() const { return sqrtf(norm_squared()); }
-inline float vector4::norm_squared() const { return x * x + y * y + z * z + w * w; }
-inline vector4& vector4::normalize()
-{
-	float n = norm();
-	x /= n;
-	y /= n;
-	z /= n;
-	w /= n;
-	return *this;
-}
 inline vector4 vector4::get_normalized() const
 {
 	vector4 res = *this;
 	res.normalize();
 	return res;
-}
-inline vector4& vector4::clamp(vector4 min, vector4 max)
-{
-	x = cdm::clamp(x, min.x, max.x);
-	y = cdm::clamp(y, min.y, max.y);
-	z = cdm::clamp(z, min.z, max.z);
-	w = cdm::clamp(w, min.w, max.w);
-	return *this;
 }
 inline vector4 vector4::get_clamped(vector4 min, vector4 max) const
 {
@@ -1508,27 +1491,12 @@ inline vector4 vector4::get_clamped(vector4 min, vector4 max) const
 	res.clamp(min, max);
 	return res;
 }
-inline vector4& vector4::negate()
-{
-	x = -x;
-	y = -y;
-	z = -z;
-	w = -w;
-	return *this;
-}
 inline vector4 vector4::get_negated() const
 {
 	vector4 res = *this;
 	res.negate();
 	return res;
 }
-inline float vector4::dot(vector4 v) const { return x * v.x + y * v.y + z * v.z + w * v.w; }
-inline vector4 vector4::lerp(vector4 begin, vector4 end, float percent) {	return (end - begin) * percent + begin; }
-inline vector4 vector4::nlerp(vector4 begin, vector4 end, float percent) { return lerp(begin, end, percent).get_normalized(); }
-inline float vector4::distance_from(vector4 v) const { return distance_between(*this, v); }
-inline float vector4::distance_between(vector4 v1, vector4 v2) { return (v1 - v2).norm(); }
-inline vector4 vector4::from_to(vector4 from, vector4 to) { return {to.x - from.x, to.y - from.y, to.z - from.z, to.w - from.w}; }
-inline vector4 vector4::to(vector4 v) const { return from_to(*this, v); }
 
 inline vector2 vector4::xy() const { return { x, y }; }
 inline vector3 vector4::xyz() const { return { x, y, z }; }
@@ -1548,7 +1516,46 @@ inline vector4 vector4::operator-() const { return get_negated(); }
 inline bool vector4::operator==(vector4 v) const { return x == v.x && y == v.y && z == v.z && w == v.w; }
 inline bool vector4::operator!=(vector4 v) const { return !operator==(v); }
 
-inline float dot(vector4 lhs, vector4 rhs) { return lhs.dot(rhs); }
+inline float norm(vector4 v) { return std::sqrtf(norm_squared(v)); }
+inline float norm_squared(vector4 v) { return v.x * v.x + v.y * v.y + v.z * v.z + v.w * v.w; }
+inline vector4& normalize(vector4& v)
+{
+	float n = norm(v);
+	v.x /= n;
+	v.y /= n;
+	v.z /= n;
+	v.w /= n;
+	return v;
+}
+inline vector4& clamp(vector4& v, vector4 min, vector4 max)
+{
+	v.x = cdm::clamp(v.x, min.x, max.x);
+	v.y = cdm::clamp(v.y, min.y, max.y);
+	v.z = cdm::clamp(v.z, min.z, max.z);
+	v.w = cdm::clamp(v.w, min.w, max.w);
+	return v;
+}
+inline vector4& negate(vector4& v)
+{
+	v.x = -v.x;
+	v.y = -v.y;
+	v.z = -v.z;
+	v.w = -v.w;
+	return v;
+}
+inline float dot(vector4 lhs, vector4 rhs) { return lhs.x * rhs.x + lhs.y * rhs.y + lhs.z * rhs.z + lhs.w * rhs.w; }
+inline vector4 lerp(vector4 begin, vector4 end, float percent) { return (end - begin) * percent + begin; }
+inline vector4 nlerp(vector4 begin, vector4 end, float percent) { return lerp(begin, end, percent).get_normalized(); }
+inline float distance_between(vector4 v1, vector4 v2) { return norm(v1 - v2); }
+inline float distance_squared_between(vector4 v1, vector4 v2) { return norm_squared(v1 - v2); }
+inline vector4 from_to(vector4 from, vector4 to) { return {to.x - from.x, to.y - from.y, to.z - from.z, to.w - from.w}; }
+inline bool nearly_equal(vector4 v1, vector4 v2, float e)
+{
+	return nearly_equal(v1.x, v2.x, e) &&
+	       nearly_equal(v1.y, v2.y, e) &&
+	       nearly_equal(v1.z, v2.z, e) &&
+	       nearly_equal(v1.w, v2.w, e);
+}
 
 template<typename T>
 normalized<T>::normalized(const T& t) : vector(t) { vector.normalize(); }
@@ -2993,7 +3000,7 @@ inline quaternion quaternion::get_clamped(quaternion min, quaternion max) const
 	res.clamp(min, max);
 	return res;
 }
-inline float quaternion::norm() const { return sqrtf(norm_squared()); }
+inline float quaternion::norm() const { return std::sqrtf(norm_squared()); }
 inline float quaternion::norm_squared() const { return x * x + y * y + z * z + w * w; }
 inline quaternion quaternion::lerp(quaternion begin, quaternion end, float percent) { return (end - begin) * percent + begin; }
 inline quaternion quaternion::nlerp(quaternion begin, quaternion end, float percent) { return lerp(begin, end, percent).get_normalized(); }
@@ -3119,14 +3126,14 @@ inline polar_direction2d polar_direction2d::get_wrapped()
 	return res;
 }
 
-inline bool line::is_parallel(line l1, line l2)
+inline bool line::are_parallel(line l1, line l2)
 {
 	return nearly_equal(l1.coefficient, l2.coefficient) || nearly_equal(l1.coefficient, -l2.coefficient);
 }
 
 inline bool collides(line l1, line l2)
 {
-	return !line::is_parallel(l1, l2);
+	return !line::are_parallel(l1, l2);
 }
 inline bool collides(line l1, line l2, vector2& intersection)
 {
@@ -3186,7 +3193,7 @@ inline bool collides(vector2 v, const aa_rect& r)
 //inline bool collides(const ray3d& r, const plane& p)
 //{
 //	float DdotN = r.direction->dot(p.normal);
-//	if (std::abs(DdotN) > std::numeric_limits<float>::epsilon())
+//	if (std::abs(DdotN) > epsilon)
 //	{
 //		float t = -(r.origin.dot(p.normal) + p.distance) / DdotN;
 //		return t >= 0;
@@ -3196,7 +3203,7 @@ inline bool collides(vector2 v, const aa_rect& r)
 //inline bool collides(const ray3d& r, const plane& p, vector3& intersection)
 //{
 //	float DdotN = r.direction->dot(p.normal);
-//	if (std::abs(DdotN) > std::numeric_limits<float>::epsilon())
+//	if (std::abs(DdotN) > epsilon)
 //	{
 //		float t = -(r.origin.dot(p.normal) + p.distance) / DdotN;
 //		intersection = r.origin + t * r.direction;
@@ -3598,8 +3605,8 @@ std::vector<vector3> function2D_sampler(const Functor& functor, float min, float
 	if (min > max)
 		std::swap(min, max);
 
-	if (step < std::numeric_limits<float>::epsilon())
-		step = std::numeric_limits<float>::epsilon();
+	if (step < epsilon)
+		step = epsilon;
 
 	for (float f = min; f < max; f += step)
 	{
@@ -3619,10 +3626,10 @@ std::vector<std::vector<vector3>> function3D_sampler(const Functor& functor, vec
 	if (min.y > max.y)
 		std::swap(min.y, max.y);
 
-	if (step.x < std::numeric_limits<float>::epsilon())
-		step.x = std::numeric_limits<float>::epsilon();
-	if (step.y < std::numeric_limits<float>::epsilon())
-		step.y = std::numeric_limits<float>::epsilon();
+	if (step.x < epsilon)
+		step.x = epsilon;
+	if (step.y < epsilon)
+		step.y = epsilon;
 
 	size_t xCount = 0;
 	size_t yCount = 0;

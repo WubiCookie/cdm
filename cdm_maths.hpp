@@ -833,16 +833,21 @@ struct line
 	static bool are_parallel(line l1, line l2);
 };
 
-inline bool collides(line l1, line l2);
-inline bool collides(line l1, line l2, vector2& intersection);
-inline bool collides(line l, vector2 v);
-inline bool collides(vector2 v, line l);
+bool collides(line l1, line l2);
+bool collides(line l1, line l2, vector2& intersection);
+bool collides(line l, vector2 v);
+bool collides(vector2 v, line l);
 
 struct segment2d
 {
 	vector2 origin;
 	vector2 end;
 };
+
+bool intersects(const segment2d& s0,
+                const segment2d& s1,
+                vector2& outPoint,
+                float e = epsilon);
 
 struct plane
 {
@@ -853,6 +858,8 @@ struct plane
 	vector3 project3d(vector3 point) const;
 	vector2 project2d(vector3 point, normalized<vector3> plane_tangent) const;
 	vector3 unproject(vector2 point, normalized<vector3> plane_tangent) const;
+
+	normalized<vector3> computeTangent(float e = epsilon) const;
 };
 
 struct ray2d
@@ -3214,6 +3221,65 @@ inline bool collides(vector2 v, const aa_rect& r)
 //inline bool collides(const plane& p, const ray3d& r) { return collides(r, p); }
 //inline bool collides(const plane& p, const ray3d& r, vector3& intersection) { return collides(r, p, intersection); }
 
+// https://stackoverflow.com/a/565282
+inline bool intersects(const segment2d& s0,
+                       const segment2d& s1,
+                       vector2& outPoint,
+                       float e)
+{
+	vector2 p = s0.origin;
+	vector2 q = s1.origin;
+	vector2 r = from_to(p, s0.end);
+	vector2 s = from_to(q, s1.end);
+
+	vector2 qmp = q - p;
+
+	float rcs = cross(r, s);
+
+	if (nearly_equal(rcs, 0.0f, e)) // colinear
+	{
+		if (nearly_equal(cross(qmp, r), 0.0f, e)) // same line, different segments
+		{
+			float invrdr = 1.0f / dot(r, r);
+			float t0 = dot(qmp, r) * invrdr;
+			float t1 = dot(qmp + s, r) * invrdr;
+
+			if (dot(s, r) < 0.0f)
+				std::swap(t0, t1);
+
+			if (t0 <= 1.0f && t0 >= 0.0f || t1 <= 1.0f && t1 >= 0.0f)
+			{
+				outPoint = s0.origin;  /// TODO: better than that
+				return true;
+			}
+			else
+				return false;
+		}
+		else  // parallel, non-intersecting
+		{
+			return false;
+		}
+	}
+	else
+	{
+		float invrcs = 1.0f / rcs;
+
+		float t = cross(qmp, s) * invrcs;
+		float u = cross(qmp, r) * invrcs;
+
+		if (t >= 0.0f && t <= 1.0f && u >= 0.0f && u <= 1.0f)  // intersects
+		{
+			outPoint = p + r * t;
+
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+}
+
 inline float plane::evaluate(vector3 point) const
 {
 	return normal->x * (point.x - origin.x) +
@@ -3252,6 +3318,13 @@ inline vector3 plane::unproject(vector2 point, normalized<vector3> plane_tangent
 	vector3 plane_space_point = vector3(point, 0.0f);
 
 	return (invTBN * plane_space_point) + origin;
+}
+inline normalized<vector3> plane::computeTangent(float e) const
+{
+	vector3 tangent = plane.project3d(vector3{1.0f, 0.0f, 0.0f} + plane.origin) - plane.origin;
+	if (norm_squared(tangent) < e)
+		tangent = plane.project3d(vector3{0.0f, 1.0f, 0.0f} + plane.origin) - plane.origin;
+	return normalized<vector3>(tangent);
 }
 
 inline bool collides(const plane& plane, const ray3d& r, vector3& collision_point)

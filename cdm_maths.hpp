@@ -2375,8 +2375,8 @@ inline matrix4 matrix4::scale(vector3 s) { return {s.x, 0.0f, 0.0f, 0.0f, 0.0f, 
 inline matrix4 matrix4::look_at(vector3 from, vector3 to, vector3 up)
 {
 	vector3 forward = (from - to).get_normalized();
-    vector3 right = up.get_normalized().cross(forward);
-    vector3 true_up = forward.cross(right);
+	vector3 right = up.get_normalized().cross(forward);
+	vector3 true_up = forward.cross(right);
 
 	return {
 		right.x, true_up.x, forward.x, from.x,

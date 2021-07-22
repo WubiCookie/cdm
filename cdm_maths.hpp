@@ -1093,18 +1093,18 @@ constexpr int signnum(T val)
 }
 
 inline complex::complex(float real, float imaginary) : r(real), i(imaginary) {}
-inline complex::complex(radian angle) : r(angle.cos()), i(angle.sin()) {}
+inline complex::complex(radian angle) : r(cos(angle)), i(sin(angle)) {}
 
 inline complex complex::get_normalized() const
 {
 	complex res = *this;
-	res.normalize();
+	normalize(res);
 	return res;
 }
 inline complex complex::get_conjugated() const
 {
 	complex res = *this;
-	res.conjugate();
+	conjugate(res);
 	return res;
 }
 
@@ -1152,7 +1152,7 @@ inline vector2 operator*(normalized<complex> c, vector2 v)
 	};
 }
 
-inline float norm(complex c) { return std::sqrtf(c.norm_squared()); }
+inline float norm(complex c) { return std::sqrtf(norm_squared(c)); }
 inline float norm_squared(complex c) { return c.r * c.r + c.i * c.i; }
 inline complex& normalize(complex& c)
 {
@@ -1288,19 +1288,19 @@ inline vector2::vector2(float x_, float y_) : x(x_), y(y_) {}
 inline vector2 vector2::get_normalized() const
 {
 	vector2 res = *this;
-	res.normalize();
+	normalize(res);
 	return res;
 }
 inline vector2 vector2::get_clamped(vector2 min, vector2 max) const
 {
 	vector2 res = *this;
-	res.clamp(min, max);
+	clamp(res, min, max);
 	return res;
 }
 inline vector2 vector2::get_negated() const
 {
 	vector2 res = *this;
-	res.negate();
+	negate(res);
 	return res;
 }
 
@@ -1337,7 +1337,7 @@ inline vector2 operator*(float f, vector2 v) { return v * f; }
 
 inline float norm(vector2 v) { return std::sqrtf(norm_squared(v)); }
 inline float norm_squared(vector2 v) { return v.x * v.x + v.y * v.y; }
-inline vector2& normalize(vector2& vector2 v)
+inline vector2& normalize(vector2& v)
 {
 	float n = norm(v);
 	v.x /= n;
@@ -1363,8 +1363,8 @@ inline vector2 nlerp(vector2 begin, vector2 end, float percent) { return lerp(be
 inline vector2 slerp(vector2 begin, vector2 end, float percent)
 {
 	const radian angle = angle_between(begin, end) * percent;
-	const float s = angle.sin();
-	const float c = angle.cos();
+	const float s = sin(angle);
+	const float c = cos(angle);
 
 	normalized<vector2> res {
 		{
@@ -1373,7 +1373,7 @@ inline vector2 slerp(vector2 begin, vector2 end, float percent)
 		}
 	};
 
-	float f = cdm::lerp(begin.norm(), end.norm(), percent);
+	float f = cdm::lerp(norm(begin), norm(end), percent);
 	return res * f;
 }
 inline float distance_between(vector2 v1, vector2 v2) { return norm((v1 - v2)); }
@@ -1387,26 +1387,26 @@ inline vector3::vector3(vector2 v, float z_) : vector3(v.x, v.y, z_) {}
 inline vector3 vector3::get_normalized() const
 {
 	vector3 res = *this;
-	res.normalize();
+	normalize(res);
 	return res;
 }
 inline vector3 vector3::get_clamped(vector3 min, vector3 max) const
 {
 	vector3 res = *this;
-	res.clamp(min, max);
+	clamp(res, min, max);
 	return res;
 }
 inline vector3 vector3::get_negated() const
 {
 	vector3 res = *this;
-	res.negate();
+	negate(res);
 	return res;
 }
 inline radian vector3::angle_around_axis(vector3 v, vector3 axis)
 {
-	vector3 c = cross(v);
-	float angle = atan2f(c.norm(), dot(v));
-	return radian(c.dot(axis) < 0.0f ? -angle : angle);
+	vector3 c = cross(*this, v);
+	float angle = atan2f(norm(c), dot(*this, v));
+	return radian(dot(c, axis) < 0.0f ? -angle : angle);
 }
 
 inline vector2 vector3::xy() const { return {x, y}; }
@@ -1431,8 +1431,8 @@ inline bool vector3::operator!=(vector3 v) const { return !operator==(v); }
 
 inline vector3 operator*(float f, vector3 v) { return v * f; }
 
-inline float norm(vector3 v) const { return std::sqrtf(norm_squared(v)); }
-inline float norm_squared(vector3 v) const { return v.x * v.x + v.y * v.y + v.z * v.z; }
+inline float norm(vector3 v) { return std::sqrtf(norm_squared(v)); }
+inline float norm_squared(vector3 v) { return v.x * v.x + v.y * v.y + v.z * v.z; }
 inline vector3& normalize(vector3& v)
 {
 	float n = norm(v);
@@ -1469,7 +1469,7 @@ inline vector3 nlerp(vector3 begin, vector3 end, float percent) { return lerp(be
 inline float distance_between(vector3 v1, vector3 v2) { return norm(v1 - v2); }
 inline float distance_squared_between(vector3 v1, vector3 v2) { return norm_squared(v1 - v2); }
 inline vector3 from_to(vector3 from, vector3 to) { return {to.x - from.x, to.y - from.y, to.z - from.z}; }
-inline radian angle_between(vector3 v1, vector3 v2) const
+inline radian angle_between(vector3 v1, vector3 v2)
 {
 	float divisor = std::sqrtf(norm_squared(v1) * norm_squared(v2));
 	float alpha = dot(v1, v2) / divisor;
@@ -1489,19 +1489,19 @@ inline vector4::vector4(vector3 v, float w_) : vector4(v.x, v.y, v.z, w_) {}
 inline vector4 vector4::get_normalized() const
 {
 	vector4 res = *this;
-	res.normalize();
+	normalize(res);
 	return res;
 }
 inline vector4 vector4::get_clamped(vector4 min, vector4 max) const
 {
 	vector4 res = *this;
-	res.clamp(min, max);
+	clamp(res, min, max);
 	return res;
 }
 inline vector4 vector4::get_negated() const
 {
 	vector4 res = *this;
-	res.negate();
+	negate(res);
 	return res;
 }
 
@@ -1640,8 +1640,8 @@ inline matrix2 matrix2::zero() { return {0.0f, 0.0f, 0.0f, 0.0f}; }
 inline matrix2 matrix2::identity() { return {1.0f, 0.0f, 0.0f, 1.0f}; }
 inline matrix2 matrix2::rotation(radian angle)
 {
-	float c = angle.cos();
-	float s = angle.sin();
+	float c = cos(angle);
+	float s = sin(angle);
 	return {
 		c, -s,
 		s, c
@@ -1738,22 +1738,22 @@ inline matrix3 matrix3::identity() { return {1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f,
 inline matrix3 matrix3::rotation(euler_angles r)
 {
 	matrix3 RX = matrix3::identity();
-	RX.m11 = r.x.cos();
-	RX.m12 = -r.x.sin();
-	RX.m21 = r.x.sin();
-	RX.m22 = r.x.cos();
+	RX.m11 = cos(r.x);
+	RX.m12 = -sin(r.x);
+	RX.m21 = sin(r.x);
+	RX.m22 = cos(r.x);
 
 	matrix3 RY = matrix3::identity();
-	RY.m00 = r.y.cos();
-	RY.m02 = r.y.sin();
-	RY.m20 = -r.y.sin();
-	RY.m22 = r.y.cos();
+	RY.m00 = cos(r.y);
+	RY.m02 = sin(r.y);
+	RY.m20 = -sin(r.y);
+	RY.m22 = cos(r.y);
 
 	matrix3 RZ = matrix3::identity();
-	RZ.m00 = r.z.cos();
-	RZ.m01 = -r.z.sin();
-	RZ.m10 = r.z.sin();
-	RZ.m11 = r.z.cos();
+	RZ.m00 = cos(r.z);
+	RZ.m01 = -sin(r.z);
+	RZ.m10 = sin(r.z);
+	RZ.m11 = cos(r.z);
 
 	//return RZ * RX * RY;
 	//return RZ * RY * RX;
@@ -1772,8 +1772,8 @@ inline matrix3 matrix3::rotation(quaternion q)
 }
 inline matrix3 matrix3::rotation_around_x(radian angle)
 {
-	float c = angle.cos();
-	float s = angle.sin();
+	float c = cos(angle);
+	float s = sin(angle);
 	return {
 		1.0f, 0.0f, 0.0f,
 		0.0f, c,    s,
@@ -1782,8 +1782,8 @@ inline matrix3 matrix3::rotation_around_x(radian angle)
 }
 inline matrix3 matrix3::rotation_around_y(radian angle)
 {
-	float c = angle.cos();
-	float s = angle.sin();
+	float c = cos(angle);
+	float s = sin(angle);
 	return {
 		c,    0.0f, s,
 		0.0f, 1.0f, 0.0f,
@@ -1792,8 +1792,8 @@ inline matrix3 matrix3::rotation_around_y(radian angle)
 }
 inline matrix3 matrix3::rotation_around_z(radian angle)
 {
-	float c = angle.cos();
-	float s = angle.sin();
+	float c = cos(angle);
+	float s = sin(angle);
 	return {
 		c,    -s,   0.0f,
 		s,    c,    0.0f,
@@ -2375,8 +2375,8 @@ inline matrix4 matrix4::scale(vector3 s) { return {s.x, 0.0f, 0.0f, 0.0f, 0.0f, 
 inline matrix4 matrix4::look_at(vector3 from, vector3 to, vector3 up)
 {
 	vector3 forward = (from - to).get_normalized();
-	vector3 right = up.get_normalized().cross(forward);
-	vector3 true_up = forward.cross(right);
+	vector3 right = cross(up.get_normalized(), forward);
+	vector3 true_up = cross(forward, right);
 
 	return {
 		right.x, true_up.x, forward.x, from.x,
@@ -2759,12 +2759,12 @@ inline perspective::perspective(radian angle, float ratio, float near, float far
     m_inv_ratio(1.0f / m_ratio),
     m_near(near),
     m_far(far),
-    m_invTanHalfFovy(1.0f / (m_angle / 2.0f).tan())
+    m_invTanHalfFovy(1.0f / tan(m_angle / 2.0f))
 {}
 inline void perspective::set_angle(radian angle)
 	{
 	m_angle = angle;
-	m_invTanHalfFovy = 1.0f / (angle / 2.0f).tan();
+	m_invTanHalfFovy = 1.0f / tan(angle / 2.0f);
 }
 inline radian perspective::get_angle() const { return m_angle; }
 inline void perspective::set_ratio(float ratio)
@@ -2927,8 +2927,8 @@ inline quaternion::quaternion(const normalized<vector3>& axis, radian angle)
 	/*vector3 tmpAxis = vector3_get_normalized(axis);
 	tmpAxis = vector3_times_float(&tmpAxis, sinf(angle / 2.0f));*/
 
-	vector3 tmpAxis = axis * (angle / 2.0f).sin();
-	*this = {tmpAxis.x, tmpAxis.y, tmpAxis.z, (angle / 2.0f).cos()};
+	vector3 tmpAxis = axis * sin(angle / 2.0f);
+	*this = {tmpAxis.x, tmpAxis.y, tmpAxis.z, cos(angle / 2.0f)};
 }
 
 inline quaternion quaternion::zero() { return {0.0f, 0.0f, 0.0f, 0.0f}; }
@@ -2976,7 +2976,7 @@ inline quaternion& quaternion::normalize()
 inline quaternion quaternion::get_normalized() const
 {
 	quaternion res = *this;
-	res.normalize();
+	normalize(res);
 	return res;
 }
 inline quaternion& quaternion::negate()
@@ -2990,7 +2990,7 @@ inline quaternion& quaternion::negate()
 inline quaternion quaternion::get_negated() const
 {
 	quaternion res = *this;
-	res.negate();
+	negate(res);
 	return res;
 }
 inline quaternion& quaternion::clamp(quaternion min, quaternion max)
@@ -3004,7 +3004,7 @@ inline quaternion& quaternion::clamp(quaternion min, quaternion max)
 inline quaternion quaternion::get_clamped(quaternion min, quaternion max) const
 {
 	quaternion res = *this;
-	res.clamp(min, max);
+	clamp(res, min, max);
 	return res;
 }
 inline float quaternion::norm() const { return std::sqrtf(norm_squared()); }
@@ -3085,12 +3085,12 @@ inline bool quaternion::operator!=(quaternion q) const { return !operator==(q); 
 inline cartesian_direction2d::cartesian_direction2d(float x_, float y_) : cartesian_direction2d(normalized<vector2>({ x_, y_ })) {}
 inline cartesian_direction2d::cartesian_direction2d(const normalized<vector2>& direction) : x(direction->x), y(direction->y) {}
 inline cartesian_direction2d::cartesian_direction2d(polar_direction2d direction) : cartesian_direction2d(direction.angle) {}
-inline cartesian_direction2d::cartesian_direction2d(radian angle) : cartesian_direction2d(angle.cos(), angle.sin()) {}
+inline cartesian_direction2d::cartesian_direction2d(radian angle) : cartesian_direction2d(cos(angle), sin(angle)) {}
 
 inline cartesian_direction2d& cartesian_direction2d::rotate(radian angle)
 {
-	const float c = angle.cos();
-	const float s = angle.sin();
+	const float c = cos(angle);
+	const float s = sin(angle);
     x = x * c - y * s;
     y = x * s + y * c;
 
@@ -3293,8 +3293,8 @@ inline vector3 plane::project3d(vector3 point) const
 }
 inline vector2 plane::project2d(vector3 point, normalized<vector3> plane_tangent) const
 {
-	normalized<vector3> bitangent = normal->cross(plane_tangent);
-	normalized<vector3> tangent = bitangent->cross(normal);
+	normalized<vector3> bitangent = cross(*normal, plane_tangent);
+	normalized<vector3> tangent = cross(*bitangent, normal);
 
 	matrix3 TBN(tangent->x,   tangent->y,   tangent->z,
 	            bitangent->x, bitangent->y, bitangent->z,
@@ -3307,8 +3307,8 @@ inline vector2 plane::project2d(vector3 point, normalized<vector3> plane_tangent
 }
 inline vector3 plane::unproject(vector2 point, normalized<vector3> plane_tangent) const
 {
-	normalized<vector3> bitangent = normal->cross(plane_tangent);
-	normalized<vector3> tangent = bitangent->cross(normal);
+	normalized<vector3> bitangent = cross(*normal, plane_tangent);
+	normalized<vector3> tangent = cross(*bitangent, normal);
 
 	matrix3 invTBN = matrix3(tangent->x,   tangent->y,   tangent->z,
 	                         bitangent->x, bitangent->y, bitangent->z,
@@ -3321,18 +3321,18 @@ inline vector3 plane::unproject(vector2 point, normalized<vector3> plane_tangent
 }
 inline normalized<vector3> plane::computeTangent(float e) const
 {
-	vector3 tangent = plane.project3d(vector3{1.0f, 0.0f, 0.0f} + plane.origin) - plane.origin;
+	vector3 tangent = project3d(vector3{1.0f, 0.0f, 0.0f} + origin) - origin;
 	if (norm_squared(tangent) < e)
-		tangent = plane.project3d(vector3{0.0f, 1.0f, 0.0f} + plane.origin) - plane.origin;
+		tangent = project3d(vector3{0.0f, 1.0f, 0.0f} + origin) - origin;
 	return normalized<vector3>(tangent);
 }
 
 inline bool collides(const plane& plane, const ray3d& r, vector3& collision_point)
 {
-	float denom = plane.normal->dot(r.direction);
+	float denom = dot(*plane.normal, r.direction);
 	if (abs(denom) > 0.0001f)
 	{
-		float t = -(plane.origin - r.origin).dot(plane.normal) / denom;
+		float t = -dot(plane.origin - r.origin, plane.normal) / denom;
 		if (t >= 0.0f)
 		{
 			collision_point = r.origin + r.direction * t;
@@ -3343,20 +3343,13 @@ inline bool collides(const plane& plane, const ray3d& r, vector3& collision_poin
 }
 inline bool collides_bidirectional(const plane& plane, const ray3d& r, vector3& collision_point)
 {
-	float denom = plane.normal->dot(r.direction);
+	float denom = dot(*plane.normal, r.direction);
 	if (abs(denom) > 0.0001f)
 	{
-		float t = -(plane.origin - r.origin).dot(plane.normal) / denom;
-		//if (t >= 0.0f)
-		//{
-			collision_point = r.origin + r.direction * t;
-			return true;
-		//}
-		//else
-		//{
-		//	collision_point = r.origin - r.direction * t;
-		//	return true;
-		//}
+		float t = -dot(plane.origin - r.origin, plane.normal) / denom;
+
+		collision_point = r.origin + r.direction * t;
+		return true;
 	}
 	return false;
 }

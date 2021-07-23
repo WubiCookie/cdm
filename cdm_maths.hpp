@@ -96,6 +96,7 @@ inline constexpr float deg_to_rad = pi / 180.0f;
 inline constexpr float rad_to_deg = 180.0f / pi;
 inline constexpr float epsilon = 1.0e-05f;
 
+constexpr float lerp(float begin, float end, float percent);
 constexpr float clamp(float f, float min, float max);
 
 bool nearly_equal(float f1, float f2, float e = epsilon);
@@ -744,23 +745,12 @@ struct quaternion
 
 	static quaternion zero();
 	static quaternion identity();
-	quaternion& inverse();
+
 	quaternion get_inversed() const;
-	quaternion& conjugate();
 	quaternion get_conjugated() const;
-	quaternion& normalize();
 	quaternion get_normalized() const;
-	quaternion& negate();
 	quaternion get_negated() const;
-	quaternion& clamp(quaternion min, quaternion max);
 	quaternion get_clamped(quaternion min, quaternion max) const;
-	float norm() const;
-	float norm_squared() const;
-	static quaternion lerp(quaternion begin, quaternion end, float percent);
-	static quaternion nlerp(quaternion begin, quaternion end, float percent);
-	static quaternion slerp(quaternion begin, quaternion end, float percent);
-	float dot(quaternion) const;
-	quaternion cross(quaternion) const;
 
 	quaternion operator+(quaternion q) const;
 	quaternion operator-(quaternion q) const;
@@ -781,6 +771,19 @@ struct quaternion
 };
 
 vector3 operator*(const normalized<quaternion>& q, vector3 v);
+
+float norm(quaternion q);
+float norm_squared(quaternion q);
+quaternion& normalize(quaternion& q);
+quaternion& clamp(quaternion& q, quaternion min, quaternion max);
+quaternion& negate(quaternion& q);
+quaternion& inverse(quaternion& q);
+quaternion& conjugate(quaternion& q);
+float dot(quaternion lhs, quaternion rhs);
+quaternion cross(quaternion lhs, quaternion rhs);
+quaternion lerp(quaternion begin, quaternion end, float percent);
+quaternion nlerp(quaternion begin, quaternion end, float percent);
+quaternion slerp(quaternion begin, quaternion end, float percent);
 
 struct cartesian_direction2d
 {
@@ -1071,12 +1074,17 @@ struct unscaled_transform3d
 	quaternion operator*(quaternion q) const;
 };
 
+constexpr float lerp(float begin, float end, float percent)
+{
+	return (end - begin) * percent + begin;
+}
+
 constexpr float clamp(float f, float min, float max)
 {
 	return std::min(std::max(f, min), max);
 }
 
-bool nearly_equal(float f1, float f2, float e)
+inline bool nearly_equal(float f1, float f2, float e)
 {
 	return std::abs(f1 - f2) < e;
 }
@@ -1376,7 +1384,8 @@ inline vector2 slerp(vector2 begin, vector2 end, float percent)
 	float f = cdm::lerp(norm(begin), norm(end), percent);
 	return res * f;
 }
-inline float distance_between(vector2 v1, vector2 v2) { return norm((v1 - v2)); }
+inline float distance_between(vector2 v1, vector2 v2) { return norm(v1 - v2); }
+inline float distance_squared_between(vector2 v1, vector2 v2) { return norm_squared(v1 - v2); }
 inline vector2 from_to(vector2 from, vector2 to) { return {to.x - from.x, to.y - from.y}; }
 inline radian angle_between(vector2 v1, vector2 v2) { return radian(atan2f(v2.y, v2.x) - atan2f(v1.y, v1.x)); }
 inline bool nearly_equal(vector2 v1, vector2 v2, float e) { return cdm::nearly_equal(v1.x, v2.x, e) && cdm::nearly_equal(v1.y, v2.y, e); }
@@ -1565,9 +1574,9 @@ inline bool nearly_equal(vector4 v1, vector4 v2, float e)
 }
 
 template<typename T>
-normalized<T>::normalized(const T& t) : vector(t) { vector.normalize(); }
+normalized<T>::normalized(const T& t) : vector(t) { normalize(vector); }
 template<typename T>
-normalized<T>::normalized(T&& t) noexcept : vector(std::move(t)) { vector.normalize(); }
+normalized<T>::normalized(T&& t) noexcept : vector(std::move(t)) { normalize(vector); }
 
 template<typename T>
 normalized<T> normalized<T>::already_normalized(const T& t)
@@ -2933,45 +2942,18 @@ inline quaternion::quaternion(const normalized<vector3>& axis, radian angle)
 
 inline quaternion quaternion::zero() { return {0.0f, 0.0f, 0.0f, 0.0f}; }
 inline quaternion quaternion::identity() { return {0.0f, 0.0f, 0.0f, 1.0f}; }
-inline quaternion& quaternion::inverse()
-{
-	float n = norm();
-	if (nearly_equal(n, 1.0f))
-		return conjugate();
 
-	x /= -n;
-	y /= -n;
-	z /= -n;
-	w /= n;
-	return *this;
-}
 inline quaternion quaternion::get_inversed() const
 {
 	quaternion res = *this;
-	res.inverse();
+	inverse(res);
 	return res;
-}
-inline quaternion& quaternion::conjugate()
-{
-	x = -x;
-	y = -y;
-	z = -z;
-	return *this;
 }
 inline quaternion quaternion::get_conjugated() const
 {
 	quaternion res = *this;
-	res.conjugate();
+	conjugate(res);
 	return res;
-}
-inline quaternion& quaternion::normalize()
-{
-	float n = norm();
-	x /= n;
-	y /= n;
-	z /= n;
-	w /= n;
-	return *this;
 }
 inline quaternion quaternion::get_normalized() const
 {
@@ -2979,73 +2961,17 @@ inline quaternion quaternion::get_normalized() const
 	normalize(res);
 	return res;
 }
-inline quaternion& quaternion::negate()
-{
-	x = -x;
-	y = -y;
-	z = -z;
-	w = -w;
-	return *this;
-}
 inline quaternion quaternion::get_negated() const
 {
 	quaternion res = *this;
 	negate(res);
 	return res;
 }
-inline quaternion& quaternion::clamp(quaternion min, quaternion max)
-{
-	x = cdm::clamp(x, min.x, max.x);
-	y = cdm::clamp(y, min.y, max.y);
-	z = cdm::clamp(z, min.z, max.z);
-	w = cdm::clamp(w, min.w, max.w);
-	return *this;
-}
 inline quaternion quaternion::get_clamped(quaternion min, quaternion max) const
 {
 	quaternion res = *this;
 	clamp(res, min, max);
 	return res;
-}
-inline float quaternion::norm() const { return std::sqrtf(norm_squared()); }
-inline float quaternion::norm_squared() const { return x * x + y * y + z * z + w * w; }
-inline quaternion quaternion::lerp(quaternion begin, quaternion end, float percent) { return (end - begin) * percent + begin; }
-inline quaternion quaternion::nlerp(quaternion begin, quaternion end, float percent) { return lerp(begin, end, percent).get_normalized(); }
-inline quaternion quaternion::slerp(quaternion begin, quaternion end, float percent)
-{
-	quaternion _end;
-	float dot = begin.dot(end);
-
-	if (dot > 0.9995f)
-		return quaternion::lerp(begin, end, percent);
-	if (dot < 0.0f)
-	{
-		_end = -end;
-		dot = -dot;
-	}
-	else
-		_end = end;
-
-	percent = cdm::clamp(percent, 0.0f, 1.0f);
-	dot = cdm::clamp(dot, -1.0f, 1.0f);
-	float theta = acosf(dot) * percent;
-
-	quaternion res = begin * dot;
-	res = _end - res;
-
-	res = begin * cosf(theta) + res * sinf(theta);
-
-	return res;
-}
-inline float quaternion::dot(quaternion q) const { return x * q.x + y * q.y + z * q.z + w * q.w; }
-inline quaternion quaternion::cross(quaternion q) const
-{
-	return {
-		y * q.z - z * q.y,
-		z * q.x - x * q.z,
-		x * q.y - y * q.x,
-		1.0f
-	};
 }
 
 inline quaternion quaternion::operator+(quaternion q) const { return {x + q.x, y + q.y, z + q.z, w + q.w}; }
@@ -3061,15 +2987,6 @@ inline quaternion quaternion::operator*(quaternion q) const
 }
 inline quaternion quaternion::operator*(float f) const { return {x * f, y * f, z * f, w * f}; }
 inline quaternion quaternion::operator/(float f) const { return {x / f, y / f, z / f, w / f}; }
-inline vector3 operator*(const normalized<quaternion>& q, vector3 v)
-{
-	vector3 qvec = {q->x, q->y, q->z};
-	vector3 uv = qvec.cross(v);
-	vector3 uuv = qvec.cross(uv);
-	uv = uv * (2.0f * q->w);
-	uuv = uuv * 2.0f;
-	return v + uv + uuv;
-}
 
 inline quaternion& quaternion::operator+=(quaternion q) { *this = *this + q; return *this; }
 inline quaternion& quaternion::operator-=(quaternion q) { *this = *this - q; return *this; }
@@ -3081,6 +2998,101 @@ inline quaternion quaternion::operator-() const { return get_negated(); }
 
 inline bool quaternion::operator==(quaternion q) const { return x == q.x && y == q.y && z == q.z && w == q.w; }
 inline bool quaternion::operator!=(quaternion q) const { return !operator==(q); }
+
+inline vector3 operator*(const normalized<quaternion>& q, vector3 v)
+{
+	vector3 qvec = {q->x, q->y, q->z};
+	vector3 uv = cross(qvec, v);
+	vector3 uuv = cross(qvec, uv);
+	uv = uv * (2.0f * q->w);
+	uuv = uuv * 2.0f;
+	return v + uv + uuv;
+}
+
+inline float norm(quaternion q) { return std::sqrtf(norm_squared(q)); }
+inline float norm_squared(quaternion q) { return q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w; }
+inline quaternion& normalize(quaternion& q)
+{
+	float n = norm(q);
+	q.x /= n;
+	q.y /= n;
+	q.z /= n;
+	q.w /= n;
+	return q;
+}
+inline quaternion& clamp(quaternion& q, quaternion min, quaternion max)
+{
+	q.x = cdm::clamp(q.x, min.x, max.x);
+	q.y = cdm::clamp(q.y, min.y, max.y);
+	q.z = cdm::clamp(q.z, min.z, max.z);
+	q.w = cdm::clamp(q.w, min.w, max.w);
+	return q;
+}
+inline quaternion& negate(quaternion& q)
+{
+	q.x = -q.x;
+	q.y = -q.y;
+	q.z = -q.z;
+	q.w = -q.w;
+	return q;
+}
+inline quaternion& inverse(quaternion& q)
+{
+	float n = norm(q);
+	if (nearly_equal(n, 1.0f))
+		return conjugate(q);
+
+	q.x /= -n;
+	q.y /= -n;
+	q.z /= -n;
+	q.w /= n;
+	return q;
+}
+inline quaternion& conjugate(quaternion& q)
+{
+	q.x = -q.x;
+	q.y = -q.y;
+	q.z = -q.z;
+	return q;
+}
+inline float dot(quaternion lhs, quaternion rhs) { return lhs.x * rhs.x + lhs.y * rhs.y + lhs.z * rhs.z + lhs.w * rhs.w; }
+inline quaternion cross(quaternion lhs, quaternion rhs)
+{
+	return {
+		lhs.y * rhs.z - lhs.z * rhs.y,
+		lhs.z * rhs.x - lhs.x * rhs.z,
+		lhs.x * rhs.y - lhs.y * rhs.x,
+		1.0f
+	};
+}
+inline quaternion lerp(quaternion begin, quaternion end, float percent) { return (end - begin) * percent + begin; }
+inline quaternion nlerp(quaternion begin, quaternion end, float percent) { return lerp(begin, end, percent).get_normalized(); }
+inline quaternion slerp(quaternion begin, quaternion end, float percent)
+{
+	quaternion _end;
+	float d = dot(begin, end);
+
+	if (d > 0.9995f)
+		return lerp(begin, end, percent);
+	if (d < 0.0f)
+	{
+		_end = -end;
+		d = -d;
+	}
+	else
+		_end = end;
+
+	percent = cdm::clamp(percent, 0.0f, 1.0f);
+	d = cdm::clamp(d, -1.0f, 1.0f);
+	float theta = acosf(d) * percent;
+
+	quaternion res = begin * d;
+	res = _end - res;
+
+	res = begin * cosf(theta) + res * sinf(theta);
+
+	return res;
+}
 
 inline cartesian_direction2d::cartesian_direction2d(float x_, float y_) : cartesian_direction2d(normalized<vector2>({ x_, y_ })) {}
 inline cartesian_direction2d::cartesian_direction2d(const normalized<vector2>& direction) : x(direction->x), y(direction->y) {}
@@ -3570,7 +3582,7 @@ inline unscaled_transform3d& unscaled_transform3d::rotate(quaternion r)
 
 inline unscaled_transform3d& unscaled_transform3d::inverse()
 {
-	rotation.inverse();
+	cdm::inverse(rotation);
 	position = rotation * -position;
 	return *this;
 }

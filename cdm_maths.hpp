@@ -1204,7 +1204,7 @@ inline degree& degree::operator*=(degree d) { angle *= d.angle; return *this; }
 inline degree& degree::operator/=(float f) { angle /= f; return *this; }
 inline degree& degree::operator/=(degree d) { angle /= d.angle; return *this; }
 
-inline degree degree::operator-() const { return radian(-angle); }
+inline degree degree::operator-() const { return degree(-angle); }
 
 inline degree& degree::operator=(degree d) { angle = d.angle; return *this; }
 inline degree& degree::operator=(radian r) { angle = r.angle * rad_to_deg; return *this; }

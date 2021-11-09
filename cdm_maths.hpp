@@ -1,4 +1,4 @@
-/* cdm_maths - v1.0.0 - geometric library - https://github.com/WubiCookie/cdm
+/* cdm_maths - v1.0.1 - geometric library - https://github.com/Iconeus/cdm
    no warranty implied; use at your own risk
 
 LICENSE

@@ -49,388 +49,532 @@ Written by Charles Seizilles de Mazancourt
 
 namespace cdm
 {
+#pragma region forward declarations
 template<typename T>
 class normalized;
-struct complex;
-struct radian;
-struct degree;
-struct vector2;
-struct vector3;
-struct vector4;
-struct matrix2;
-struct matrix3;
-struct matrix3x4;
-struct matrix4x3;
-struct matrix4;
-struct perspective;
-struct euler_angles;
-struct quaternion;
-struct cartesian_direction2d;
-struct polar_direction2d;
-struct line;
-struct segment2d;
-struct plane;
+template<typename T>
+struct complex_t;
+template<typename T>
+struct radian_t;
+template<typename T>
+struct degree_t;
+template<typename T>
+struct vector2_t;
+template<typename T>
+struct vector3_t;
+template<typename T>
+struct vector4_t;
+template<typename T>
+struct matrix2_t;
+template<typename T>
+struct matrix3_t;
+template<typename T>
+struct matrix4_t;
+template<typename T>
+struct perspective_t;
+template<typename T>
+struct euler_angles_t;
+template<typename T>
+struct quaternion_t;
+template<typename T>
+struct cartesian_direction2d_t;
+template<typename T>
+struct polar_direction_t;
+template<typename T>
+struct line_t;
+template<typename T>
+struct segment2d_t;
+template<typename T>
+struct plane_t;
 //struct rect;
-struct aa_rect;
-struct circle;
+template<typename T>
+struct aa_rect_t;
+template<typename T>
+struct circle_t;
 //struct ellipse;
 //struct aa_ellipse;
-struct ray2d;
-struct ray3d;
-struct aabb;
-struct transform2d;
-struct transform3d;
-struct uniform_transform2d;
-struct uniform_transform3d;
-struct unscaled_transform2d;
-struct unscaled_transform3d;
+template<typename T>
+struct ray2d_t;
+template<typename T>
+struct ray3d_t;
+template<typename T>
+struct aabb_t;
+template<typename T>
+struct transform2d_t;
+template<typename T>
+struct transform3d_t;
+template<typename T>
+struct uniform_transform2d_t;
+template<typename T>
+struct uniform_transform3d_t;
+template<typename T>
+struct unscaled_transform2d_t;
+template<typename T>
+struct unscaled_transform3d_t;
 
 namespace detail
 {
-template<unsigned char x, unsigned char y>
-float get_quaternion_matrix_element(quaternion q);
+template<uint8_t x, uint8_t y, typename T>
+T get_quaternion_t_matrix_element(quaternion_t<T> q);
 } // namespace detail
 
-inline constexpr float pi = 3.141592653589793238462643f;
-inline constexpr float deg_to_rad = pi / 180.0f;
-inline constexpr float rad_to_deg = 180.0f / pi;
-inline constexpr float epsilon = 1.0e-05f;
+template<typename T>
+constexpr T lerp(T begin, T end, T percent);
+template<typename T>
+constexpr T clamp(T f, T min, T max);
 
-constexpr float lerp(float begin, float end, float percent);
-constexpr float clamp(float f, float min, float max);
-
-bool nearly_equal(float f1, float f2, float e = epsilon);
+template<typename T>
+bool nearly_equal(T f1, T f2, T e = T(epsilon));
 
 template<typename T>
 constexpr int sign(T val);
 template<typename T>
 constexpr int signnum(T val);
+#pragma endregion
 
-struct complex
+#pragma region constants declarations
+constexpr double pi = 3.141592653589793238462643;
+constexpr double deg_to_rad = pi / 180.0;
+constexpr double rad_to_deg = 180.0 / pi;
+constexpr double epsilon = 1.0e-05;
+#pragma endregion
+
+#pragma region declaration complex_t
+template<typename T>
+struct complex_t
 {
-	float r = 0.0f;
-	float i = 0.0f;
+	T r;
+	T i;
 
-	complex() = default;
-	complex(const complex&) = default;
-	complex(complex&&) = default;
-	complex(float real, float imaginary);
-	explicit complex(radian angle);
+	static complex_t from(radian_t<T> angle);
 
-	complex get_normalized() const;
-	complex get_conjugated() const;
+	complex_t operator+(complex_t c) const;
+	complex_t operator-(complex_t c) const;
 
-	complex operator+(complex c) const;
-	complex operator-(complex c) const;
-
-	complex& operator+=(complex c);
-	complex& operator-=(complex c);
-	complex& operator*=(complex c);
-
-	complex& operator=(const complex&) = default;
-	complex& operator=(complex&&) = default;
+	complex_t& operator+=(complex_t c);
+	complex_t& operator-=(complex_t c);
+	complex_t& operator*=(complex_t c);
 };
 
-complex operator*(complex c1, complex c2);
-complex operator*(complex c, float f);
-complex operator*(normalized<complex> c1, complex c2);
-complex operator*(complex c1, normalized<complex> c2);
-normalized<complex> operator*(normalized<complex> c1, normalized<complex> c2);
-vector2 operator*(normalized<complex> c, vector2 v);
+template<typename T>
+complex_t<T> operator*(complex_t<T> c1, complex_t<T> c2);
+template<typename T>
+complex_t<T> operator*(complex_t<T> c, T f);
+template<typename T>
+complex_t<T> operator*(normalized<complex_t<T>> c1, complex_t<T> c2);
+template<typename T>
+complex_t<T> operator*(complex_t<T> c1, normalized<complex_t<T>> c2);
+template<typename T>
+normalized<complex_t<T>> operator*(normalized<complex_t<T>> c1, normalized<complex_t<T>> c2);
+template<typename T>
+vector2_t<T> operator*(normalized<complex_t<T>> c, vector2_t<T> v);
 
-float norm(complex c);
-float norm_squared(complex c);
-complex& normalize(complex& c);
-complex& conjugate(complex& c);
+template<typename T>
+T norm(complex_t<T> c);
+template<typename T>
+T norm_squared(complex_t<T> c);
+template<typename T>
+complex_t<T> normalize(complex_t<T> c);
+template<typename T>
+complex_t<T> conjugate(complex_t<T> c);
+#pragma endregion
 
-struct radian
+#pragma region declaration radian_t
+template<typename T>
+struct radian_t
 {
-	float angle = 0.0f;
+	T angle;
 
-	radian() = default;
-	explicit radian(float f);
-	radian(const radian& r);
-	radian(degree d);
+	radian_t() = default;
+	explicit radian_t(T f);
+	radian_t(const radian_t& r) = default;
+	radian_t(radian_t&& r) = default;
+	radian_t(degree_t<T> d);
 
-	explicit operator float() const;
+	explicit operator T() const;
 
-	radian& operator+=(float f);
-	radian& operator+=(radian r);
-	radian& operator-=(float f);
-	radian& operator-=(radian r);
-	radian& operator*=(float f);
-	radian& operator*=(radian r);
-	radian& operator/=(float f);
-	radian& operator/=(radian r);
+	radian_t& operator+=(T f);
+	radian_t& operator+=(radian_t r);
+	radian_t& operator-=(T f);
+	radian_t& operator-=(radian_t r);
+	radian_t& operator*=(T f);
+	radian_t& operator*=(radian_t r);
+	radian_t& operator/=(T f);
+	radian_t& operator/=(radian_t r);
 
-	radian operator-() const;
+	radian_t operator-() const;
 
-	radian& operator=(radian r);
-	radian& operator=(degree d);
+	radian_t& operator=(const radian_t& r) = default;
+	radian_t& operator=(degree_t<T> d);
 };
 
-radian operator+(radian, radian);
-radian operator-(radian, radian);
-radian operator*(radian, radian);
-radian operator/(radian, radian);
-radian operator*(radian, float);
-radian operator/(radian, float);
-radian operator*(float, radian);
-radian operator/(float, radian);
-bool operator<(float, radian);
-bool operator>(float, radian);
-bool operator==(float, radian);
-bool operator!=(float, radian);
-bool operator>=(float, radian);
-bool operator<=(float, radian);
-bool operator<(radian, float);
-bool operator>(radian, float);
-bool operator==(radian, float);
-bool operator!=(radian, float);
-bool operator>=(radian, float);
-bool operator<=(radian, float);
-bool operator<(radian, radian);
-bool operator>(radian, radian);
-bool operator==(radian, radian);
-bool operator!=(radian, radian);
-bool operator>=(radian, radian);
-bool operator<=(radian, radian);
+template<typename T>
+radian_t<T> operator+(radian_t<T>, radian_t<T>);
+template<typename T>
+radian_t<T> operator-(radian_t<T>, radian_t<T>);
+template<typename T>
+radian_t<T> operator*(radian_t<T>, radian_t<T>);
+template<typename T>
+radian_t<T> operator/(radian_t<T>, radian_t<T>);
+template<typename T>
+radian_t<T> operator*(radian_t<T>, T);
+template<typename T>
+radian_t<T> operator/(radian_t<T>, T);
+template<typename T>
+radian_t<T> operator*(T, radian_t<T>);
+template<typename T>
+radian_t<T> operator/(T, radian_t<T>);
+template<typename T>
+bool operator<(T, radian_t<T>);
+template<typename T>
+bool operator>(T, radian_t<T>);
+template<typename T>
+bool operator==(T, radian_t<T>);
+template<typename T>
+bool operator!=(T, radian_t<T>);
+template<typename T>
+bool operator>=(T, radian_t<T>);
+template<typename T>
+bool operator<=(T, radian_t<T>);
+template<typename T>
+bool operator<(radian_t<T>, T);
+template<typename T>
+bool operator>(radian_t<T>, T);
+template<typename T>
+bool operator==(radian_t<T>, T);
+template<typename T>
+bool operator!=(radian_t<T>, T);
+template<typename T>
+bool operator>=(radian_t<T>, T);
+template<typename T>
+bool operator<=(radian_t<T>, T);
+template<typename T>
+bool operator<(radian_t<T>, radian_t<T>);
+template<typename T>
+bool operator>(radian_t<T>, radian_t<T>);
+template<typename T>
+bool operator==(radian_t<T>, radian_t<T>);
+template<typename T>
+bool operator!=(radian_t<T>, radian_t<T>);
+template<typename T>
+bool operator>=(radian_t<T>, radian_t<T>);
+template<typename T>
+bool operator<=(radian_t<T>, radian_t<T>);
 
-float sin(radian r);
-float cos(radian r);
-float tan(radian r);
-float asin(radian r);
-float acos(radian r);
-float atan(radian r);
-float sinh(radian r);
-float cosh(radian r);
-float tanh(radian r);
-float asinh(radian r);
-float acosh(radian r);
-float atanh(radian r);
+template<typename T>
+T sin(radian_t<T> r);
+template<typename T>
+T cos(radian_t<T> r);
+template<typename T>
+T tan(radian_t<T> r);
+template<typename T>
+T asin(radian_t<T> r);
+template<typename T>
+T acos(radian_t<T> r);
+template<typename T>
+T atan(radian_t<T> r);
+template<typename T>
+T sinh(radian_t<T> r);
+template<typename T>
+T cosh(radian_t<T> r);
+template<typename T>
+T tanh(radian_t<T> r);
+template<typename T>
+T asinh(radian_t<T> r);
+template<typename T>
+T acosh(radian_t<T> r);
+template<typename T>
+T atanh(radian_t<T> r);
+#pragma endregion
 
-struct degree
+#pragma region declaration degree_t
+template<typename T>
+struct degree_t
 {
-	float angle = 0.0f;
+	T angle;
 
-	degree() = default;
-	explicit degree(float f);
-	degree(const degree& d);
-	degree(radian r);
+	degree_t() = default;
+	explicit degree_t(T f);
+	degree_t(const degree_t& d) = default;
+	degree_t(degree_t&& d) = default;
+	degree_t(radian_t<T> r);
 
-	explicit operator float() const;
+	explicit operator T() const;
 
-	degree& operator+=(float f);
-	degree& operator+=(degree d);
-	degree& operator-=(float f);
-	degree& operator-=(degree d);
-	degree& operator*=(float f);
-	degree& operator*=(degree d);
-	degree& operator/=(float f);
-	degree& operator/=(degree d);
+	degree_t& operator+=(T f);
+	degree_t& operator+=(degree_t d);
+	degree_t& operator-=(T f);
+	degree_t& operator-=(degree_t d);
+	degree_t& operator*=(T f);
+	degree_t& operator*=(degree_t d);
+	degree_t& operator/=(T f);
+	degree_t& operator/=(degree_t d);
 
-	degree operator-() const;
+	degree_t operator-() const;
 
-	degree& operator=(degree d);
-	degree& operator=(radian r);
+	degree_t& operator=(const degree_t& d) = default;
+	degree_t& operator=(radian_t<T> r);
 };
 
-degree operator+(degree, degree);
-degree operator-(degree, degree);
-degree operator*(degree, degree);
-degree operator/(degree, degree);
-degree operator*(degree, float);
-degree operator/(degree, float);
-degree operator*(float, degree);
-degree operator/(float, degree);
-bool operator<(float, degree);
-bool operator>(float, degree);
-bool operator==(float, degree);
-bool operator!=(float, degree);
-bool operator>=(float, degree);
-bool operator<=(float, degree);
-bool operator<(degree, float);
-bool operator>(degree, float);
-bool operator==(degree, float);
-bool operator!=(degree, float);
-bool operator>=(degree, float);
-bool operator<=(degree, float);
-bool operator<(degree, degree);
-bool operator>(degree, degree);
-bool operator==(degree, degree);
-bool operator!=(degree, degree);
-bool operator>=(degree, degree);
-bool operator<=(degree, degree);
+template<typename T>
+degree_t<T> operator+(degree_t<T>, degree_t<T>);
+template<typename T>
+degree_t<T> operator-(degree_t<T>, degree_t<T>);
+template<typename T>
+degree_t<T> operator*(degree_t<T>, degree_t<T>);
+template<typename T>
+degree_t<T> operator/(degree_t<T>, degree_t<T>);
+template<typename T>
+degree_t<T> operator*(degree_t<T>, T);
+template<typename T>
+degree_t<T> operator/(degree_t<T>, T);
+template<typename T>
+degree_t<T> operator*(T, degree_t<T>);
+template<typename T>
+degree_t<T> operator/(T, degree_t<T>);
+template<typename T>
+bool operator<(T, degree_t<T>);
+template<typename T>
+bool operator>(T, degree_t<T>);
+template<typename T>
+bool operator==(T, degree_t<T>);
+template<typename T>
+bool operator!=(T, degree_t<T>);
+template<typename T>
+bool operator>=(T, degree_t<T>);
+template<typename T>
+bool operator<=(T, degree_t<T>);
+template<typename T>
+bool operator<(degree_t<T>, T);
+template<typename T>
+bool operator>(degree_t<T>, T);
+template<typename T>
+bool operator==(degree_t<T>, T);
+template<typename T>
+bool operator!=(degree_t<T>, T);
+template<typename T>
+bool operator>=(degree_t<T>, T);
+template<typename T>
+bool operator<=(degree_t<T>, T);
+template<typename T>
+bool operator<(degree_t<T>, degree_t<T>);
+template<typename T>
+bool operator>(degree_t<T>, degree_t<T>);
+template<typename T>
+bool operator==(degree_t<T>, degree_t<T>);
+template<typename T>
+bool operator!=(degree_t<T>, degree_t<T>);
+template<typename T>
+bool operator>=(degree_t<T>, degree_t<T>);
+template<typename T>
+bool operator<=(degree_t<T>, degree_t<T>);
 
-float sin(degree d);
-float cos(degree d);
-float tan(degree d);
-float asin(degree d);
-float acos(degree d);
-float atan(degree d);
-float sinh(degree d);
-float cosh(degree d);
-float tanh(degree d);
-float asinh(degree d);
-float acosh(degree d);
-float atanh(degree d);
+template<typename T>
+T sin(degree_t<T> d);
+template<typename T>
+T cos(degree_t<T> d);
+template<typename T>
+T tan(degree_t<T> d);
+template<typename T>
+T asin(degree_t<T> d);
+template<typename T>
+T acos(degree_t<T> d);
+template<typename T>
+T atan(degree_t<T> d);
+template<typename T>
+T sinh(degree_t<T> d);
+template<typename T>
+T cosh(degree_t<T> d);
+template<typename T>
+T tanh(degree_t<T> d);
+template<typename T>
+T asinh(degree_t<T> d);
+template<typename T>
+T acosh(degree_t<T> d);
+template<typename T>
+T atanh(degree_t<T> d);
+#pragma endregion
 
-struct vector2
+#pragma region declaration vector2_t
+template<typename T>
+struct vector2_t
 {
-	float x = 0.0f, y = 0.0f;
+	T x, y;
 
-	vector2() = default;
-	vector2(float x, float y);
+	template<typename U = T>
+	std::array<U, 2> to_array() const;
 
-	vector2 get_normalized() const;
-	vector2 get_clamped(vector2 min, vector2 max) const;
-	vector2 get_negated() const;
+	T& operator[](size_t i);
+	const T& operator[](size_t i) const;
 
-	bool lies_on(const line& l);
-	//bool lies_on(const rect& r);
-	bool lies_on(const aa_rect& r);
-	bool lies_on(const circle& c);
-	//bool lies_on(const ellipe& e);
-	//bool lies_on(const aa_ellipe& e);
+	vector2_t operator+(vector2_t v) const;
+	vector2_t operator-(vector2_t v) const;
+	vector2_t operator*(T f) const;
+	vector2_t operator/(T f) const;
 
-	float& operator[](size_t i);
-	float operator[](size_t i) const;
+	vector2_t& operator+=(vector2_t v);
+	vector2_t& operator-=(vector2_t v);
+	vector2_t& operator*=(T f);
+	vector2_t& operator/=(T f);
 
-	vector2 operator+(vector2 v) const;
-	vector2 operator-(vector2 v) const;
-	vector2 operator*(float f) const;
-	vector2 operator/(float f) const;
+	vector2_t operator-() const;
 
-	vector2& operator+=(vector2 v);
-	vector2& operator-=(vector2 v);
-	vector2& operator*=(float f);
-	vector2& operator/=(float f);
-
-	vector2 operator-() const;
-
-	bool operator==(vector2 v) const;
-	bool operator!=(vector2 v) const;
+	bool operator==(vector2_t v) const;
+	bool operator!=(vector2_t v) const;
 };
 
-vector2 operator*(float f, vector2 v);
+template<typename T>
+vector2_t<T> operator*(T f, vector2_t<T> v);
 
-float norm(vector2 v);
-float norm_squared(vector2 v);
-vector2& normalize(vector2& v);
-vector2& clamp(vector2& v, vector2 min, vector2 max);
-vector2& negate(vector2& v);
-float dot(vector2 lhs, vector2 rhs);
-float cross(vector2 lhs, vector2 rhs);
-vector2 lerp(vector2 begin, vector2 end, float percent);
-vector2 nlerp(vector2 begin, vector2 end, float percent);
-vector2 slerp(vector2 begin, vector2 end, float percent);
-float distance_between(vector2 v1, vector2 v2);
-float distance_squared_between(vector2 v1, vector2 v2);
-vector2 from_to(vector2 from, vector2 to);
-radian angle_between(vector2 v1, vector2 v2);
-bool nearly_equal(vector2 v1, vector2 v2, float e = epsilon);
+template<typename T>
+T norm(vector2_t<T> v);
+template<typename T>
+T norm_squared(vector2_t<T> v);
+template<typename T>
+vector2_t<T> normalize(vector2_t<T> v);
+template<typename T>
+vector2_t<T> clamp(vector2_t<T> v, vector2_t<T> min, vector2_t<T> max);
+template<typename T>
+T dot(vector2_t<T> lhs, vector2_t<T> rhs);
+template<typename T>
+T cross(vector2_t<T> lhs, vector2_t<T> rhs);
+template<typename T>
+vector2_t<T> lerp(vector2_t<T> begin, vector2_t<T> end, T percent);
+template<typename T>
+vector2_t<T> nlerp(vector2_t<T> begin, vector2_t<T> end, T percent);
+template<typename T>
+vector2_t<T> slerp(vector2_t<T> begin, vector2_t<T> end, T percent);
+template<typename T>
+T distance_between(vector2_t<T> v1, vector2_t<T> v2);
+template<typename T>
+T distance_squared_between(vector2_t<T> v1, vector2_t<T> v2);
+template<typename T>
+vector2_t<T> from_to(vector2_t<T> from, vector2_t<T> to);
+template<typename T>
+radian_t<T> angle_between(vector2_t<T> v1, vector2_t<T> v2);
+template<typename T>
+bool nearly_equal(vector2_t<T> v1, vector2_t<T> v2, T e = T(epsilon));
+#pragma endregion
 
-struct vector3
+#pragma region declaration vector3_t
+template<typename T>
+struct vector3_t
 {
-	float x = 0.0f, y = 0.0f, z = 0.0f;
+	T x, y, z;
 
-	vector3() = default;
-	vector3(float x, float y, float z);
-	vector3(vector2 v, float z);
+	template<typename U = T>
+	std::array<U, 3> to_array() const;
 
-	vector3 get_normalized() const;
-	vector3 get_clamped(vector3 min, vector3 max) const;
-	vector3 get_negated() const;
-	radian angle_around_axis(vector3 v, vector3 axis);
+	radian_t<T> angle_around_axis(vector3_t v, vector3_t axis);
 
-	vector2 xy() const;
+	vector2_t<T> xy() const;
 
-	float& operator[](size_t i);
-	float operator[](size_t i) const;
+	vector3_t operator+(vector3_t v) const;
+	vector3_t operator-(vector3_t v) const;
+	vector3_t operator*(T f) const;
+	vector3_t operator/(T f) const;
 
-	vector3 operator+(vector3 v) const;
-	vector3 operator-(vector3 v) const;
-	vector3 operator*(float f) const;
-	vector3 operator/(float f) const;
+	vector3_t& operator+=(vector3_t v);
+	vector3_t& operator-=(vector3_t v);
+	vector3_t& operator*=(T f);
+	vector3_t& operator/=(T f);
 
-	vector3& operator+=(vector3 v);
-	vector3& operator-=(vector3 v);
-	vector3& operator*=(float f);
-	vector3& operator/=(float f);
+	vector3_t operator-() const;
 
-	vector3 operator-() const;
-
-	bool operator==(vector3 v) const;
-	bool operator!=(vector3 v) const;
+	bool operator==(vector3_t v) const;
+	bool operator!=(vector3_t v) const;
 };
 
-vector3 operator*(float f, vector3 v);
+template<typename T>
+vector3_t<T> operator*(T f, vector3_t<T> v);
 
-float norm(vector3 v);
-float norm_squared(vector3 v);
-vector3& normalize(vector3& v);
-vector3& clamp(vector3& v, vector3 min, vector3 max);
-vector3& negate(vector3& v);
-float dot(vector3 lhs, vector3 rhs);
-vector3 cross(vector3 lhs, vector3 rhs);
-vector3 lerp(vector3 begin, vector3 end, float percent);
-vector3 nlerp(vector3 begin, vector3 end, float percent);
-float distance_between(vector3 v1, vector3 v2);
-float distance_squared_between(vector3 v1, vector3 v2);
-vector3 from_to(vector3 from, vector3 to);
-radian angle_between(vector3 v1, vector3 v2);
-bool nearly_equal(vector3 v1, vector3 v2, float e = epsilon);
+template<typename T>
+T norm(vector3_t<T> v);
+template<typename T>
+T norm_squared(vector3_t<T> v);
+template<typename T>
+vector3_t<T> normalize(vector3_t<T> v);
+template<typename T>
+vector3_t<T> clamp(vector3_t<T> v, vector3_t<T> min, vector3_t<T> max);
+template<typename T>
+T dot(vector3_t<T> lhs, vector3_t<T> rhs);
+template<typename T>
+vector3_t<T> cross(vector3_t<T> lhs, vector3_t<T> rhs);
+template<typename T>
+vector3_t<T> lerp(vector3_t<T> begin, vector3_t<T> end, T percent);
+template<typename T>
+vector3_t<T> nlerp(vector3_t<T> begin, vector3_t<T> end, T percent);
+template<typename T>
+T distance_between(vector3_t<T> v1, vector3_t<T> v2);
+template<typename T>
+T distance_squared_between(vector3_t<T> v1, vector3_t<T> v2);
+template<typename T>
+vector3_t<T> from_to(vector3_t<T> from, vector3_t<T> to);
+template<typename T>
+radian_t<T> angle_between(vector3_t<T> v1, vector3_t<T> v2);
+template<typename T>
+bool nearly_equal(vector3_t<T> v1, vector3_t<T> v2, T e = epsilon);
+#pragma endregion
 
-struct vector4
+#pragma region declaration vector4_t
+template<typename T>
+struct vector4_t
 {
-	float x = 0.0f, y = 0.0f, z = 0.0f, w = 0.0f;
+	T x, y, z, w;
 
-	vector4() = default;
-	vector4(float x, float y, float z, float w);
-	vector4(vector2 v, float z, float w);
-	vector4(vector3 v, float w);
+	template<typename U = T>
+	std::array<U, 4> to_array() const;
 
-	vector4 get_normalized() const;
-	vector4 get_clamped(vector4 min, vector4 max) const;
-	vector4 get_negated() const;
+	vector2_t<T> xy() const;
+	vector3_t<T> xyz() const;
 
-	vector2 xy() const;
-	vector3 xyz() const;
+	vector4_t operator+(vector4_t v) const;
+	vector4_t operator-(vector4_t v) const;
+	vector4_t operator*(T f) const;
+	vector4_t operator/(T f) const;
 
-	vector4 operator+(vector4 v) const;
-	vector4 operator-(vector4 v) const;
-	vector4 operator*(float f) const;
-	vector4 operator/(float f) const;
+	vector4_t& operator+=(vector4_t v);
+	vector4_t& operator-=(vector4_t v);
+	vector4_t& operator*=(T f);
+	vector4_t& operator/=(T f);
 
-	vector4& operator+=(vector4 v);
-	vector4& operator-=(vector4 v);
-	vector4& operator*=(float f);
-	vector4& operator/=(float f);
+	vector4_t operator-() const;
 
-	vector4 operator-() const;
-
-	bool operator==(vector4 v) const;
-	bool operator!=(vector4 v) const;
+	bool operator==(vector4_t v) const;
+	bool operator!=(vector4_t v) const;
 };
 
-float dot(vector4 lhs, vector4 rhs);
+template<typename T>
+T dot(vector4_t<T> lhs, vector4_t<T> rhs);
 
-float norm(vector4 v);
-float norm_squared(vector4 v);
-vector4& normalize(vector4& v);
-vector4& clamp(vector4& v, vector4 min, vector4 max);
-vector4& negate(vector4& v);
-float dot(vector4 lhs, vector4 rhs);
-// vector4 cross(vector4 lhs, vector4 rhs);
-vector4 lerp(vector4 begin, vector4 end, float percent);
-vector4 nlerp(vector4 begin, vector4 end, float percent);
-// vector4 slerp(vector4 begin, vector4 end, float percent);
-float distance_between(vector4 v1, vector4 v2);
-float distance_squared_between(vector4 v1, vector4 v2);
-vector4 from_to(vector4 from, vector4 to);
-// radian angle_between(vector4 lhs, vector4 rhs);
-bool nearly_equal(vector4 v1, vector4 v2, float e = epsilon);
+template<typename T>
+T norm(vector4_t<T> v);
+template<typename T>
+T norm_squared(vector4_t<T> v);
+template<typename T>
+vector4_t<T> normalize(vector4_t<T> v);
+template<typename T>
+vector4_t<T> clamp(vector4_t<T> v, vector4_t<T> min, vector4_t<T> max);
+template<typename T>
+T dot(vector4_t<T> lhs, vector4_t<T> rhs);
+// vector4_t<T> cross(vector4_t<T> lhs, vector4_t<T> rhs);
+template<typename T>
+vector4_t<T> lerp(vector4_t<T> begin, vector4_t<T> end, T percent);
+template<typename T>
+vector4_t<T> nlerp(vector4_t<T> begin, vector4_t<T> end, T percent);
+// vector4_t<T> slerp(vector4_t<T> begin, vector4_t<T> end, T percent);
+template<typename T>
+T distance_between(vector4_t<T> v1, vector4_t<T> v2);
+template<typename T>
+T distance_squared_between(vector4_t<T> v1, vector4_t<T> v2);
+template<typename T>
+vector4_t<T> from_to(vector4_t<T> from, vector4_t<T> to);
+// radian_t angle_between(vector4_t<T> lhs, vector4_t<T> rhs);
+template<typename T>
+bool nearly_equal(vector4_t<T> v1, vector4_t<T> v2, T e = epsilon);
+#pragma endregion
 
+#pragma region declaration normalized
 template<typename T>
 class normalized
 {
@@ -452,8 +596,8 @@ public:
 
 	normalized operator+(const T& v) const;
 	normalized operator-(const T& v) const;
-	T operator*(float f) const;
-	T operator/(float f) const;
+	T operator*(T f) const;
+	T operator/(T f) const;
 
 	normalized& operator+=(const T& v);
 	normalized& operator-=(const T& v);
@@ -468,623 +612,527 @@ public:
 	normalized& operator=(const T& t);
 	normalized& operator=(T&& t) noexcept;
 };
+#pragma endregion
 
-struct matrix2
+#pragma region declaration matrix2_t
+template<typename T>
+struct matrix2_t
 {
-	float
-		m00 = 0.0f, m10 = 0.0f,
-		m01 = 0.0f, m11 = 0.0f;
+	T m00, m10,
+	  m01, m11;
 
-	matrix2() = default;
-	matrix2(float m00, float m10, float m01, float m11);
-	explicit matrix2(const matrix3& m);
-	explicit matrix2(const matrix4& m);
+	template<typename U = T>
+	std::array<U, 4> to_array() const;
 
-	static matrix2 zero(void);
-	static matrix2 identity(void);
-	static matrix2 rotation(radian angle);
-	static matrix2 rotation(normalized<complex> angle);
-	matrix2& transpose();
-	matrix2 get_transposed() const;
-	float get_determinant() const;
+	static matrix2_t zero();
+	static matrix2_t identity();
+	static matrix2_t rotation(radian_t<T> angle);
+	static matrix2_t rotation(normalized<complex_t<T>> angle);
+	matrix2_t& transpose();
+	matrix2_t get_transposed() const;
+	T determinant() const;
 
-	float& at(uint8_t x, uint8_t y);
-	const float& at(uint8_t x, uint8_t y) const;
+	T& at(uint8_t x, uint8_t y);
+	const T& at(uint8_t x, uint8_t y) const;
 
-	vector2 operator*(vector2 v) const;
-	matrix2 operator*(matrix2 m) const;
+	vector2_t<T> operator*(vector2_t<T> v) const;
+	matrix2_t operator*(matrix2_t m) const;
 };
 
-struct matrix3
+template<typename T>
+matrix2_t<T> transpose(matrix2_t<T> m);
+#pragma endregion
+
+#pragma region declaration matrix3_t
+template<typename T>
+struct matrix3_t
 {
-	float
-		m00 = 0.0f, m10 = 0.0f, m20 = 0.0f,
-		m01 = 0.0f, m11 = 0.0f, m21 = 0.0f,
-		m02 = 0.0f, m12 = 0.0f, m22 = 0.0f;
+	T m00, m10, m20,
+	  m01, m11, m21,
+	  m02, m12, m22;
 
-	matrix3() = default;
-	matrix3(float m00, float m10, float m20,
-		float m01, float m11, float m21,
-		float m02, float m12, float m22);
+	template<typename U = T>
+	std::array<U, 9> to_array() const;
 
-	explicit matrix3(matrix2 m);
-	explicit matrix3(const matrix4& m);
-	explicit matrix3(const transform2d& t);
-	explicit matrix3(uniform_transform2d t);
-	explicit matrix3(unscaled_transform2d t);
-
-	static matrix3 zero();
-	static matrix3 identity();
-	static matrix3 rotation(euler_angles r);
-	static matrix3 rotation(quaternion q);
-	static matrix3 rotation_around_x(radian angle);
-	static matrix3 rotation_around_y(radian angle);
-	static matrix3 rotation_around_z(radian angle);
-	static matrix3 rotation_around_x(normalized<complex> angle);
-	static matrix3 rotation_around_y(normalized<complex> angle);
-	static matrix3 rotation_around_z(normalized<complex> angle);
-	matrix3& inverse();
-	matrix3 get_inversed() const;
-	matrix3& transpose();
-	matrix3 get_transposed() const;
-	float get_determinant() const;
+	static matrix3_t zero();
+	static matrix3_t identity();
+	static matrix3_t rotation(euler_angles_t<T> r);
+	static matrix3_t rotation(quaternion_t<T> q);
+	static matrix3_t rotation_around_x(radian_t<T> angle);
+	static matrix3_t rotation_around_y(radian_t<T> angle);
+	static matrix3_t rotation_around_z(radian_t<T> angle);
+	static matrix3_t rotation_around_x(normalized<complex_t<T>> angle);
+	static matrix3_t rotation_around_y(normalized<complex_t<T>> angle);
+	static matrix3_t rotation_around_z(normalized<complex_t<T>> angle);
+	matrix3_t inversed() const;
+	matrix3_t transposed() const;
+	T determinant() const;
 	bool is_orthogonal() const;
 
-	float& at(uint8_t x, uint8_t y);
-	const float& at(uint8_t x, uint8_t y) const;
+	T& at(uint8_t x, uint8_t y);
+	const T& at(uint8_t x, uint8_t y) const;
 
-	matrix3 operator*(float f) const;
-	vector3 operator*(vector3 v) const;
-	matrix3 operator*(const matrix3& m) const;
-	matrix4x3 operator*(const matrix4x3& m) const;
+	matrix3_t operator*(T f) const;
+	vector3_t<T> operator*(vector3_t<T> v) const;
+	matrix3_t operator*(const matrix3_t& m) const;
 };
 
-struct matrix3x4
+template<typename T>
+matrix3_t<T> inverse(matrix3_t<T> m);
+template<typename T>
+matrix3_t<T> transpose(matrix3_t<T> m);
+#pragma endregion
+
+#pragma region declaration matrix4_t
+template<typename T>
+struct matrix4_t
 {
-	float
-		m00 = 0.0f, m10 = 0.0f, m20 = 0.0f,
-		m01 = 0.0f, m11 = 0.0f, m21 = 0.0f,
-		m02 = 0.0f, m12 = 0.0f, m22 = 0.0f,
-		m03 = 0.0f, m13 = 0.0f, m23 = 0.0f;
+	T m00, m10, m20, m30,
+	  m01, m11, m21, m31,
+	  m02, m12, m22, m32,
+	  m03, m13, m23, m33;
 
-	matrix3x4() = default;
-	matrix3x4(float m00, float m10, float m20,
-		float m01, float m11, float m21,
-		float m02, float m12, float m22,
-		float m03, float m13, float m23);
+	template<typename U = T>
+	std::array<U, 16> to_array() const;
 
-	explicit matrix3x4(matrix2 m);
-	explicit matrix3x4(const matrix3& m);
-	explicit matrix3x4(const matrix4& m);
-	explicit matrix3x4(const transform3d& t);
-	explicit matrix3x4(const uniform_transform3d& t);
-	explicit matrix3x4(const unscaled_transform3d& t);
-
-	static matrix3x4 zero();
-	static matrix3x4 identity();
-	static matrix3x4 rotation(euler_angles r);
-	static matrix3x4 rotation(quaternion q);
-	static matrix3x4 rotation_around_x(radian angle);
-	static matrix3x4 rotation_around_y(radian angle);
-	static matrix3x4 rotation_around_z(radian angle);
-	static matrix3x4 rotation_around_x(normalized<complex> angle);
-	static matrix3x4 rotation_around_y(normalized<complex> angle);
-	static matrix3x4 rotation_around_z(normalized<complex> angle);
-	matrix4x3 get_transposed() const;
-
-	float& at(uint8_t x, uint8_t y);
-	const float& at(uint8_t x, uint8_t y) const;
-
-	matrix3x4 operator*(float f) const;
-	vector4 operator*(vector3 v) const;
-	matrix3x4 operator*(const matrix3& m) const;
-	matrix4 operator*(const matrix4x3& m) const;
-};
-
-struct matrix4x3
-{
-	float
-		m00 = 0.0f, m10 = 0.0f, m20 = 0.0f, m30,
-		m01 = 0.0f, m11 = 0.0f, m21 = 0.0f, m31,
-		m02 = 0.0f, m12 = 0.0f, m22 = 0.0f, m32;
-
-	matrix4x3() = default;
-	matrix4x3(float m00, float m10, float m20, float m30,
-		float m01, float m11, float m21, float m31,
-		float m02, float m12, float m22, float m32);
-
-	explicit matrix4x3(matrix2 m);
-	explicit matrix4x3(const matrix3& m);
-	explicit matrix4x3(const matrix4& m);
-	explicit matrix4x3(const transform3d& t);
-	explicit matrix4x3(const uniform_transform3d& t);
-	explicit matrix4x3(const unscaled_transform3d& t);
-
-	static matrix4x3 zero();
-	static matrix4x3 identity();
-	static matrix4x3 rotation(euler_angles r);
-	static matrix4x3 rotation(quaternion q);
-	static matrix4x3 translation(vector3 t);
-	static matrix4x3 rotation_around_x(radian angle);
-	static matrix4x3 rotation_around_y(radian angle);
-	static matrix4x3 rotation_around_z(radian angle);
-	static matrix4x3 rotation_around_x(normalized<complex> angle);
-	static matrix4x3 rotation_around_y(normalized<complex> angle);
-	static matrix4x3 rotation_around_z(normalized<complex> angle);
-	matrix3x4 get_transposed() const;
-
-	float& at(uint8_t x, uint8_t y);
-	const float& at(uint8_t x, uint8_t y) const;
-
-	matrix4x3 operator*(float f) const;
-	vector3 operator*(vector4 v) const;
-	matrix3 operator*(const matrix3x4& m) const;
-	matrix4x3 operator*(const matrix4& m) const;
-};
-
-struct matrix4
-{
-	float
-		m00 = 0.0f, m10 = 0.0f, m20 = 0.0f, m30 = 0.0f,
-		m01 = 0.0f, m11 = 0.0f, m21 = 0.0f, m31 = 0.0f,
-		m02 = 0.0f, m12 = 0.0f, m22 = 0.0f, m32 = 0.0f,
-		m03 = 0.0f, m13 = 0.0f, m23 = 0.0f, m33 = 0.0f;
-
-	matrix4() = default;
-	matrix4(float m00, float m10, float m20, float m30,
-		float m01, float m11, float m21, float m31,
-		float m02, float m12, float m22, float m32,
-		float m03, float m13, float m23, float m33);
-	explicit matrix4(matrix2 m);
-	explicit matrix4(const matrix3& m);
-	matrix4(const matrix4& m) = default;
-	explicit matrix4(const perspective& p);
-	explicit matrix4(const transform3d& t);
-	explicit matrix4(const uniform_transform3d& t);
-	explicit matrix4(const unscaled_transform3d& t);
-	explicit matrix4(const std::array<float, 16>& a);
-	explicit matrix4(const std::array<double, 16>& a);
-
-	static matrix4 zero();
-	static matrix4 identity();
-	static matrix4 rotation(euler_angles r);
-	static matrix4 rotation(quaternion q);
-	static matrix4 translation(vector3 t);
-	static matrix4 translation(float x, float y, float z);
-	static matrix4 scale(vector3 t);
-	static matrix4 look_at(vector3 from, vector3 to, vector3 up = { 0.0f, 1.0f, 0.0f });
-	static matrix4 orthographic(float left, float right, float top, float bottom, float near, float far);
-	static matrix4 rotation_around_x(radian angle);
-	static matrix4 rotation_around_y(radian angle);
-	static matrix4 rotation_around_z(radian angle);
-	static matrix4 rotation_around_x(normalized<complex> angle);
-	static matrix4 rotation_around_y(normalized<complex> angle);
-	static matrix4 rotation_around_z(normalized<complex> angle);
+	static matrix4_t zero();
+	static matrix4_t identity();
+	static matrix4_t rotation(euler_angles_t<T> r);
+	static matrix4_t rotation(quaternion_t<T> q);
+	static matrix4_t translation(vector3_t<T> t);
+	static matrix4_t translation(T x, T y, T z);
+	static matrix4_t scale(vector3_t<T> t);
+	static matrix4_t look_at(vector3_t<T> from, vector3_t<T> to, vector3_t<T> up = { T(0), T(1), T(0) });
+	static matrix4_t orthographic(T left, T right, T top, T bottom, T near, T far);
+	static matrix4_t rotation_around_x(radian_t<T> angle);
+	static matrix4_t rotation_around_y(radian_t<T> angle);
+	static matrix4_t rotation_around_z(radian_t<T> angle);
+	static matrix4_t rotation_around_x(normalized<complex_t<T>> angle);
+	static matrix4_t rotation_around_y(normalized<complex_t<T>> angle);
+	static matrix4_t rotation_around_z(normalized<complex_t<T>> angle);
 	bool is_orthogonal() const;
 	bool is_homogenous() const;
-	matrix4& inverse();
-	matrix4 get_inversed() const;
-	matrix4& transpose();
-	matrix4 get_transposed() const;
-	float get_determinant() const;
+	matrix4_t inversed() const;
+	matrix4_t transposed() const;
+	T determinant() const;
 
-	float& at(uint8_t x, uint8_t y);
-	const float& at(uint8_t x, uint8_t y) const;
+	T& at(uint8_t x, uint8_t y);
+	const T& at(uint8_t x, uint8_t y) const;
 
-	matrix4 operator*(float f) const;
-	matrix4 operator/(float f) const;
-	vector4 operator*(vector4 v) const;
-	matrix3x4 operator*(const matrix3x4& m) const;
-	matrix4 operator*(const matrix4& m) const;
-
-	operator std::array<float, 16>() const;
-	operator std::array<double, 16>() const;
+	matrix4_t operator*(T f) const;
+	matrix4_t operator/(T f) const;
+	vector4_t<T> operator*(vector4_t<T> v) const;
+	matrix4_t operator*(const matrix4_t& m) const;
 };
+#pragma endregion
 
-struct perspective
+#pragma region declaration perspective_t
+template<typename T>
+struct perspective_t
 {
 private:
-	radian m_angle = degree(90.0f);
-	float m_ratio = 1.0f;
-	float m_inv_ratio = 1.0f;
-	float m_near = 0.01f;
-	float m_far = 10000.0f;
-	float m_invTanHalfFovy = 1.0f / tan(m_angle / 2.0f);
+	radian_t<T> m_angle;
+	T m_ratio;
+	T m_inv_ratio;
+	T m_near;
+	T m_far;
+	T m_invTanHalfFovy;
 
 public:
-	perspective() = default;
-	perspective(radian angle, float ratio, float near, float far);
-	perspective(const perspective&) = default;
-	perspective(perspective&&) = default;
+	void set(radian_t<T> angle, T ratio, T near, T far);
 
-	perspective& operator=(const perspective&) = default;
-	perspective& operator=(perspective&&) = default;
+	void set_angle(radian_t<T> angle);
+	radian_t<T> get_angle() const;
 
-	void set_angle(radian angle);
-	radian get_angle() const;
+	void set_ratio(T ratio);
+	T get_ratio() const;
 
-	void set_ratio(float ratio);
-	float get_ratio() const;
+	void set_near(T near_plane_t);
+	T get_near() const;
 
-	void set_near(float near_plane);
-	float get_near() const;
+	void set_far(T far_plane_t);
+	T get_far() const;
 
-	void set_far(float far_plane);
-	float get_far() const;
+	matrix4_t<T> to_matrix4_t() const;
 
-	matrix4 to_matrix4() const;
+	friend matrix4_t<T> operator*(const matrix4_t<T>& m, const perspective_t& p);
+	friend matrix4_t<T> operator*(const perspective_t& p, const matrix4_t<T>& m);
 
-	friend matrix4 operator*(const matrix4& m, const perspective& p);
-	friend matrix4 operator*(const perspective& p, const matrix4& m);
-
-	friend matrix4 operator*(const unscaled_transform3d& t, const perspective& p);
-	friend matrix4 operator*(const perspective& p, const unscaled_transform3d& t);
+	friend matrix4_t<T> operator*(const unscaled_transform3d_t<T>& t, const perspective_t& p);
+	friend matrix4_t<T> operator*(const perspective_t& p, const unscaled_transform3d_t<T>& t);
 };
 
-matrix4 operator*(const matrix4& m, const perspective& p);
-matrix4 operator*(const perspective& p, const matrix4& m);
+template<typename T>
+matrix4_t<T> operator*(const matrix4_t<T>& m, const perspective_t<T>& p);
+template<typename T>
+matrix4_t<T> operator*(const perspective_t<T>& p, const matrix4_t<T>& m);
 
-matrix4 operator*(const unscaled_transform3d& t, const perspective& p);
-matrix4 operator*(const perspective& p, const unscaled_transform3d& t);
+template<typename T>
+matrix4_t<T> operator*(const unscaled_transform3d_t<T>& t, const perspective_t<T>& p);
+template<typename T>
+matrix4_t<T> operator*(const perspective_t<T>& p, const unscaled_transform3d_t<T>& t);
+#pragma endregion
 
-struct euler_angles
+#pragma region declaration euler_angles_t
+template<typename T>
+struct euler_angles_t
 {
-	radian x, y, z;
-
-	euler_angles() = default;
-	euler_angles(radian x, radian y, radian z);
+	radian_t<T> x, y, z;
 };
+#pragma endregion
 
-struct quaternion
+#pragma region declaration quaternion_t
+template<typename T>
+struct quaternion_t
 {
-	float x = 0.0f, y = 0.0f, z = 0.0f, w = 1.0f;
+	T x, y, z, w;
 
-	quaternion() = default;
-	quaternion(float x, float y, float z, float w);
-	quaternion(const normalized<vector3>& axis, radian angle);
+	template<typename U = T>
+	std::array<U, 4> to_array() const;
 
-	static quaternion zero();
-	static quaternion identity();
+	static quaternion_t zero();
+	static quaternion_t identity();
+	static quaternion_t from(const normalized<vector3_t<T>>& axis, radian_t<T> angle);
 
-	quaternion get_inversed() const;
-	quaternion get_conjugated() const;
-	quaternion get_normalized() const;
-	quaternion get_negated() const;
-	quaternion get_clamped(quaternion min, quaternion max) const;
+	quaternion_t inversed() const;
+	quaternion_t conjugated() const;
+	quaternion_t normalized() const;
+	quaternion_t clamped(quaternion_t min, quaternion_t max) const;
 
-	quaternion operator+(quaternion q) const;
-	quaternion operator-(quaternion q) const;
-	quaternion operator*(quaternion q) const; // TODO: implement operator* for normalized<> if result is normalized too
-	quaternion operator*(float f) const;
-	quaternion operator/(float f) const;
+	quaternion_t operator+(quaternion_t q) const;
+	quaternion_t operator-(quaternion_t q) const;
+	quaternion_t operator*(quaternion_t q) const; // TODO: implement operator* for normalized<> if result is normalized too
+	quaternion_t operator*(T f) const;
+	quaternion_t operator/(T f) const;
 
-	quaternion& operator+=(quaternion q);
-	quaternion& operator-=(quaternion q);
-	quaternion& operator*=(quaternion q);
-	quaternion& operator*=(float f);
-	quaternion& operator/=(float f);
+	quaternion_t& operator+=(quaternion_t q);
+	quaternion_t& operator-=(quaternion_t q);
+	quaternion_t& operator*=(quaternion_t q);
+	quaternion_t& operator*=(T f);
+	quaternion_t& operator/=(T f);
 
-	quaternion operator-() const;
+	quaternion_t operator-() const;
 
-	bool operator==(quaternion v) const;
-	bool operator!=(quaternion v) const;
+	bool operator==(quaternion_t v) const;
+	bool operator!=(quaternion_t v) const;
 };
 
-vector3 operator*(const normalized<quaternion>& q, vector3 v);
+template<typename T>
+vector3_t<T> operator*(const normalized<quaternion_t<T>>& q, vector3_t<T> v);
 
-float norm(quaternion q);
-float norm_squared(quaternion q);
-quaternion& normalize(quaternion& q);
-quaternion& clamp(quaternion& q, quaternion min, quaternion max);
-quaternion& negate(quaternion& q);
-quaternion& inverse(quaternion& q);
-quaternion& conjugate(quaternion& q);
-float dot(quaternion lhs, quaternion rhs);
-quaternion cross(quaternion lhs, quaternion rhs);
-quaternion lerp(quaternion begin, quaternion end, float percent);
-quaternion nlerp(quaternion begin, quaternion end, float percent);
-quaternion slerp(quaternion begin, quaternion end, float percent);
+template<typename T>
+T norm(quaternion_t<T> q);
+template<typename T>
+T norm_squared(quaternion_t<T> q);
+template<typename T>
+quaternion_t<T>& normalize(quaternion_t<T>& q);
+template<typename T>
+quaternion_t<T>& clamp(quaternion_t<T>& q, quaternion_t<T> min, quaternion_t<T> max);
+template<typename T>
+quaternion_t<T>& negate(quaternion_t<T>& q);
+template<typename T>
+quaternion_t<T>& inverse(quaternion_t<T>& q);
+template<typename T>
+quaternion_t<T>& conjugate(quaternion_t<T>& q);
+template<typename T>
+T dot(quaternion_t<T> lhs, quaternion_t<T> rhs);
+template<typename T>
+quaternion_t<T> cross(quaternion_t<T> lhs, quaternion_t<T> rhs);
+template<typename T>
+quaternion_t<T> lerp(quaternion_t<T> begin, quaternion_t<T> end, T percent);
+template<typename T>
+quaternion_t<T> nlerp(quaternion_t<T> begin, quaternion_t<T> end, T percent);
+template<typename T>
+quaternion_t<T> slerp(quaternion_t<T> begin, quaternion_t<T> end, T percent);
+#pragma endregion
 
-struct cartesian_direction2d
+#pragma region declaration cartesian_direction2d_t
+template<typename T>
+struct cartesian_direction2d_t
 {
-	float x, y;
+	T x, y;
 
-	cartesian_direction2d() = default;
-	cartesian_direction2d(float x, float y);
-	cartesian_direction2d(const normalized<vector2>& direction);
-	cartesian_direction2d(polar_direction2d direction);
-	cartesian_direction2d(radian angle);
-	cartesian_direction2d(const cartesian_direction2d&) = default;
-	cartesian_direction2d(cartesian_direction2d&&) noexcept = default;
-	~cartesian_direction2d() = default;
+	static cartesian_direction2d_t from(const normalized<vector2_t<T>>& direction);
+	static cartesian_direction2d_t from(polar_direction_t<T> direction);
+	static cartesian_direction2d_t from(radian_t<T> angle);
 
-	cartesian_direction2d& operator=(const cartesian_direction2d&) = default;
-	cartesian_direction2d& operator=(cartesian_direction2d&&) noexcept = default;
-
-	cartesian_direction2d& rotate(radian angle);
-	cartesian_direction2d get_rotated(radian angle);
+	cartesian_direction2d_t& rotate(radian_t<T> angle);
 };
+#pragma endregion
 
-struct polar_direction2d
+#pragma region declaration polar_direction_t
+template<typename T>
+struct polar_direction_t
 {
-	radian angle;
+	radian_t<T> angle;
 
-	polar_direction2d() = default;
-	polar_direction2d(float x, float y);
-	polar_direction2d(const normalized<vector2>& direction);
-	polar_direction2d(cartesian_direction2d direction);
-	polar_direction2d(radian angle);
-	polar_direction2d(const polar_direction2d&) = default;
-	polar_direction2d(polar_direction2d&&) noexcept = default;
-	~polar_direction2d() = default;
+	static polar_direction_t from(const normalized<vector2_t<T>>& direction);
+	static polar_direction_t from(cartesian_direction2d_t<T> direction);
+	static polar_direction_t from(radian_t<T> angle);
 
-	polar_direction2d& operator=(const polar_direction2d&) = default;
-	polar_direction2d& operator=(polar_direction2d&&) noexcept = default;
+	polar_direction_t& rotate(radian_t<T> angle);
 
-	polar_direction2d& rotate(radian angle);
-	polar_direction2d get_rotated(radian angle);
-
-	polar_direction2d& wrap();
-	polar_direction2d get_wrapped();
+	polar_direction_t& wrap();
 };
+#pragma endregion
 
-struct line
+#pragma region declaration line_t
+template<typename T>
+struct line_t
 {
-	float coefficient;
-	float offset;
+	T coefficient;
+	T offset;
 
-	static bool are_parallel(line l1, line l2);
+	static line_t from(vector2_t<T> v);
 };
 
-bool collides(line l1, line l2);
-bool collides(line l1, line l2, vector2& intersection);
-bool collides(line l, vector2 v);
-bool collides(vector2 v, line l);
+template<typename T>
+bool are_parallel(line_t<T> l1, line_t<T> l2);
 
-struct segment2d
+template<typename T>
+bool collides(line_t<T> l1, line_t<T> l2);
+template<typename T>
+bool collides(line_t<T> l1, line_t<T> l2, vector2_t<T>& intersection);
+#pragma endregion
+
+#pragma region declaration segment2d_t
+template<typename T>
+struct segment2d_t
 {
-	vector2 origin;
-	vector2 end;
+	vector2_t<T> origin;
+	vector2_t<T> end;
 };
 
-bool intersects(const segment2d& s0,
-                const segment2d& s1,
-                vector2& outPoint,
-                float e = epsilon);
+template<typename T>
+bool collides(const segment2d_t<T>& s0,
+              const segment2d_t<T>& s1,
+              vector2_t<T>& outPoint,
+              T e = T(epsilon));
+#pragma endregion
 
-struct plane
+#pragma region declaration plane_t
+template<typename T>
+struct plane_t
 {
-	vector3 origin;
-	normalized<vector3> normal;
+	vector3_t<T> origin;
+	normalized<vector3_t<T>> normal;
 
-	float evaluate(vector3 point) const;
-	vector3 project3d(vector3 point) const;
-	vector2 project2d(vector3 point, normalized<vector3> plane_tangent) const;
-	vector3 unproject(vector2 point, normalized<vector3> plane_tangent) const;
+	T evaluate(vector3_t<T> point) const;
+	vector3_t<T> project3d(vector3_t<T> point) const;
+	vector2_t<T> project2d(vector3_t<T> point, normalized<vector3_t<T>> plane_t_tangent) const;
+	vector3_t<T> unproject(vector2_t<T> point, normalized<vector3_t<T>> plane_t_tangent) const;
 
-	normalized<vector3> computeTangent(float e = epsilon) const;
+	normalized<vector3_t<T>> computeTangent(T e = T(epsilon)) const;
 };
+#pragma endregion
 
-struct ray2d
+#pragma region declaration ray2d_t
+template<typename T>
+struct ray2d_t
 {
-	vector2 origin;
-	normalized<vector2> direction;
+	vector2_t<T> origin;
+	normalized<vector2_t<T>> direction;
 };
+#pragma endregion
 
-struct ray3d
+#pragma region declaration ray3d_t
+template<typename T>
+struct ray3d_t
 {
-	vector3 origin;
-	normalized<vector3> direction;
+	vector3_t<T> origin;
+	normalized<vector3_t<T>> direction;
 };
+#pragma endregion
 
 //struct rect
 //{
-//	vector2 origin;
-//	vector2 dimention;
-//	complex angle;
+//	vector2_t origin;
+//	vector2_t dimention;
+//	complex_t angle;
 //};
 //
 //bool collides(const rect& r1, const rect& r2);
-//std::size_t collides(const rect& r1, const rect& r2, vector2* intersection1, vector2* insersection2);
-//bool collides(const rect& r, const line& l);
-//std::size_t collides(const rect& r, const line& l, vector2* intersection1, vector2* insersection2);
-//bool collides(const line& l, const rect& r);
-//std::size_t collides(const line& l, const rect& r, vector2* intersection1, vector2* insersection2);
-//bool collides(const rect& r, vector2 v);
-//bool collides(vector2 v, const rect& r);
+//std::size_t collides(const rect& r1, const rect& r2, vector2_t* intersection1, vector2_t* insersection2);
+//bool collides(const rect& r, const line_t& l);
+//std::size_t collides(const rect& r, const line_t& l, vector2_t* intersection1, vector2_t* insersection2);
+//bool collides(const line_t& l, const rect& r);
+//std::size_t collides(const line_t& l, const rect& r, vector2_t* intersection1, vector2_t* insersection2);
+//bool collides(const rect& r, vector2_t v);
+//bool collides(vector2_t v, const rect& r);
 
-struct aa_rect
+#pragma region declaration aa_rect_t
+template<typename T>
+struct aa_rect_t
 {
-	vector2 origin;
-	vector2 dimention;
+	vector2_t<T> origin;
+	vector2_t<T> dimention;
 
-	bool contains(vector2 v) const;
+	bool contains(vector2_t<T> v) const;
 };
 
-inline std::size_t collides(const aa_rect& r1, const aa_rect& r2, vector2* intersection1, vector2* insersection2);
-//std::size_t collides(const aa_rect& r1, const rect& r2, vector2* intersection1, vector2* insersection2);
-//std::size_t collides(const rect& r1, const aa_rect& r2, vector2* intersection1, vector2* insersection2);
-inline std::size_t collides(const aa_rect& r, const line& l, vector2* intersection1, vector2* insersection2);
-inline std::size_t collides(const line& l, const aa_rect& r, vector2* intersection1, vector2* insersection2);
-inline bool collides(const aa_rect& r, vector2 v);
-inline bool collides(vector2 v, const aa_rect& r);
+template<typename T>
+std::size_t collides(aa_rect_t<T> r1, aa_rect_t<T> r2, vector2_t<T>* intersection1, vector2_t<T>* insersection2);
+//std::size_t collides(const aa_rect_t& r1, const rect& r2, vector2_t* intersection1, vector2_t* insersection2);
+//std::size_t collides(const rect& r1, const aa_rect_t& r2, vector2_t* intersection1, vector2_t* insersection2);
+template<typename T>
+std::size_t collides(aa_rect_t<T> r, line_t<T> l, vector2_t<T>* intersection1, vector2_t<T>* insersection2);
+template<typename T>
+std::size_t collides(line_t<T> l, aa_rect_t<T> r, vector2_t<T>* intersection1, vector2_t<T>* insersection2);
+#pragma endregion
 
-struct circle
+#pragma region declaration circle_t
+template<typename T>
+struct circle_t
 {
-	vector2 origin;
-	float radius;
+	vector2_t<T> origin;
+	T radius;
 };
 
-inline std::size_t collides(const circle& c1, const circle& c2, vector2* intersection1, vector2* insersection2);
-inline std::size_t collides(const circle& c, const aa_rect& r, vector2* intersection1, vector2* insersection2);
-inline std::size_t collides(const aa_rect& r, const circle& c, vector2* intersection1, vector2* insersection2);
-//std::size_t collides(const circle& c, const rect& r, vector2* intersection1, vector2* insersection2);
-//std::size_t collides(const rect& r, const circle& c, vector2* intersection1, vector2* insersection2);
-inline std::size_t collides(const circle& c, const line& l, vector2* intersection1, vector2* insersection2);
-inline std::size_t collides(const line& l, const circle& c, vector2* intersection1, vector2* insersection2);
-inline bool collides(const circle& c, vector2 v);
-inline bool collides(vector2 v, const circle& c);
+template<typename T>
+std::size_t collides(circle_t<T> c1, circle_t<T> c2, vector2_t<T>* intersection1, vector2_t<T>* insersection2);
+template<typename T>
+std::size_t collides(circle_t<T> c, aa_rect_t<T> r, vector2_t<T>* intersection1, vector2_t<T>* insersection2);
+template<typename T>
+std::size_t collides(aa_rect_t<T> r, circle_t<T> c, vector2_t<T>* intersection1, vector2_t<T>* insersection2);
+template<typename T>
+std::size_t collides(circle_t<T> c, line_t<T> l, vector2_t<T>* intersection1, vector2_t<T>* insersection2);
+template<typename T>
+std::size_t collides(line_t<T> l, circle_t<T> c, vector2_t<T>* intersection1, vector2_t<T>* insersection2);
 
-//struct ellipse
-//{
-//	vector2 origin;
-//	float semi_minor = 1.0f;
-//	float semi_major = 1.0f;
-//	complex angle;
-//};
-//
-//inline std::size_t collides(const ellipse& e1, const ellipse& e2, vector2* intersection1, vector2* insersection2);
-//inline std::size_t collides(const ellipse& e, const circle& c, vector2* intersection1, vector2* insersection2);
-//inline std::size_t collides(const circle& c, const ellipse& e, vector2* intersection1, vector2* insersection2);
-//inline std::size_t collides(const ellipse& e, const aa_rect& r, vector2* intersection1, vector2* insersection2);
-//inline std::size_t collides(const aa_rect& r, const ellipse& e, vector2* intersection1, vector2* insersection2);
-//inline std::size_t collides(const ellipse& e, const rect& r, vector2* intersection1, vector2* insersection2);
-//inline std::size_t collides(const rect& r, const ellipse& e, vector2* intersection1, vector2* insersection2);
-//inline std::size_t collides(const ellipse& e, const line& l, vector2* intersection1, vector2* insersection2);
-//inline std::size_t collides(const line& l, const ellipse& e, vector2* intersection1, vector2* insersection2);
-//inline bool collides(const ellipse& e, vector2 v);
-//inline bool collides(vector2 v, const ellipse& e);
-//
-//struct aa_ellipse
-//{
-//	vector2 origin;
-//	float semi_minor = 1.0f;
-//	float semi_major = 1.0f;
-//};
-//
-//inline std::size_t collides(const aa_ellipse& e1, const aa_ellipse& e2, vector2* intersection1, vector2* insersection2);
-//inline std::size_t collides(const aa_ellipse& e1, const ellipse& e2, vector2* intersection1, vector2* insersection2);
-//inline std::size_t collides(const ellipse& e1, const aa_ellipse& e2, vector2* intersection1, vector2* insersection2);
-//inline std::size_t collides(const aa_ellipse& e, const circle& c, vector2* intersection1, vector2* insersection2);
-//inline std::size_t collides(const circle& c, const aa_ellipse& e, vector2* intersection1, vector2* insersection2);
-//inline std::size_t collides(const aa_ellipse& e, const aa_rect& r, vector2* intersection1, vector2* insersection2);
-//inline std::size_t collides(const aa_rect& r, const aa_ellipse& e, vector2* intersection1, vector2* insersection2);
-//inline std::size_t collides(const aa_ellipse& e, const rect& r, vector2* intersection1, vector2* insersection2);
-//inline std::size_t collides(const rect& r, const aa_ellipse& e, vector2* intersection1, vector2* insersection2);
-//inline std::size_t collides(const aa_ellipse& e, const line& l, vector2* intersection1, vector2* insersection2);
-//inline std::size_t collides(const line& l, const aa_ellipse& e, vector2* intersection1, vector2* insersection2);
-//inline bool collides(const aa_ellipse& e, vector2 v);
-//inline bool collides(vector2 v, const aa_ellipse& e);
+template<typename T>
+bool collides(ray3d_t<T> r, plane_t<T> p);
+template<typename T>
+bool collides(ray3d_t<T> r, plane_t<T> p, vector3_t<T>& intersection);
+template<typename T>
+bool collides(plane_t<T> p, ray3d_t<T> r);
+template<typename T>
+bool collides(plane_t<T> p, ray3d_t<T> r, vector3_t<T>& intersection);
+template<typename T>
+bool collides_bidirectional(plane_t<T> p, ray3d_t<T> r, vector3_t<T>& intersection);
+#pragma endregion
 
-inline bool collides(const ray3d& r, const plane& p);
-inline bool collides(const ray3d& r, const plane& p, vector3& intersection);
-inline bool collides(const plane& p, const ray3d& r);
-inline bool collides(const plane& p, const ray3d& r, vector3& intersection);
-inline bool collides_bidirectional(const plane& p, const ray3d& r, vector3& intersection);
-
-struct aabb
+#pragma region declaration aabb_t
+template<typename T>
+struct aabb_t
 {
-	vector3 min;
-	vector3 max;
+	vector3_t<T> min;
+	vector3_t<T> max;
 
-	bool contains(vector3 p) const;
-	vector3 get_center() const;
+	bool contains(vector3_t<T> p) const;
+	vector3_t<T> get_center() const;
 
-	aabb operator+(aabb rhs) const;
+	aabb_t operator+(aabb_t rhs) const;
 };
 
-inline bool collides(aabb b, ray3d r);
-inline bool collides(const aabb& b1, const aabb& b2);
+template<typename T>
+bool collides(aabb_t<T> b, ray3d_t<T> r);
+template<typename T>
+bool collides(aabb_t<T> b1, aabb_t<T> b2);
+#pragma endregion
 
-struct transform2d
+#pragma region declaration transform2d_t
+template<typename T>
+struct transform2d_t
 {
-	vector2 position;
-	normalized<complex> rotation;
-	vector2 scale = {1.0f, 1.0f};
+	vector2_t<T> position;
+	normalized<complex_t<T>> rotation;
+	vector2_t<T> scale;
 
-	transform2d() = default;
-	transform2d(vector2 position, normalized<complex> rotation, vector2 scale);
-
-	transform2d operator*(const transform2d& t) const;
-	vector2 operator*(vector2 v) const;
+	transform2d_t operator*(const transform2d_t& t) const;
+	vector2_t<T> operator*(vector2_t<T> v) const;
 };
+#pragma endregion
 
-struct transform3d
+#pragma region declaration transform3d_t
+template<typename T>
+struct transform3d_t
 {
-	vector3 position;
-	quaternion rotation;
-	vector3 scale = {1.0f, 1.0f, 1.0f};
+	vector3_t<T> position;
+	quaternion_t<T> rotation;
+	vector3_t<T> scale;
 
-	transform3d() = default;
-	transform3d(vector3 position, quaternion rotation, vector3 scale);
-
-	transform3d operator*(const transform3d& t) const;
-	vector3 operator*(vector3 v) const;
-	quaternion operator*(quaternion q) const;
+	transform3d_t operator*(const transform3d_t& t) const;
+	vector3_t<T> operator*(vector3_t<T> v) const;
+	quaternion_t<T> operator*(quaternion_t<T> q) const;
 };
+#pragma endregion
 
-struct uniform_transform2d
+#pragma region declaration uniform_transform2d_t
+template<typename T>
+struct uniform_transform2d_t
 {
-	vector2 position;
-	radian rotation;
-	float scale = 1.0f;
+	vector2_t<T> position;
+	radian_t<T> rotation;
+	T scale;
 
-	uniform_transform2d() = default;
-	uniform_transform2d(vector2 position, radian rotation, float scale);
-
-	uniform_transform2d operator*(uniform_transform2d t) const;
-	vector2 operator*(vector2 v) const;
+	uniform_transform2d_t operator*(uniform_transform2d_t t) const;
+	vector2_t<T> operator*(vector2_t<T> v) const;
 };
+#pragma endregion
 
-struct uniform_transform3d
+#pragma region declaration uniform_transform3d_t
+template<typename T>
+struct uniform_transform3d_t
 {
-	vector3 position;
-	quaternion rotation;
-	float scale = 1.0f;
+	vector3_t<T> position;
+	quaternion_t<T> rotation;
+	T scale;
 
-	uniform_transform3d() = default;
-	uniform_transform3d(vector3 position, quaternion rotation, float scale);
-
-	uniform_transform3d operator*(const uniform_transform3d& t) const;
-	vector3 operator*(vector3 v) const;
-	quaternion operator*(quaternion q) const;
+	uniform_transform3d_t operator*(const uniform_transform3d_t& t) const;
+	vector3_t<T> operator*(vector3_t<T> v) const;
+	quaternion_t<T> operator*(quaternion_t<T> q) const;
 };
+#pragma endregion
 
-struct unscaled_transform2d
+#pragma region declaration unscaled_transform2d_t
+template<typename T>
+struct unscaled_transform2d_t
 {
-	vector2 position;
-	radian rotation;
+	vector2_t<T> position;
+	radian_t<T> rotation;
 
-	unscaled_transform2d() = default;
-	unscaled_transform2d(vector2 position, radian rotation);
-
-	unscaled_transform2d operator*(unscaled_transform2d t) const;
-	vector2 operator*(vector2 v) const;
+	unscaled_transform2d_t operator*(unscaled_transform2d_t t) const;
+	vector2_t<T> operator*(vector2_t<T> v) const;
 };
+#pragma endregion
 
-struct unscaled_transform3d
+#pragma region declaration unscaled_transform3d_t
+template<typename T>
+struct unscaled_transform3d_t
 {
-	vector3 position;
-	quaternion rotation;
+	vector3_t<T> position;
+	quaternion_t<T> rotation;
 
-	unscaled_transform3d() = default;
-	unscaled_transform3d(vector3 position, quaternion rotation);
+	unscaled_transform3d_t& translate_absolute(vector3_t<T> t);
+	unscaled_transform3d_t& translate_relative(vector3_t<T> t);
+	unscaled_transform3d_t& rotate(quaternion_t<T> r);
 
-	unscaled_transform3d& translate_absolute(vector3 t);
-	unscaled_transform3d& translate_relative(vector3 t);
-	unscaled_transform3d& rotate(quaternion r);
+	matrix4_t<T> to_matrix() const;
 
-	unscaled_transform3d& inverse();
-	unscaled_transform3d get_inversed() const;
-
-	matrix4 to_matrix() const;
-
-	unscaled_transform3d operator*(const unscaled_transform3d& t) const;
-	vector3 operator*(vector3 v) const;
-	quaternion operator*(quaternion q) const;
+	unscaled_transform3d_t operator*(const unscaled_transform3d_t& t) const;
+	vector3_t<T> operator*(vector3_t<T> v) const;
+	quaternion_t<T> operator*(quaternion_t<T> q) const;
 };
+#pragma endregion
 
-constexpr float lerp(float begin, float end, float percent)
+#pragma region definition misc
+template<typename T>
+unscaled_transform3d_t<T> inverse(unscaled_transform3d_t<T> tr);
+
+template<typename T>
+constexpr T lerp(T begin, T end, T percent)
 {
 	return (end - begin) * percent + begin;
 }
 
-constexpr float clamp(float f, float min, float max)
+template<typename T>
+constexpr T clamp(T f, T min, T max)
 {
 	return std::min(std::max(f, min), max);
 }
 
-inline bool nearly_equal(float f1, float f2, float e)
+template<typename T>
+bool nearly_equal(T f1, T f2, T e)
 {
 	return std::abs(f1 - f2) < e;
 }
@@ -1099,31 +1147,28 @@ constexpr int signnum(T val)
 {
     return (T(0) < val) - (val < T(0));
 }
+#pragma endregion
 
-inline complex::complex(float real, float imaginary) : r(real), i(imaginary) {}
-inline complex::complex(radian angle) : r(cos(angle)), i(sin(angle)) {}
-
-inline complex complex::get_normalized() const
+#pragma region definition complex_t
+template<typename T>
+complex_t<T> complex_t<T>::from(radian_t<T> angle)
 {
-	complex res = *this;
-	normalize(res);
-	return res;
-}
-inline complex complex::get_conjugated() const
-{
-	complex res = *this;
-	conjugate(res);
-	return res;
+	complex_t<T> c;
+	c.r = cos(angle);
+	c.i = sin(angle);
+	return c;
 }
 
-inline complex complex::operator+(complex c) const
+template<typename T>
+complex_t<T> complex_t<T>::operator+(complex_t<T> c) const
 {
 	return {
 		r + c.r,
 		i + c.i
 	};
 }
-inline complex complex::operator-(complex c) const
+template<typename T>
+complex_t<T> complex_t<T>::operator-(complex_t<T> c) const
 {
 	return {
 		r - c.r,
@@ -1131,28 +1176,37 @@ inline complex complex::operator-(complex c) const
 	};
 }
 
-inline complex& complex::operator+=(complex c) { return *this = *this + c; }
-inline complex& complex::operator-=(complex c) { return *this = *this - c; }
-inline complex& complex::operator*=(complex c) { return *this = *this * c; }
+template<typename T>
+complex_t<T>& complex_t<T>::operator+=(complex_t<T> c) { return *this = *this + c; }
+template<typename T>
+complex_t<T>& complex_t<T>::operator-=(complex_t<T> c) { return *this = *this - c; }
+template<typename T>
+complex_t<T>& complex_t<T>::operator*=(complex_t<T> c) { return *this = *this * c; }
 
-inline complex operator*(complex c1, complex c2)
+template<typename T>
+complex_t<T> operator*(complex_t<T> c1, complex_t<T> c2)
 {
 	return {
 		c1.r * c2.r - c1.i * c2.i,
 		c1.r * c2.i + c1.i * c2.r
 	};
 }
-inline complex operator*(complex c, float f) { return {c.r * f, c.i * f}; }
-inline complex operator*(normalized<complex> c1, complex c2) { return *c1 * c2; }
-inline complex operator*(complex c1, normalized<complex> c2) { return c1 * *c2; }
-inline normalized<complex> operator*(normalized<complex> c1, normalized<complex> c2)
+template<typename T>
+complex_t<T> operator*(complex_t<T> c, T f) { return {c.r * f, c.i * f}; }
+template<typename T>
+complex_t<T> operator*(normalized<complex_t<T>> c1, complex_t<T> c2) { return *c1 * c2; }
+template<typename T>
+complex_t<T> operator*(complex_t<T> c1, normalized<complex_t<T>> c2) { return c1 * *c2; }
+template<typename T>
+normalized<complex_t<T>> operator*(normalized<complex_t<T>> c1, normalized<complex_t<T>> c2)
 {
-	return normalized<complex>::already_normalized(complex(
+	return normalized<complex_t<T>>::already_normalized(complex_t<T>{
 		c1->r * c2->r - c1->i * c2->i,
 		c1->r * c2->i + c1->i * c2->r
-	));
+	});
 }
-inline vector2 operator*(normalized<complex> c, vector2 v)
+template<typename T>
+vector2_t<T> operator*(normalized<complex_t<T>> c, vector2_t<T> v)
 {
 	return {
 		c->r * v.x - c->i * v.y,
@@ -1160,312 +1214,406 @@ inline vector2 operator*(normalized<complex> c, vector2 v)
 	};
 }
 
-inline float norm(complex c) { return std::sqrtf(norm_squared(c)); }
-inline float norm_squared(complex c) { return c.r * c.r + c.i * c.i; }
-inline complex& normalize(complex& c)
+template<typename T>
+T norm(complex_t<T> c) { return std::sqrt(norm_squared(c)); }
+template<typename T>
+T norm_squared(complex_t<T> c) { return c.r * c.r + c.i * c.i; }
+template<typename T>
+complex_t<T> normalize(complex_t<T> c)
 {
-	float n = norm(c);
+	T n = norm(c);
 	c.r /= n;
 	c.i /= n;
 	return c;
 }
-inline complex& conjugate(complex& c) { c.i = -c.i; return c; }
+template<typename T>
+complex_t<T> conjugate(complex_t<T> c) { c.i = -c.i; return c; }
+#pragma endregion
 
-inline radian::radian(float f) : angle(f) {}
-inline radian::radian(const radian& r) : angle(r.angle) {}
-inline radian::radian(degree d) : angle(d.angle * deg_to_rad) {}
+#pragma region definition radian_t
+template<typename T>
+radian_t<T>::radian_t(T f) : angle(f) {}
+template<typename T>
+radian_t<T>::radian_t(degree_t<T> d) : angle(d.angle * T(deg_to_rad)) {}
 
-inline radian::operator float() const { return angle; }
+template<typename T>
+radian_t<T>::operator T() const { return angle; }
 
-inline radian& radian::operator+=(float f) { angle += f; return *this; }
-inline radian& radian::operator+=(radian r) { angle += r.angle; return *this; }
-inline radian& radian::operator-=(float f) { angle -= f; return *this; }
-inline radian& radian::operator-=(radian r) { angle -= r.angle; return *this; }
-inline radian& radian::operator*=(float f) { angle *= f; return *this; }
-inline radian& radian::operator*=(radian r) { angle *= r.angle; return *this; }
-inline radian& radian::operator/=(float f) { angle /= f; return *this; }
-inline radian& radian::operator/=(radian r) { angle /= r.angle; return *this; }
+template<typename T>
+radian_t<T>& radian_t<T>::operator+=(T f) { angle += f; return *this; }
+template<typename T>
+radian_t<T>& radian_t<T>::operator+=(radian_t<T> r) { angle += r.angle; return *this; }
+template<typename T>
+radian_t<T>& radian_t<T>::operator-=(T f) { angle -= f; return *this; }
+template<typename T>
+radian_t<T>& radian_t<T>::operator-=(radian_t<T> r) { angle -= r.angle; return *this; }
+template<typename T>
+radian_t<T>& radian_t<T>::operator*=(T f) { angle *= f; return *this; }
+template<typename T>
+radian_t<T>& radian_t<T>::operator*=(radian_t<T> r) { angle *= r.angle; return *this; }
+template<typename T>
+radian_t<T>& radian_t<T>::operator/=(T f) { angle /= f; return *this; }
+template<typename T>
+radian_t<T>& radian_t<T>::operator/=(radian_t<T> r) { angle /= r.angle; return *this; }
 
-inline radian radian::operator-() const { return radian(-angle); }
+template<typename T>
+radian_t<T> radian_t<T>::operator-() const { return radian_t<T>{ -angle }; }
 
-inline radian& radian::operator=(radian r) { angle = r.angle; return *this; }
-inline radian& radian::operator=(degree d) { angle = d.angle * deg_to_rad; return *this; }
+template<typename T>
+radian_t<T>& radian_t<T>::operator=(degree_t<T> d) { angle = d.angle * T(deg_to_rad); return *this; }
 
-inline radian operator+(radian r1, radian r2) { return radian(r1.angle + r2.angle); }
-inline radian operator-(radian r1, radian r2) { return radian(r1.angle - r2.angle); }
-inline radian operator*(radian r1, radian r2) { return radian(r1.angle * r2.angle); }
-inline radian operator/(radian r1, radian r2) { return radian(r1.angle / r2.angle); }
-inline radian operator*(radian r, float f) { return radian(r.angle * f); }
-inline radian operator/(radian r, float f) { return radian(r.angle / f); }
-inline radian operator*(float f, radian r) { return radian(f * r.angle); }
-inline radian operator/(float f, radian r) { return radian(f / r.angle); }
-inline bool operator<(float lhs, radian rhs) { return float(lhs) < float(rhs); }
-inline bool operator>(float lhs, radian rhs) { return float(lhs) > float(rhs); }
-inline bool operator==(float lhs, radian rhs) { return float(lhs) == float(rhs); }
-inline bool operator!=(float lhs, radian rhs) { return float(lhs) != float(rhs); }
-inline bool operator>=(float lhs, radian rhs) { return float(lhs) >= float(rhs); }
-inline bool operator<=(float lhs, radian rhs) { return float(lhs) <= float(rhs); }
-inline bool operator<(radian lhs, float rhs) { return float(lhs) < float(rhs); }
-inline bool operator>(radian lhs, float rhs) { return float(lhs) > float(rhs); }
-inline bool operator==(radian lhs, float rhs) { return float(lhs) == float(rhs); }
-inline bool operator!=(radian lhs, float rhs) { return float(lhs) != float(rhs); }
-inline bool operator>=(radian lhs, float rhs) { return float(lhs) >= float(rhs); }
-inline bool operator<=(radian lhs, float rhs) { return float(lhs) <= float(rhs); }
-inline bool operator<(radian lhs, radian rhs) { return float(lhs) < float(rhs); }
-inline bool operator>(radian lhs, radian rhs) { return float(lhs) > float(rhs); }
-inline bool operator==(radian lhs, radian rhs) { return float(lhs) == float(rhs); }
-inline bool operator!=(radian lhs, radian rhs) { return float(lhs) != float(rhs); }
-inline bool operator>=(radian lhs, radian rhs) { return float(lhs) >= float(rhs); }
-inline bool operator<=(radian lhs, radian rhs) { return float(lhs) <= float(rhs); }
+template<typename T>
+radian_t<T> operator+(radian_t<T> r1, radian_t<T> r2) { return radian_t<T>{ r1.angle + r2.angle }; }
+template<typename T>
+radian_t<T> operator-(radian_t<T> r1, radian_t<T> r2) { return radian_t<T>{ r1.angle - r2.angle }; }
+template<typename T>
+radian_t<T> operator*(radian_t<T> r1, radian_t<T> r2) { return radian_t<T>{ r1.angle * r2.angle }; }
+template<typename T>
+radian_t<T> operator/(radian_t<T> r1, radian_t<T> r2) { return radian_t<T>{ r1.angle / r2.angle }; }
+template<typename T>
+radian_t<T> operator*(radian_t<T> r, T f) { return radian_t<T>{ r.angle * f }; }
+template<typename T>
+radian_t<T> operator/(radian_t<T> r, T f) { return radian_t<T>{ r.angle / f }; }
+template<typename T>
+radian_t<T> operator*(T f, radian_t<T> r) { return radian_t<T>{ f * r.angle }; }
+template<typename T>
+radian_t<T> operator/(T f, radian_t<T> r) { return radian_t<T>{ f / r.angle }; }
+template<typename T>
+bool operator<(T lhs, radian_t<T> rhs) { return T(lhs) < T(rhs); }
+template<typename T>
+bool operator>(T lhs, radian_t<T> rhs) { return T(lhs) > T(rhs); }
+template<typename T>
+bool operator==(T lhs, radian_t<T> rhs) { return T(lhs) == T(rhs); }
+template<typename T>
+bool operator!=(T lhs, radian_t<T> rhs) { return T(lhs) != T(rhs); }
+template<typename T>
+bool operator>=(T lhs, radian_t<T> rhs) { return T(lhs) >= T(rhs); }
+template<typename T>
+bool operator<=(T lhs, radian_t<T> rhs) { return T(lhs) <= T(rhs); }
+template<typename T>
+bool operator<(radian_t<T> lhs, T rhs) { return T(lhs) < T(rhs); }
+template<typename T>
+bool operator>(radian_t<T> lhs, T rhs) { return T(lhs) > T(rhs); }
+template<typename T>
+bool operator==(radian_t<T> lhs, T rhs) { return T(lhs) == T(rhs); }
+template<typename T>
+bool operator!=(radian_t<T> lhs, T rhs) { return T(lhs) != T(rhs); }
+template<typename T>
+bool operator>=(radian_t<T> lhs, T rhs) { return T(lhs) >= T(rhs); }
+template<typename T>
+bool operator<=(radian_t<T> lhs, T rhs) { return T(lhs) <= T(rhs); }
+template<typename T>
+bool operator<(radian_t<T> lhs, radian_t<T> rhs) { return T(lhs) < T(rhs); }
+template<typename T>
+bool operator>(radian_t<T> lhs, radian_t<T> rhs) { return T(lhs) > T(rhs); }
+template<typename T>
+bool operator==(radian_t<T> lhs, radian_t<T> rhs) { return T(lhs) == T(rhs); }
+template<typename T>
+bool operator!=(radian_t<T> lhs, radian_t<T> rhs) { return T(lhs) != T(rhs); }
+template<typename T>
+bool operator>=(radian_t<T> lhs, radian_t<T> rhs) { return T(lhs) >= T(rhs); }
+template<typename T>
+bool operator<=(radian_t<T> lhs, radian_t<T> rhs) { return T(lhs) <= T(rhs); }
 
-inline float sin(radian r) { return std::sinf(r.angle); }
-inline float cos(radian r) { return std::cosf(r.angle); }
-inline float tan(radian r) { return std::tanf(r.angle); }
-inline float asin(radian r) { return std::asinf(r.angle); }
-inline float acos(radian r) { return std::acosf(r.angle); }
-inline float atan(radian r) { return std::atanf(r.angle); }
-inline float sinh(radian r) { return std::sinhf(r.angle); }
-inline float cosh(radian r) { return std::coshf(r.angle); }
-inline float tanh(radian r) { return std::tanhf(r.angle); }
-inline float asinh(radian r) { return std::asinhf(r.angle); }
-inline float acosh(radian r) { return std::acoshf(r.angle); }
-inline float atanh(radian r) { return std::atanhf(r.angle); }
+template<typename T>
+T sin(radian_t<T> r) { return std::sin(r.angle); }
+template<typename T>
+T cos(radian_t<T> r) { return std::cos(r.angle); }
+template<typename T>
+T tan(radian_t<T> r) { return std::tan(r.angle); }
+template<typename T>
+T asin(radian_t<T> r) { return std::asin(r.angle); }
+template<typename T>
+T acos(radian_t<T> r) { return std::acos(r.angle); }
+template<typename T>
+T atan(radian_t<T> r) { return std::atan(r.angle); }
+template<typename T>
+T sinh(radian_t<T> r) { return std::sinh(r.angle); }
+template<typename T>
+T cosh(radian_t<T> r) { return std::cosh(r.angle); }
+template<typename T>
+T tanh(radian_t<T> r) { return std::tanh(r.angle); }
+template<typename T>
+T asinh(radian_t<T> r) { return std::asinh(r.angle); }
+template<typename T>
+T acosh(radian_t<T> r) { return std::acosh(r.angle); }
+template<typename T>
+T atanh(radian_t<T> r) { return std::atanh(r.angle); }
+#pragma endregion
 
-inline degree::degree(float f) : angle(f) {}
-inline degree::degree(const degree& d) : angle(d.angle) {}
-inline degree::degree(radian r) : angle(r.angle * rad_to_deg) {}
+#pragma region definition degree_t
+template<typename T>
+degree_t<T>::degree_t(T f) : angle(f) {}
+template<typename T>
+degree_t<T>::degree_t(radian_t<T> r) : angle(r.angle * T(rad_to_deg)) {}
 
-inline degree::operator float() const { return angle; }
+template<typename T>
+degree_t<T>::operator T() const { return angle; }
 
-inline degree& degree::operator+=(float f) { angle += f; return *this; }
-inline degree& degree::operator+=(degree d) { angle += d.angle; return *this; }
-inline degree& degree::operator-=(float f) { angle -= f; return *this; }
-inline degree& degree::operator-=(degree d) { angle -= d.angle; return *this; }
-inline degree& degree::operator*=(float f) { angle *= f; return *this; }
-inline degree& degree::operator*=(degree d) { angle *= d.angle; return *this; }
-inline degree& degree::operator/=(float f) { angle /= f; return *this; }
-inline degree& degree::operator/=(degree d) { angle /= d.angle; return *this; }
+template<typename T>
+degree_t<T>& degree_t<T>::operator+=(T f) { angle += f; return *this; }
+template<typename T>
+degree_t<T>& degree_t<T>::operator+=(degree_t d) { angle += d.angle; return *this; }
+template<typename T>
+degree_t<T>& degree_t<T>::operator-=(T f) { angle -= f; return *this; }
+template<typename T>
+degree_t<T>& degree_t<T>::operator-=(degree_t d) { angle -= d.angle; return *this; }
+template<typename T>
+degree_t<T>& degree_t<T>::operator*=(T f) { angle *= f; return *this; }
+template<typename T>
+degree_t<T>& degree_t<T>::operator*=(degree_t d) { angle *= d.angle; return *this; }
+template<typename T>
+degree_t<T>& degree_t<T>::operator/=(T f) { angle /= f; return *this; }
+template<typename T>
+degree_t<T>& degree_t<T>::operator/=(degree_t d) { angle /= d.angle; return *this; }
 
-inline degree degree::operator-() const { return radian(-angle); }
+template<typename T>
+degree_t<T> degree_t<T>::operator-() const { return radian_t(-angle); }
 
-inline degree& degree::operator=(degree d) { angle = d.angle; return *this; }
-inline degree& degree::operator=(radian r) { angle = r.angle * rad_to_deg; return *this; }
+template<typename T>
+degree_t<T> operator+(degree_t<T> d1, degree_t<T> d2) { return degree_t<T>{ d1.angle + d2.angle }; }
+template<typename T>
+degree_t<T> operator-(degree_t<T> d1, degree_t<T> d2) { return degree_t<T>{ d1.angle - d2.angle }; }
+template<typename T>
+degree_t<T> operator*(degree_t<T> d1, degree_t<T> d2) { return degree_t<T>{ d1.angle * d2.angle }; }
+template<typename T>
+degree_t<T> operator/(degree_t<T> d1, degree_t<T> d2) { return degree_t<T>{ d1.angle / d2.angle }; }
+template<typename T>
+degree_t<T> operator*(degree_t<T> d, T f) { return degree_t<T>{ d.angle * f }; }
+template<typename T>
+degree_t<T> operator/(degree_t<T> d, T f) { return degree_t<T>{ d.angle / f }; }
+template<typename T>
+degree_t<T> operator*(T f, degree_t<T> d) { return degree_t<T>{ f * d.angle }; }
+template<typename T>
+degree_t<T> operator/(T f, degree_t<T> d) { return degree_t<T>{ f / d.angle }; }
+template<typename T>
+bool operator<(T lhs, degree_t<T> rhs) { return T(lhs) < T(rhs); }
+template<typename T>
+bool operator>(T lhs, degree_t<T> rhs) { return T(lhs) > T(rhs); }
+template<typename T>
+bool operator==(T lhs, degree_t<T> rhs) { return T(lhs) == T(rhs); }
+template<typename T>
+bool operator!=(T lhs, degree_t<T> rhs) { return T(lhs) != T(rhs); }
+template<typename T>
+bool operator>=(T lhs, degree_t<T> rhs) { return T(lhs) >= T(rhs); }
+template<typename T>
+bool operator<=(T lhs, degree_t<T> rhs) { return T(lhs) <= T(rhs); }
+template<typename T>
+bool operator<(degree_t<T> lhs, T rhs) { return T(lhs) < T(rhs); }
+template<typename T>
+bool operator>(degree_t<T> lhs, T rhs) { return T(lhs) > T(rhs); }
+template<typename T>
+bool operator==(degree_t<T> lhs, T rhs) { return T(lhs) == T(rhs); }
+template<typename T>
+bool operator!=(degree_t<T> lhs, T rhs) { return T(lhs) != T(rhs); }
+template<typename T>
+bool operator>=(degree_t<T> lhs, T rhs) { return T(lhs) >= T(rhs); }
+template<typename T>
+bool operator<=(degree_t<T> lhs, T rhs) { return T(lhs) <= T(rhs); }
+template<typename T>
+bool operator<(degree_t<T> lhs, degree_t<T> rhs) { return T(lhs) < T(rhs); }
+template<typename T>
+bool operator>(degree_t<T> lhs, degree_t<T> rhs) { return T(lhs) > T(rhs); }
+template<typename T>
+bool operator==(degree_t<T> lhs, degree_t<T> rhs) { return T(lhs) == T(rhs); }
+template<typename T>
+bool operator!=(degree_t<T> lhs, degree_t<T> rhs) { return T(lhs) != T(rhs); }
+template<typename T>
+bool operator>=(degree_t<T> lhs, degree_t<T> rhs) { return T(lhs) >= T(rhs); }
+template<typename T>
+bool operator<=(degree_t<T> lhs, degree_t<T> rhs) { return T(lhs) <= T(rhs); }
 
-inline degree operator+(degree d1, degree d2) { return degree(d1.angle + d2.angle); }
-inline degree operator-(degree d1, degree d2) { return degree(d1.angle - d2.angle); }
-inline degree operator*(degree d1, degree d2) { return degree(d1.angle * d2.angle); }
-inline degree operator/(degree d1, degree d2) { return degree(d1.angle / d2.angle); }
-inline degree operator*(degree d, float f) { return degree(d.angle * f); }
-inline degree operator/(degree d, float f) { return degree(d.angle / f); }
-inline degree operator*(float f, degree d) { return degree(f * d.angle); }
-inline degree operator/(float f, degree d) { return degree(f / d.angle); }
-inline bool operator<(float lhs, degree rhs) { return float(lhs) < float(rhs); }
-inline bool operator>(float lhs, degree rhs) { return float(lhs) > float(rhs); }
-inline bool operator==(float lhs, degree rhs) { return float(lhs) == float(rhs); }
-inline bool operator!=(float lhs, degree rhs) { return float(lhs) != float(rhs); }
-inline bool operator>=(float lhs, degree rhs) { return float(lhs) >= float(rhs); }
-inline bool operator<=(float lhs, degree rhs) { return float(lhs) <= float(rhs); }
-inline bool operator<(degree lhs, float rhs) { return float(lhs) < float(rhs); }
-inline bool operator>(degree lhs, float rhs) { return float(lhs) > float(rhs); }
-inline bool operator==(degree lhs, float rhs) { return float(lhs) == float(rhs); }
-inline bool operator!=(degree lhs, float rhs) { return float(lhs) != float(rhs); }
-inline bool operator>=(degree lhs, float rhs) { return float(lhs) >= float(rhs); }
-inline bool operator<=(degree lhs, float rhs) { return float(lhs) <= float(rhs); }
-inline bool operator<(degree lhs, degree rhs) { return float(lhs) < float(rhs); }
-inline bool operator>(degree lhs, degree rhs) { return float(lhs) > float(rhs); }
-inline bool operator==(degree lhs, degree rhs) { return float(lhs) == float(rhs); }
-inline bool operator!=(degree lhs, degree rhs) { return float(lhs) != float(rhs); }
-inline bool operator>=(degree lhs, degree rhs) { return float(lhs) >= float(rhs); }
-inline bool operator<=(degree lhs, degree rhs) { return float(lhs) <= float(rhs); }
+template<typename T>
+T sin(degree_t<T> d) { return sin(radian_t<T>::from(d)); }
+template<typename T>
+T cos(degree_t<T> d) { return cos(radian_t<T>::from(d)); }
+template<typename T>
+T tan(degree_t<T> d) { return tan(radian_t<T>::from(d)); }
+template<typename T>
+T asin(degree_t<T> d) { return asin(radian_t<T>::from(d)); }
+template<typename T>
+T acos(degree_t<T> d) { return acos(radian_t<T>::from(d)); }
+template<typename T>
+T atan(degree_t<T> d) { return atan(radian_t<T>::from(d)); }
+template<typename T>
+T sinh(degree_t<T> d) { return sinh(radian_t<T>::from(d)); }
+template<typename T>
+T cosh(degree_t<T> d) { return cosh(radian_t<T>::from(d)); }
+template<typename T>
+T tanh(degree_t<T> d) { return tanh(radian_t<T>::from(d)); }
+template<typename T>
+T asinh(degree_t<T> d) { return asinh(radian_t<T>::from(d)); }
+template<typename T>
+T acosh(degree_t<T> d) { return acosh(radian_t<T>::from(d)); }
+template<typename T>
+T atanh(degree_t<T> d) { return atanh(radian_t<T>::from(d)); }
+#pragma endregion
 
-inline float sin(degree d) { return sin(radian(d)); }
-inline float cos(degree d) { return cos(radian(d)); }
-inline float tan(degree d) { return tan(radian(d)); }
-inline float asin(degree d) { return asin(radian(d)); }
-inline float acos(degree d) { return acos(radian(d)); }
-inline float atan(degree d) { return atan(radian(d)); }
-inline float sinh(degree d) { return sinh(radian(d)); }
-inline float cosh(degree d) { return cosh(radian(d)); }
-inline float tanh(degree d) { return tanh(radian(d)); }
-inline float asinh(degree d) { return asinh(radian(d)); }
-inline float acosh(degree d) { return acosh(radian(d)); }
-inline float atanh(degree d) { return atanh(radian(d)); }
-
-inline vector2::vector2(float x_, float y_) : x(x_), y(y_) {}
-
-inline vector2 vector2::get_normalized() const
+#pragma region definition vector2_t
+template<typename T>
+bool vector2_t<T>::lies_on(line_t<T> l) { return cdm::nearly_equal(l.coefficient * x + l.offset, y); }
+//bool vector2_t::lies_on(const rect& r)
+template<typename T>
+bool vector2_t<T>::lies_on(aa_rect_t<T> r)
 {
-	vector2 res = *this;
-	normalize(res);
-	return res;
+	return ((x >= r.origin.x) && (x <= r.origin.x + r.dimention.x) && (lies_on(line_t{ 0, r.origin.y }) || lies_on(line_t{ 0, r.origin.y + r.dimention.y }))) ||
+		((y >= r.origin.y) && (y <= r.origin.y + r.dimention.y) && (lies_on(line_t{ r.origin.x, 0 }) || lies_on(line_t{ r.origin.x + r.dimention.x, 0 })));
 }
-inline vector2 vector2::get_clamped(vector2 min, vector2 max) const
+//bool vector2_t::lies_on(const circle_t& c)
+//bool vector2_t::lies_on(const ellipe& e)
+//bool vector2_t::lies_on(const aa_ellipe& e)
+
+template<typename T>
+vector2_t<T> vector2_t<T>::operator+(vector2_t<T> v) const { return {x + v.x, y + v.y}; }
+template<typename T>
+vector2_t<T> vector2_t<T>::operator-(vector2_t<T> v) const { return {x - v.x, y - v.y}; }
+template<typename T>
+vector2_t<T> vector2_t<T>::operator*(T f) const { return {x * f, y * f}; }
+template<typename T>
+vector2_t<T> vector2_t<T>::operator/(T f) const { return {x / f, y / f}; }
+
+template<typename T>
+vector2_t<T>& vector2_t<T>::operator+=(vector2_t<T> v) { *this = *this + v; return *this; }
+template<typename T>
+vector2_t<T>& vector2_t<T>::operator-=(vector2_t<T> v) { *this = *this - v; return *this; }
+template<typename T>
+vector2_t<T>& vector2_t<T>::operator*=(T f) { *this = *this * f; return *this; }
+template<typename T>
+vector2_t<T>& vector2_t<T>::operator/=(T f) { *this = *this / f; return *this; }
+
+template<typename T>
+vector2_t<T> vector2_t<T>::operator-() const { return {-x, -y}; }
+
+template<typename T>
+bool vector2_t<T>::operator==(vector2_t<T> v) const { return x == v.x && y == v.y; }
+template<typename T>
+bool vector2_t<T>::operator!=(vector2_t<T> v) const { return !operator==(v); }
+
+template<typename T>
+vector2_t<T> operator*(T f, vector2_t<T> v) { return v * f; }
+
+template<typename T>
+T norm(vector2_t<T> v) { return std::sqrt(norm_squared(v)); }
+template<typename T>
+T norm_squared(vector2_t<T> v) { return v.x * v.x + v.y * v.y; }
+template<typename T>
+vector2_t<T>& normalize(vector2_t<T>& v)
 {
-	vector2 res = *this;
-	clamp(res, min, max);
-	return res;
-}
-inline vector2 vector2::get_negated() const
-{
-	vector2 res = *this;
-	negate(res);
-	return res;
-}
-
-inline bool vector2::lies_on(const line& l) { return cdm::nearly_equal(l.coefficient * x + l.offset, y); }
-//bool vector2::lies_on(const rect& r)
-inline bool vector2::lies_on(const aa_rect& r)
-{
-	return ((x >= r.origin.x) && (x <= r.origin.x + r.dimention.x) && (lies_on(line{ 0, r.origin.y }) || lies_on(line{ 0, r.origin.y + r.dimention.y }))) ||
-		((y >= r.origin.y) && (y <= r.origin.y + r.dimention.y) && (lies_on(line{ r.origin.x, 0 }) || lies_on(line{ r.origin.x + r.dimention.x, 0 })));
-}
-//bool vector2::lies_on(const circle& c)
-//bool vector2::lies_on(const ellipe& e)
-//bool vector2::lies_on(const aa_ellipe& e)
-
-inline float& vector2::operator[](size_t i) { return reinterpret_cast<float*>(this)[i]; }
-inline float vector2::operator[](size_t i) const { return reinterpret_cast<const float*>(this)[i]; }
-
-inline vector2 vector2::operator+(vector2 v) const { return {x + v.x, y + v.y}; }
-inline vector2 vector2::operator-(vector2 v) const { return {x - v.x, y - v.y}; }
-inline vector2 vector2::operator*(float f) const { return {x * f, y * f}; }
-inline vector2 vector2::operator/(float f) const { return {x / f, y / f}; }
-
-inline vector2& vector2::operator+=(vector2 v) { *this = *this + v; return *this; }
-inline vector2& vector2::operator-=(vector2 v) { *this = *this - v; return *this; }
-inline vector2& vector2::operator*=(float f) { *this = *this * f; return *this; }
-inline vector2& vector2::operator/=(float f) { *this = *this / f; return *this; }
-
-inline vector2 vector2::operator-() const { return get_negated(); }
-
-inline bool vector2::operator==(vector2 v) const { return x == v.x && y == v.y; }
-inline bool vector2::operator!=(vector2 v) const { return !operator==(v); }
-
-inline vector2 operator*(float f, vector2 v) { return v * f; }
-
-inline float norm(vector2 v) { return std::sqrtf(norm_squared(v)); }
-inline float norm_squared(vector2 v) { return v.x * v.x + v.y * v.y; }
-inline vector2& normalize(vector2& v)
-{
-	float n = norm(v);
+	T n = norm(v);
 	v.x /= n;
 	v.y /= n;
 	return v;
 }
-inline vector2& clamp(vector2& v, vector2 min, vector2 max)
+template<typename T>
+vector2_t<T> clamp(vector2_t<T> v, vector2_t<T> min, vector2_t<T> max)
 {
 	v.x = cdm::clamp(v.x, min.x, max.x);
 	v.y = cdm::clamp(v.y, min.y, max.y);
 	return v;
 }
-inline vector2& negate(vector2& v)
+template<typename T>
+T dot(vector2_t<T> lhs, vector2_t<T> rhs) { return lhs.x * rhs.x + lhs.y * rhs.y; }
+template<typename T>
+T cross(vector2_t<T> lhs, vector2_t<T> rhs) { return lhs.x * rhs.y - lhs.y * rhs.x; }
+template<typename T>
+vector2_t<T> lerp(vector2_t<T> begin, vector2_t<T> end, T percent) { return (end - begin) * percent + begin; }
+template<typename T>
+vector2_t<T> nlerp(vector2_t<T> begin, vector2_t<T> end, T percent) { return lerp(begin, end, percent).get_normalized(); }
+template<typename T>
+vector2_t<T> slerp(vector2_t<T> begin, vector2_t<T> end, T percent)
 {
-	v.x = -v.x;
-	v.y = -v.y;
-	return v;
-}
-inline float dot(vector2 lhs, vector2 rhs) { return lhs.x * rhs.x + lhs.y * rhs.y; }
-inline float cross(vector2 lhs, vector2 rhs) { return lhs.x * rhs.y - lhs.y * rhs.x; }
-inline vector2 lerp(vector2 begin, vector2 end, float percent) { return (end - begin) * percent + begin; }
-inline vector2 nlerp(vector2 begin, vector2 end, float percent) { return lerp(begin, end, percent).get_normalized(); }
-inline vector2 slerp(vector2 begin, vector2 end, float percent)
-{
-	const radian angle = angle_between(begin, end) * percent;
-	const float s = sin(angle);
-	const float c = cos(angle);
+	const radian_t angle = angle_between(begin, end) * percent;
+	const T s = sin(angle);
+	const T c = cos(angle);
 
-	normalized<vector2> res {
+	normalized<vector2_t<T>> res {
 		{
 			c * begin.x - s * begin.y,
 			s * begin.x + c * begin.y
 		}
 	};
 
-	float f = cdm::lerp(norm(begin), norm(end), percent);
+	T f = cdm::lerp(norm(begin), norm(end), percent);
 	return res * f;
 }
-inline float distance_between(vector2 v1, vector2 v2) { return norm(v1 - v2); }
-inline float distance_squared_between(vector2 v1, vector2 v2) { return norm_squared(v1 - v2); }
-inline vector2 from_to(vector2 from, vector2 to) { return {to.x - from.x, to.y - from.y}; }
-inline radian angle_between(vector2 v1, vector2 v2) { return radian(atan2f(v2.y, v2.x) - atan2f(v1.y, v1.x)); }
-inline bool nearly_equal(vector2 v1, vector2 v2, float e) { return cdm::nearly_equal(v1.x, v2.x, e) && cdm::nearly_equal(v1.y, v2.y, e); }
+template<typename T>
+T distance_between(vector2_t<T> v1, vector2_t<T> v2) { return norm(v1 - v2); }
+template<typename T>
+T distance_squared_between(vector2_t<T> v1, vector2_t<T> v2) { return norm_squared(v1 - v2); }
+template<typename T>
+vector2_t<T> from_to(vector2_t<T> from, vector2_t<T> to) { return {to.x - from.x, to.y - from.y}; }
+template<typename T>
+radian_t<T> angle_between(vector2_t<T> v1, vector2_t<T> v2) { return radian_t{ atan2f(v2.y, v2.x) - atan2f(v1.y, v1.x) }; }
+template<typename T>
+bool nearly_equal(vector2_t<T> v1, vector2_t<T> v2, T e) { return cdm::nearly_equal(v1.x, v2.x, e) && cdm::nearly_equal(v1.y, v2.y, e); }
+#pragma endregion
 
-inline vector3::vector3(float x_, float y_, float z_) : x(x_), y(y_), z(z_) {}
-inline vector3::vector3(vector2 v, float z_) : vector3(v.x, v.y, z_) {}
-
-inline vector3 vector3::get_normalized() const
+#pragma region definition vector3_t
+template<typename T>
+radian_t<T> vector3_t<T>::angle_around_axis(vector3_t<T> v, vector3_t<T> axis)
 {
-	vector3 res = *this;
-	normalize(res);
-	return res;
-}
-inline vector3 vector3::get_clamped(vector3 min, vector3 max) const
-{
-	vector3 res = *this;
-	clamp(res, min, max);
-	return res;
-}
-inline vector3 vector3::get_negated() const
-{
-	vector3 res = *this;
-	negate(res);
-	return res;
-}
-inline radian vector3::angle_around_axis(vector3 v, vector3 axis)
-{
-	vector3 c = cross(*this, v);
-	float angle = atan2f(norm(c), dot(*this, v));
-	return radian(dot(c, axis) < 0.0f ? -angle : angle);
+	vector3_t<T> c = cross(*this, v);
+	T angle = atan2f(norm(c), dot(*this, v));
+	return radian_t<T>{ dot(c, axis) < T(0) ? -angle : angle };
 }
 
-inline vector2 vector3::xy() const { return {x, y}; }
+template<typename T>
+vector2_t<T> vector3_t<T>::xy() const { return {x, y}; }
 
-inline float& vector3::operator[](size_t i) { return reinterpret_cast<float*>(this)[i]; }
-inline float vector3::operator[](size_t i) const { return reinterpret_cast<const float*>(this)[i]; }
+template<typename T>
+vector3_t<T> vector3_t<T>::operator+(vector3_t<T> v) const { return {x + v.x, y + v.y, z + v.z}; }
+template<typename T>
+vector3_t<T> vector3_t<T>::operator-(vector3_t<T> v) const { return {x - v.x, y - v.y, z - v.z}; }
+template<typename T>
+vector3_t<T> vector3_t<T>::operator*(T f) const { return {x * f, y * f, z * f}; }
+template<typename T>
+vector3_t<T> vector3_t<T>::operator/(T f) const { return {x / f, y / f, z / f}; }
 
-inline vector3 vector3::operator+(vector3 v) const { return {x + v.x, y + v.y, z + v.z}; }
-inline vector3 vector3::operator-(vector3 v) const { return {x - v.x, y - v.y, z - v.z}; }
-inline vector3 vector3::operator*(float f) const { return {x * f, y * f, z * f}; }
-inline vector3 vector3::operator/(float f) const { return {x / f, y / f, z / f}; }
+template<typename T>
+vector3_t<T>& vector3_t<T>::operator+=(vector3_t<T> v) { *this = *this + v; return *this; }
+template<typename T>
+vector3_t<T>& vector3_t<T>::operator-=(vector3_t<T> v) { *this = *this - v; return *this; }
+template<typename T>
+vector3_t<T>& vector3_t<T>::operator*=(T f) { *this = *this * f; return *this; }
+template<typename T>
+vector3_t<T>& vector3_t<T>::operator/=(T f) { *this = *this / f; return *this; }
 
-inline vector3& vector3::operator+=(vector3 v) { *this = *this + v; return *this; }
-inline vector3& vector3::operator-=(vector3 v) { *this = *this - v; return *this; }
-inline vector3& vector3::operator*=(float f) { *this = *this * f; return *this; }
-inline vector3& vector3::operator/=(float f) { *this = *this / f; return *this; }
+template<typename T>
+vector3_t<T> vector3_t<T>::operator-() const { return {-x, -y, -z}; }
 
-inline vector3 vector3::operator-() const { return get_negated(); }
+template<typename T>
+bool vector3_t<T>::operator==(vector3_t<T> v) const { return x == v.x && y == v.y && z == v.z; }
+template<typename T>
+bool vector3_t<T>::operator!=(vector3_t<T> v) const { return !operator==(v); }
 
-inline bool vector3::operator==(vector3 v) const { return x == v.x && y == v.y && z == v.z; }
-inline bool vector3::operator!=(vector3 v) const { return !operator==(v); }
+template<typename T>
+vector3_t<T> operator*(T f, vector3_t<T> v) { return v * f; }
 
-inline vector3 operator*(float f, vector3 v) { return v * f; }
-
-inline float norm(vector3 v) { return std::sqrtf(norm_squared(v)); }
-inline float norm_squared(vector3 v) { return v.x * v.x + v.y * v.y + v.z * v.z; }
-inline vector3& normalize(vector3& v)
+template<typename T>
+T norm(vector3_t<T> v) { return std::sqrt(norm_squared(v)); }
+template<typename T>
+T norm_squared(vector3_t<T> v) { return v.x * v.x + v.y * v.y + v.z * v.z; }
+template<typename T>
+vector3_t<T> normalize(vector3_t<T> v)
 {
-	float n = norm(v);
+	T n = norm(v);
 	v.x /= n;
 	v.y /= n;
 	v.z /= n;
 	return v;
 }
-inline vector3& clamp(vector3& v, vector3 min, vector3 max)
+template<typename T>
+vector3_t<T> clamp(vector3_t<T> v, vector3_t<T> min, vector3_t<T> max)
 {
 	v.x = cdm::clamp(v.x, min.x, max.x);
 	v.y = cdm::clamp(v.y, min.y, max.y);
 	v.z = cdm::clamp(v.z, min.z, max.z);
 	return v;
 }
-inline vector3& negate(vector3& v)
-{
-	v.x = -v.x;
-	v.y = -v.y;
-	v.z = -v.z;
-	return v;
-}
-inline float dot(vector3 lhs, vector3 rhs) { return lhs.x * rhs.x + lhs.y * rhs.y + lhs.z * rhs.z; }
-inline vector3 cross(vector3 lhs, vector3 rhs)
+template<typename T>
+T dot(vector3_t<T> lhs, vector3_t<T> rhs) { return lhs.x * rhs.x + lhs.y * rhs.y + lhs.z * rhs.z; }
+template<typename T>
+vector3_t<T> cross(vector3_t<T> lhs, vector3_t<T> rhs)
 {
 	return {
 		lhs.y * rhs.z - lhs.z * rhs.y,
@@ -1473,77 +1621,80 @@ inline vector3 cross(vector3 lhs, vector3 rhs)
 		lhs.x * rhs.y - lhs.y * rhs.x
 	};
 }
-inline vector3 lerp(vector3 begin, vector3 end, float percent) { return (end - begin) * percent + begin; }
-inline vector3 nlerp(vector3 begin, vector3 end, float percent) { return lerp(begin, end, percent).get_normalized(); }
-inline float distance_between(vector3 v1, vector3 v2) { return norm(v1 - v2); }
-inline float distance_squared_between(vector3 v1, vector3 v2) { return norm_squared(v1 - v2); }
-inline vector3 from_to(vector3 from, vector3 to) { return {to.x - from.x, to.y - from.y, to.z - from.z}; }
-inline radian angle_between(vector3 v1, vector3 v2)
+template<typename T>
+vector3_t<T> lerp(vector3_t<T> begin, vector3_t<T> end, T percent) { return (end - begin) * percent + begin; }
+template<typename T>
+vector3_t<T> nlerp(vector3_t<T> begin, vector3_t<T> end, T percent) { return normalize(lerp(begin, end, percent)); }
+template<typename T>
+T distance_between(vector3_t<T> v1, vector3_t<T> v2) { return norm(v1 - v2); }
+template<typename T>
+T distance_squared_between(vector3_t<T> v1, vector3_t<T> v2) { return norm_squared(v1 - v2); }
+template<typename T>
+vector3_t<T> from_to(vector3_t<T> from, vector3_t<T> to) { return {to.x - from.x, to.y - from.y, to.z - from.z}; }
+template<typename T>
+radian_t<T> angle_between(vector3_t<T> v1, vector3_t<T> v2)
 {
-	float divisor = std::sqrtf(norm_squared(v1) * norm_squared(v2));
-	float alpha = dot(v1, v2) / divisor;
-	return radian(std::acosf(cdm::clamp(alpha, -1.0f, 1.0f)));
+	T divisor = std::sqrt(norm_squared(v1) * norm_squared(v2));
+	T alpha = dot(v1, v2) / divisor;
+	return radian_t<T>(std::acosf(cdm::clamp(alpha, T(-1), T(1))));
 }
-inline bool nearly_equal(vector3 v1, vector3 v2, float e)
+template<typename T>
+bool nearly_equal(vector3_t<T> v1, vector3_t<T> v2, T e)
 {
 	return nearly_equal(v1.x, v2.x, e) &&
 	       nearly_equal(v1.y, v2.y, e) &&
 	       nearly_equal(v1.z, v2.z, e);
 }
+#pragma endregion
 
-inline vector4::vector4(float x_, float y_, float z_, float w_) : x(x_), y(y_), z(z_), w(w_) {}
-inline vector4::vector4(vector2 v, float z_, float w_) : vector4(v.x, v.y, z_, w_) {}
-inline vector4::vector4(vector3 v, float w_) : vector4(v.x, v.y, v.z, w_) {}
+#pragma region definition vector4_t
+template<typename T>
+vector2_t<T> vector4_t<T>::xy() const { return { x, y }; }
+template<typename T>
+vector3_t<T> vector4_t<T>::xyz() const { return { x, y, z }; }
 
-inline vector4 vector4::get_normalized() const
+template<typename T>
+vector4_t<T> vector4_t<T>::operator+(vector4_t<T> v) const { return {x + v.x, y + v.y, z + v.z, w + v.w}; }
+template<typename T>
+vector4_t<T> vector4_t<T>::operator-(vector4_t<T> v) const { return {x - v.x, y - v.y, z - v.z, w - v.w}; }
+template<typename T>
+vector4_t<T> vector4_t<T>::operator*(T f) const { return {x * f, y * f, z * f, w * f}; }
+template<typename T>
+vector4_t<T> vector4_t<T>::operator/(T f) const { return {x / f, y / f, z / f, w / f}; }
+
+template<typename T>
+vector4_t<T>& vector4_t<T>::operator+=(vector4_t<T> v) { *this = *this + v; return *this; }
+template<typename T>
+vector4_t<T>& vector4_t<T>::operator-=(vector4_t<T> v) { *this = *this - v; return *this; }
+template<typename T>
+vector4_t<T>& vector4_t<T>::operator*=(T f) { *this = *this * f; return *this; }
+template<typename T>
+vector4_t<T>& vector4_t<T>::operator/=(T f) { *this = *this / f; return *this; }
+
+template<typename T>
+vector4_t<T> vector4_t<T>::operator-() const { return {-x, -y, -z, -w}; }
+
+template<typename T>
+bool vector4_t<T>::operator==(vector4_t<T> v) const { return x == v.x && y == v.y && z == v.z && w == v.w; }
+template<typename T>
+bool vector4_t<T>::operator!=(vector4_t<T> v) const { return !operator==(v); }
+
+template<typename T>
+T norm(vector4_t<T> v) { return std::sqrt(norm_squared(v)); }
+template<typename T>
+T norm_squared(vector4_t<T> v) { return v.x * v.x + v.y * v.y + v.z * v.z + v.w * v.w; }
+template<typename T>
+vector4_t<T> normalize(vector4_t<T> v)
 {
-	vector4 res = *this;
-	normalize(res);
-	return res;
-}
-inline vector4 vector4::get_clamped(vector4 min, vector4 max) const
-{
-	vector4 res = *this;
-	clamp(res, min, max);
-	return res;
-}
-inline vector4 vector4::get_negated() const
-{
-	vector4 res = *this;
-	negate(res);
-	return res;
-}
-
-inline vector2 vector4::xy() const { return { x, y }; }
-inline vector3 vector4::xyz() const { return { x, y, z }; }
-
-inline vector4 vector4::operator+(vector4 v) const { return {x + v.x, y + v.y, z + v.z, w + v.w}; }
-inline vector4 vector4::operator-(vector4 v) const { return {x - v.x, y - v.y, z - v.z, w - v.w}; }
-inline vector4 vector4::operator*(float f) const { return {x * f, y * f, z * f, w * f}; }
-inline vector4 vector4::operator/(float f) const { return {x / f, y / f, z / f, w / f}; }
-
-inline vector4& vector4::operator+=(vector4 v) { *this = *this + v; return *this; }
-inline vector4& vector4::operator-=(vector4 v) { *this = *this - v; return *this; }
-inline vector4& vector4::operator*=(float f) { *this = *this * f; return *this; }
-inline vector4& vector4::operator/=(float f) { *this = *this / f; return *this; }
-
-inline vector4 vector4::operator-() const { return get_negated(); }
-
-inline bool vector4::operator==(vector4 v) const { return x == v.x && y == v.y && z == v.z && w == v.w; }
-inline bool vector4::operator!=(vector4 v) const { return !operator==(v); }
-
-inline float norm(vector4 v) { return std::sqrtf(norm_squared(v)); }
-inline float norm_squared(vector4 v) { return v.x * v.x + v.y * v.y + v.z * v.z + v.w * v.w; }
-inline vector4& normalize(vector4& v)
-{
-	float n = norm(v);
+	T n = norm(v);
 	v.x /= n;
 	v.y /= n;
 	v.z /= n;
 	v.w /= n;
 	return v;
 }
-inline vector4& clamp(vector4& v, vector4 min, vector4 max)
+template<typename T>
+vector4_t<T> clamp(vector4_t<T> v, vector4_t<T> min, vector4_t<T> max)
 {
 	v.x = cdm::clamp(v.x, min.x, max.x);
 	v.y = cdm::clamp(v.y, min.y, max.y);
@@ -1551,7 +1702,8 @@ inline vector4& clamp(vector4& v, vector4 min, vector4 max)
 	v.w = cdm::clamp(v.w, min.w, max.w);
 	return v;
 }
-inline vector4& negate(vector4& v)
+template<typename T>
+vector4_t<T> negate(vector4_t<T> v)
 {
 	v.x = -v.x;
 	v.y = -v.y;
@@ -1559,24 +1711,33 @@ inline vector4& negate(vector4& v)
 	v.w = -v.w;
 	return v;
 }
-inline float dot(vector4 lhs, vector4 rhs) { return lhs.x * rhs.x + lhs.y * rhs.y + lhs.z * rhs.z + lhs.w * rhs.w; }
-inline vector4 lerp(vector4 begin, vector4 end, float percent) { return (end - begin) * percent + begin; }
-inline vector4 nlerp(vector4 begin, vector4 end, float percent) { return lerp(begin, end, percent).get_normalized(); }
-inline float distance_between(vector4 v1, vector4 v2) { return norm(v1 - v2); }
-inline float distance_squared_between(vector4 v1, vector4 v2) { return norm_squared(v1 - v2); }
-inline vector4 from_to(vector4 from, vector4 to) { return {to.x - from.x, to.y - from.y, to.z - from.z, to.w - from.w}; }
-inline bool nearly_equal(vector4 v1, vector4 v2, float e)
+template<typename T>
+T dot(vector4_t<T> lhs, vector4_t<T> rhs) { return lhs.x * rhs.x + lhs.y * rhs.y + lhs.z * rhs.z + lhs.w * rhs.w; }
+template<typename T>
+vector4_t<T> lerp(vector4_t<T> begin, vector4_t<T> end, T percent) { return (end - begin) * percent + begin; }
+template<typename T>
+vector4_t<T> nlerp(vector4_t<T> begin, vector4_t<T> end, T percent) { return normalized(lerp(begin, end, percent)); }
+template<typename T>
+T distance_between(vector4_t<T> v1, vector4_t<T> v2) { return norm(v1 - v2); }
+template<typename T>
+T distance_squared_between(vector4_t<T> v1, vector4_t<T> v2) { return norm_squared(v1 - v2); }
+template<typename T>
+vector4_t<T> from_to(vector4_t<T> from, vector4_t<T> to) { return {to.x - from.x, to.y - from.y, to.z - from.z, to.w - from.w}; }
+template<typename T>
+bool nearly_equal(vector4_t<T> v1, vector4_t<T> v2, T e)
 {
 	return nearly_equal(v1.x, v2.x, e) &&
 	       nearly_equal(v1.y, v2.y, e) &&
 	       nearly_equal(v1.z, v2.z, e) &&
 	       nearly_equal(v1.w, v2.w, e);
 }
+#pragma endregion
 
+#pragma region definition normalized
 template<typename T>
-normalized<T>::normalized(const T& t) : vector(t) { normalize(vector); }
-template<typename T>
-normalized<T>::normalized(T&& t) noexcept : vector(std::move(t)) { normalize(vector); }
+normalized<T>::normalized(const T& t) : vector(normalize(t)) {}
+//template<typename T>
+//normalized<T>::normalized(T&& t) noexcept : vector(normalize(std::move(t)) {}
 
 template<typename T>
 normalized<T> normalized<T>::already_normalized(const T& t)
@@ -1601,21 +1762,21 @@ template<typename T>
 normalized<T>::operator const T&() const { return vector; }
 
 template<typename T>
-normalized<T> normalized<T>::operator+(const T& v) const { return (vector + v).get_normalized(); }
+normalized<T> normalized<T>::operator+(const T& v) const { return normalize(vector + v); }
 template<typename T>
-normalized<T> normalized<T>::operator-(const T& v) const { return (vector - v).get_normalized(); }
+normalized<T> normalized<T>::operator-(const T& v) const { return normalize(vector - v); }
 template<typename T>
-T normalized<T>::operator*(float f) const { return vector * f; }
+T normalized<T>::operator*(T f) const { return vector * f; }
 template<typename T>
-T normalized<T>::operator/(float f) const { return vector / f; }
+T normalized<T>::operator/(T f) const { return vector / f; }
 
 template<typename T>
-normalized<T>& normalized<T>::operator+=(const T& v) { vector = (vector + v).get_normalized(); return *this; }
+normalized<T>& normalized<T>::operator+=(const T& v) { vector = normalize(vector + v); return *this; }
 template<typename T>
-normalized<T>& normalized<T>::operator-=(const T& v) { vector = (vector - v).get_normalized(); return *this; }
+normalized<T>& normalized<T>::operator-=(const T& v) { vector = normalize(vector - v); return *this; }
 
 template<typename T>
-normalized<T> normalized<T>::operator-() const { return vector.get_negated(); }
+normalized<T> normalized<T>::operator-() const { return -vector; }
 
 template<typename T>
 bool normalized<T>::operator==(const T& v) const { return vector == v; }
@@ -1623,66 +1784,50 @@ template<typename T>
 bool normalized<T>::operator!=(const T& v) const { return vector != v; }
 
 template<typename T>
-normalized<T>& normalized<T>::operator=(const T& t) { vector = t.get_normalized(); return *this; }
+normalized<T>& normalized<T>::operator=(const T& t) { vector = normalize(t); return *this; }
 template<typename T>
-normalized<T>& normalized<T>::operator=(T&& t) noexcept { vector = t.get_normalized(); return *this; }
+normalized<T>& normalized<T>::operator=(T&& t) noexcept { vector = normalize(t); return *this; }
+#pragma endregion
 
-inline matrix2::matrix2(float m00_, float m10_,
-	float m01_, float m11_) :
-	m00(m00_), m10(m10_),
-	m01(m01_), m11(m11_)
-{}
-inline matrix2::matrix2(const matrix3& m) :
-	matrix2(
-		m.m00, m.m10,
-		m.m01, m.m11
-	)
-{}
-inline matrix2::matrix2(const matrix4& m) :
-	matrix2(
-		m.m00, m.m10,
-		m.m01, m.m11
-	)
-{}
-
-inline matrix2 matrix2::zero() { return {0.0f, 0.0f, 0.0f, 0.0f}; }
-inline matrix2 matrix2::identity() { return {1.0f, 0.0f, 0.0f, 1.0f}; }
-inline matrix2 matrix2::rotation(radian angle)
+#pragma region definition matrix2_t
+template<typename T>
+matrix2_t<T> matrix2_t<T>::zero() { return {T(0), T(0), T(0), T(0)}; }
+template<typename T>
+matrix2_t<T> matrix2_t<T>::identity() { return {T(1), T(0), T(0), T(1)}; }
+template<typename T>
+matrix2_t<T> matrix2_t<T>::rotation(radian_t<T> angle)
 {
-	float c = cos(angle);
-	float s = sin(angle);
+	T c = cos(angle);
+	T s = sin(angle);
 	return {
 		c, -s,
 		s, c
 	};
 }
-inline matrix2 matrix2::rotation(normalized<complex> angle)
+template<typename T>
+matrix2_t<T> matrix2_t<T>::rotation(normalized<complex_t<T>> angle)
 {
 	return {
 		angle->r, -angle->i,
 		angle->i, angle->r
 	};
 }
-inline matrix2& matrix2::transpose() { std::swap(m01, m10); return *this; }
-inline matrix2 matrix2::get_transposed() const
-{
-	return {
-		m00, m01,
-		m10, m11
-	};
-}
 
-inline float& matrix2::at(uint8_t x, uint8_t y) { return reinterpret_cast<float*>(this)[x + 2 * y]; }
-inline const float& matrix2::at(uint8_t x, uint8_t y) const { return reinterpret_cast<const float*>(this)[x + 2 * y]; }
+template<typename T>
+T& matrix2_t<T>::at(uint8_t x, uint8_t y) { return reinterpret_cast<T*>(this)[x + 2 * y]; }
+template<typename T>
+const T& matrix2_t<T>::at(uint8_t x, uint8_t y) const { return reinterpret_cast<const T*>(this)[x + 2 * y]; }
 
-inline vector2 matrix2::operator*(vector2 v) const
+template<typename T>
+vector2_t<T> matrix2_t<T>::operator*(vector2_t<T> v) const
 {
 	return {
 		m00 * v.x + m01 * v.y,
 		m10 * v.x + m11 * v.y
 	};
 }
-inline matrix2 matrix2::operator*(matrix2 m) const
+template<typename T>
+matrix2_t<T> matrix2_t<T>::operator*(matrix2_t<T> m) const
 {
 	return {
 		m00 * m.m00 + m01 * m.m10,
@@ -1693,72 +1838,35 @@ inline matrix2 matrix2::operator*(matrix2 m) const
 	};
 }
 
-inline matrix3::matrix3(float m00_, float m10_, float m20_,
-	float m01_, float m11_, float m21_,
-	float m02_, float m12_, float m22_) :
-	m00(m00_), m10(m10_), m20(m20_),
-	m01(m01_), m11(m11_), m21(m21_),
-	m02(m02_), m12(m12_), m22(m22_)
-{}
-inline matrix3::matrix3(matrix2 m) :
-	matrix3(
-		m.m00, m.m10, 0.0f,
-		m.m01, m.m11, 0.0f,
-		0.0f,  0.0f,  1.0f
-	)
-{}
-inline matrix3::matrix3(const matrix4& m) :
-	matrix3(
-		m.m00, m.m10, m.m20,
-		m.m01, m.m11, m.m21,
-		m.m02, m.m12, m.m22
-	)
-{}
-inline matrix3::matrix3(const transform2d& t)
+template<typename T>
+matrix2_t<T> transpose(matrix2_t<T> m)
 {
-	matrix2 r = matrix2::rotation(t.rotation);
-	*this = {
-		t.scale.x * r.m00, t.scale.y * r.m10, t.position.x,
-		t.scale.x * r.m01, t.scale.y * r.m11, t.position.y,
-		0.0f,              0.0f,              1.0f
-	};
+	std::swap(m.m01, m.m10);
+	return m;
 }
-inline matrix3::matrix3(uniform_transform2d t)
-{
-	matrix2 r = matrix2::rotation(t.rotation);
-	*this = {
-		t.scale * r.m00, t.scale * r.m10, t.position.x,
-		t.scale * r.m01, t.scale * r.m11, t.position.y,
-		0.0f,            0.0f,            1.0f
-	};
-}
-inline matrix3::matrix3(unscaled_transform2d t)
-{
-	matrix2 r = matrix2::rotation(t.rotation);
-	*this = {
-		r.m00, r.m10, t.position.x,
-		r.m01, r.m11, t.position.y,
-		0.0f, 0.0f, 1.0f
-	};
-}
+#pragma endregion
 
-inline matrix3 matrix3::zero() { return {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}; }
-inline matrix3 matrix3::identity() { return {1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f}; }
-inline matrix3 matrix3::rotation(euler_angles r)
+#pragma region definition matrix3_t
+template<typename T>
+matrix3_t<T> matrix3_t<T>::zero() { return {T(0), T(0), T(0), T(0), T(0), T(0), T(0), T(0), T(0)}; }
+template<typename T>
+matrix3_t<T> matrix3_t<T>::identity() { return {T(1), T(0), T(0), T(0), T(1), T(0), T(0), T(0), T(1)}; }
+template<typename T>
+matrix3_t<T> matrix3_t<T>::rotation(euler_angles_t<T> r)
 {
-	matrix3 RX = matrix3::identity();
+	matrix3_t<T> RX = matrix3_t<T>::identity();
 	RX.m11 = cos(r.x);
 	RX.m12 = -sin(r.x);
 	RX.m21 = sin(r.x);
 	RX.m22 = cos(r.x);
 
-	matrix3 RY = matrix3::identity();
+	matrix3_t<T> RY = matrix3_t<T>::identity();
 	RY.m00 = cos(r.y);
 	RY.m02 = sin(r.y);
 	RY.m20 = -sin(r.y);
 	RY.m22 = cos(r.y);
 
-	matrix3 RZ = matrix3::identity();
+	matrix3_t<T> RZ = matrix3_t<T>::identity();
 	RZ.m00 = cos(r.z);
 	RZ.m01 = -sin(r.z);
 	RZ.m10 = sin(r.z);
@@ -1771,114 +1879,90 @@ inline matrix3 matrix3::rotation(euler_angles r)
 	//return RY * RX * RZ;
 	//return RX * RZ * RY;
 }
-inline matrix3 matrix3::rotation(quaternion q)
+template<typename T>
+matrix3_t<T> matrix3_t<T>::rotation(quaternion_t<T> q)
 {
 	return {
-		detail::get_quaternion_matrix_element<0, 0>(q), detail::get_quaternion_matrix_element<1, 0>(q), detail::get_quaternion_matrix_element<2, 0>(q),
-		detail::get_quaternion_matrix_element<0, 1>(q), detail::get_quaternion_matrix_element<1, 1>(q), detail::get_quaternion_matrix_element<2, 1>(q),
-		detail::get_quaternion_matrix_element<0, 2>(q), detail::get_quaternion_matrix_element<1, 2>(q), detail::get_quaternion_matrix_element<2, 2>(q),
+		detail::get_quaternion_t_matrix_element<0, 0>(q), detail::get_quaternion_t_matrix_element<1, 0>(q), detail::get_quaternion_t_matrix_element<2, 0>(q),
+		detail::get_quaternion_t_matrix_element<0, 1>(q), detail::get_quaternion_t_matrix_element<1, 1>(q), detail::get_quaternion_t_matrix_element<2, 1>(q),
+		detail::get_quaternion_t_matrix_element<0, 2>(q), detail::get_quaternion_t_matrix_element<1, 2>(q), detail::get_quaternion_t_matrix_element<2, 2>(q),
 	};
 }
-inline matrix3 matrix3::rotation_around_x(radian angle)
+template<typename T>
+matrix3_t<T> matrix3_t<T>::rotation_around_x(radian_t<T> angle)
 {
-	float c = cos(angle);
-	float s = sin(angle);
+	T c = cos(angle);
+	T s = sin(angle);
 	return {
-		1.0f, 0.0f, 0.0f,
-		0.0f, c,    s,
-		0.0f, -s,   c
+		T(1), T(0), T(0),
+		T(0), c,    s,
+		T(0), -s,   c
 	};
 }
-inline matrix3 matrix3::rotation_around_y(radian angle)
+template<typename T>
+matrix3_t<T> matrix3_t<T>::rotation_around_y(radian_t<T> angle)
 {
-	float c = cos(angle);
-	float s = sin(angle);
+	T c = cos(angle);
+	T s = sin(angle);
 	return {
-		c,    0.0f, s,
-		0.0f, 1.0f, 0.0f,
-		-s,   0.0f, c
+		c,    T(0), s,
+		T(0), T(1), T(0),
+		-s,   T(0), c
 	};
 }
-inline matrix3 matrix3::rotation_around_z(radian angle)
+template<typename T>
+matrix3_t<T> matrix3_t<T>::rotation_around_z(radian_t<T> angle)
 {
-	float c = cos(angle);
-	float s = sin(angle);
+	T c = cos(angle);
+	T s = sin(angle);
 	return {
-		c,    -s,   0.0f,
-		s,    c,    0.0f,
-		0.0f, 0.0f, 1.0f
+		c,    -s,   T(0),
+		s,    c,    T(0),
+		T(0), T(0), T(1)
 	};
 }
-inline matrix3 matrix3::rotation_around_x(normalized<complex> angle)
+template<typename T>
+matrix3_t<T> matrix3_t<T>::rotation_around_x(normalized<complex_t<T>> angle)
 {
-	float c = angle->r;
-	float s = angle->i;
+	T c = angle->r;
+	T s = angle->i;
 	return {
-		1.0f, 0.0f, 0.0f,
-		0.0f, c,    s,
-		0.0f, -s,   c
+		T(1), T(0), T(0),
+		T(0), c,    s,
+		T(0), -s,   c
 	};
 }
-inline matrix3 matrix3::rotation_around_y(normalized<complex> angle)
+template<typename T>
+matrix3_t<T> matrix3_t<T>::rotation_around_y(normalized<complex_t<T>> angle)
 {
-	float c = angle->r;
-	float s = angle->i;
+	T c = angle->r;
+	T s = angle->i;
 	return {
-		c,    0.0f, s,
-		0.0f, 1.0f, 0.0f,
-		-s,   0.0f, c
+		c,    T(0), s,
+		T(0), T(1), T(0),
+		-s,   T(0), c
 	};
 }
-inline matrix3 matrix3::rotation_around_z(normalized<complex> angle)
+template<typename T>
+matrix3_t<T> matrix3_t<T>::rotation_around_z(normalized<complex_t<T>> angle)
 {
-	float c = angle->r;
-	float s = angle->i;
+	T c = angle->r;
+	T s = angle->i;
 	return {
-		c,    -s,   0.0f,
-		s,    c,    0.0f,
-		0.0f, 0.0f, 1.0f
+		c,    -s,   T(0),
+		s,    c,    T(0),
+		T(0), T(0), T(1)
 	};
 }
-inline matrix3& matrix3::inverse()
+template<typename T>
+matrix3_t<T> matrix3_t<T>::inversed() const
 {
-	if (is_orthogonal())
-	{
-		transpose();
-		return *this;
-	}
-
-	float det = get_determinant();
-	float recM00 = m00;
-	float recM10 = m10;
-	float recM20 = m20;
-	float recM01 = m01;
-	float recM11 = m11;
-	float recM02 = m02;
-	m00 = (recM11 * m22 - m21 * m12) / det;
-	m10 = (m12 * recM20 - recM10 * m22) / det;
-	m20 = (recM10 * m12 - recM20 * recM11) / det;
-	m01 = (recM02 * m21 - recM01 * m22) / det;
-	m11 = (recM00 * m22 - recM20 * recM02) / det;
-	m21 = (recM01 * recM20 - recM00 * m21) / det;
-	m02 = (recM01 * m12 - recM11 * recM02) / det;
-	m12 = (recM02 * recM10 - recM00 * m12) / det;
-	m22 = (recM00 * recM11 - recM10 * recM01) / det;
-	return *this;
-}
-inline matrix3 matrix3::get_inversed() const
-{
-	matrix3 res = *this;
+	matrix3_t<T> res = *this;
 	res.inverse();
 	return res;
 }
-inline matrix3& matrix3::transpose()
-{
-	std::swap(m01, m10);
-	std::swap(m02, m20);
-	std::swap(m12, m21);
-	return *this;
-}
-inline matrix3 matrix3::get_transposed() const
+template<typename T>
+matrix3_t<T> matrix3_t<T>::transposed() const
 {
 	return {
 		m00, m10, m20,
@@ -1886,7 +1970,8 @@ inline matrix3 matrix3::get_transposed() const
 		m02, m12, m22
 	};
 }
-inline float matrix3::get_determinant() const
+template<typename T>
+T matrix3_t<T>::determinant() const
 {
 	return
 		m00 * m11 * m22 +
@@ -1896,21 +1981,25 @@ inline float matrix3::get_determinant() const
 		m21 * m12 * m00 -
 		m22 * m10 * m01;
 }
-inline bool matrix3::is_orthogonal() const
+template<typename T>
+bool matrix3_t<T>::is_orthogonal() const
 {
 	return
-		nearly_equal(m00 * m01 + m10 * m11 + m20 * m21, 0.0f) &&
-		nearly_equal(m00 * m02 + m10 * m12 + m20 * m22, 0.0f) &&
-		nearly_equal(m01 * m02 + m11 * m12 + m21 * m22, 0.0f) &&
-		nearly_equal(m00 * m00 + m10 * m10 + m20 * m20, 1.0f) &&
-		nearly_equal(m01 * m01 + m11 * m11 + m21 * m21, 1.0f) &&
-		nearly_equal(m02 * m02 + m12 * m12 + m22 * m22, 1.0f);
+		nearly_equal(m00 * m01 + m10 * m11 + m20 * m21, T(0)) &&
+		nearly_equal(m00 * m02 + m10 * m12 + m20 * m22, T(0)) &&
+		nearly_equal(m01 * m02 + m11 * m12 + m21 * m22, T(0)) &&
+		nearly_equal(m00 * m00 + m10 * m10 + m20 * m20, T(1)) &&
+		nearly_equal(m01 * m01 + m11 * m11 + m21 * m21, T(1)) &&
+		nearly_equal(m02 * m02 + m12 * m12 + m22 * m22, T(1));
 }
 
-inline float& matrix3::at(uint8_t x, uint8_t y) { return reinterpret_cast<float*>(this)[x + 3 * y]; }
-inline const float& matrix3::at(uint8_t x, uint8_t y) const { return reinterpret_cast<const float*>(this)[x + 3 * y]; }
+template<typename T>
+T& matrix3_t<T>::at(uint8_t x, uint8_t y) { return reinterpret_cast<T*>(this)[x + 3 * y]; }
+template<typename T>
+const T& matrix3_t<T>::at(uint8_t x, uint8_t y) const { return reinterpret_cast<const T*>(this)[x + 3 * y]; }
 
-inline matrix3 matrix3::operator*(float f) const
+template<typename T>
+matrix3_t<T> matrix3_t<T>::operator*(T f) const
 {
 	return {
 		m00 * f, m10 * f, m20 * f,
@@ -1918,7 +2007,8 @@ inline matrix3 matrix3::operator*(float f) const
 		m02 * f, m12 * f, m22 * f
 	};
 }
-inline vector3 matrix3::operator*(vector3 v) const
+template<typename T>
+vector3_t<T> matrix3_t<T>::operator*(vector3_t<T> v) const
 {
 	return {
 		m00 * v.x + m10 * v.y + m20 * v.z,
@@ -1926,7 +2016,8 @@ inline vector3 matrix3::operator*(vector3 v) const
 		m02 * v.x + m12 * v.y + m22 * v.z
 	};
 }
-inline matrix3 matrix3::operator*(const matrix3& m) const
+template<typename T>
+matrix3_t<T> matrix3_t<T>::operator*(const matrix3_t<T>& m) const
 {
 	return {
 		m00 * m.m00 + m10 * m.m01 + m20 * m.m02,
@@ -1942,709 +2033,141 @@ inline matrix3 matrix3::operator*(const matrix3& m) const
 		m02 * m.m20 + m12 * m.m21 + m22 * m.m22
 	};
 }
-inline matrix4x3 matrix3::operator*(const matrix4x3& m) const
+
+template<typename T>
+matrix3_t<T> inverse(matrix3_t<T> m)
 {
-	return {
-		m.m00 * m00 + m.m01 * m10 + m.m02 * m20,
-		m.m10 * m00 + m.m11 * m10 + m.m12 * m20,
-		m.m20 * m00 + m.m21 * m10 + m.m22 * m20,
-		m.m30 * m00 + m.m31 * m10 + m.m32 * m20,
+	if (m.is_orthogonal())
+	{
+		return transpose(m);
+	}
 
-		m.m00 * m01 + m.m01 * m11 + m.m02 * m21,
-		m.m10 * m01 + m.m11 * m11 + m.m12 * m21,
-		m.m20 * m01 + m.m21 * m11 + m.m22 * m21,
-		m.m30 * m01 + m.m31 * m11 + m.m32 * m21,
-
-		m.m00 * m02 + m.m01 * m12 + m.m02 * m22,
-		m.m10 * m02 + m.m11 * m12 + m.m12 * m22,
-		m.m20 * m02 + m.m21 * m12 + m.m22 * m22,
-		m.m30 * m02 + m.m31 * m12 + m.m32 * m22
-	};
+	T det = m.determinant();
+	T recM00 = m.m00;
+	T recM10 = m.m10;
+	T recM20 = m.m20;
+	T recM01 = m.m01;
+	T recM11 = m.m11;
+	T recM02 = m.m02;
+	m.m00 = (recM11 * m.m22 - m.m21 * m.m12) / det;
+	m.m10 = (m.m12 * recM20 - recM10 * m.m22) / det;
+	m.m20 = (recM10 * m.m12 - recM20 * recM11) / det;
+	m.m01 = (recM02 * m.m21 - recM01 * m.m22) / det;
+	m.m11 = (recM00 * m.m22 - recM20 * recM02) / det;
+	m.m21 = (recM01 * recM20 - recM00 * m.m21) / det;
+	m.m02 = (recM01 * m.m12 - recM11 * recM02) / det;
+	m.m12 = (recM02 * recM10 - recM00 * m.m12) / det;
+	m.m22 = (recM00 * recM11 - recM10 * recM01) / det;
+	return m;
 }
-
-inline matrix3x4::matrix3x4(float m00_, float m10_, float m20_,
-	float m01_, float m11_, float m21_,
-	float m02_, float m12_, float m22_,
-	float m03_, float m13_, float m23_) :
-	m00(m00_), m10(m10_), m20(m20_),
-	m01(m01_), m11(m11_), m21(m21_),
-	m02(m02_), m12(m12_), m22(m22_),
-	m03(m03_), m13(m13_), m23(m23_)
-{}
-inline matrix3x4::matrix3x4(matrix2 m) :
-	matrix3x4(
-		m.m00, m.m10, 0.0f,
-		m.m01, m.m11, 0.0f,
-		0.0f, 0.0f, 1.0f,
-		0.0f, 0.0f, 0.0f
-	)
-{}
-inline matrix3x4::matrix3x4(const matrix3& m) :
-	matrix3x4(
-		m.m00, m.m10, m.m20,
-		m.m01, m.m11, m.m21,
-		m.m02, m.m12, m.m22,
-		0.0f, 0.0f, 0.0f
-	)
-{}
-inline matrix3x4::matrix3x4(const matrix4& m) :
-	matrix3x4(
-		m.m00, m.m10, m.m20,
-		m.m01, m.m11, m.m21,
-		m.m02, m.m12, m.m22,
-		m.m03, m.m13, m.m23
-	)
-{}
-inline matrix3x4::matrix3x4(const transform3d& t)
+template<typename T>
+matrix3_t<T> transpose(matrix3_t<T> m)
 {
-	float xx = t.rotation.x * t.rotation.x;
-	float yy = t.rotation.y * t.rotation.y;
-	float zz = t.rotation.z * t.rotation.z;
-	float wx = t.rotation.w * t.rotation.x;
-	float wy = t.rotation.w * t.rotation.y;
-	float wz = t.rotation.w * t.rotation.z;
-	float xy = t.rotation.x * t.rotation.y;
-	float xz = t.rotation.x * t.rotation.z;
-	float yz = t.rotation.y * t.rotation.z;
-	*this = {
-		t.scale.x * (1.0f - 2.0f * (yy + zz)), t.scale.y * (2.0f * (xy - wz)),        t.scale.z * (2.0f * (xz + wy)),
-		t.scale.x * (2.0f * (xy + wz)),        t.scale.y * (1.0f - 2.0f * (xx + zz)), t.scale.z * (2.0f * (yz - wx)),
-		t.scale.x * (2.0f * (xz - wy)),        t.scale.y * (2.0f * (yz + wx)),        t.scale.z * (1.0f - 2.0f * (xx + yy)),
-		0.0f,                                  0.0f,                                  0.0f
-	};
+	std::swap(m.m01, m.m10);
+	std::swap(m.m02, m.m20);
+	std::swap(m.m12, m.m21);
+	return m;
 }
-inline matrix3x4::matrix3x4(const uniform_transform3d& t)
-{
-	float xx = t.rotation.x * t.rotation.x;
-	float yy = t.rotation.y * t.rotation.y;
-	float zz = t.rotation.z * t.rotation.z;
-	float wx = t.rotation.w * t.rotation.x;
-	float wy = t.rotation.w * t.rotation.y;
-	float wz = t.rotation.w * t.rotation.z;
-	float xy = t.rotation.x * t.rotation.y;
-	float xz = t.rotation.x * t.rotation.z;
-	float yz = t.rotation.y * t.rotation.z;
-	*this = {
-		t.scale * (1.0f - 2.0f * (yy + zz)), t.scale * (2.0f * (xy - wz)),        t.scale * (2.0f * (xz + wy)),
-		t.scale * (2.0f * (xy + wz)),        t.scale * (1.0f - 2.0f * (xx + zz)), t.scale * (2.0f * (yz - wx)),
-		t.scale * (2.0f * (xz - wy)),        t.scale * (2.0f * (yz + wx)),        t.scale * (1.0f - 2.0f * (xx + yy)),
-		0.0f,                                0.0f,                                0.0f
-	};
-}
-inline matrix3x4::matrix3x4(const unscaled_transform3d& t)
-{
-	float xx = t.rotation.x * t.rotation.x;
-	float yy = t.rotation.y * t.rotation.y;
-	float zz = t.rotation.z * t.rotation.z;
-	float wx = t.rotation.w * t.rotation.x;
-	float wy = t.rotation.w * t.rotation.y;
-	float wz = t.rotation.w * t.rotation.z;
-	float xy = t.rotation.x * t.rotation.y;
-	float xz = t.rotation.x * t.rotation.z;
-	float yz = t.rotation.y * t.rotation.z;
-	*this = {
-		(1.0f - 2.0f * (yy + zz)), (2.0f * (xy - wz)),        (2.0f * (xz + wy)),
-		(2.0f * (xy + wz)),        (1.0f - 2.0f * (xx + zz)), (2.0f * (yz - wx)),
-		(2.0f * (xz - wy)),        (2.0f * (yz + wx)),        (1.0f - 2.0f * (xx + yy)),
-		0.0f,                      0.0f,                      0.0f
-	};
-}
+#pragma endregion
 
-inline matrix3x4 matrix3x4::zero() { return { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f }; }
-inline matrix3x4 matrix3x4::identity() { return { 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f }; }
-inline matrix3x4 matrix3x4::rotation(euler_angles r) { return matrix3x4(matrix3::rotation(r)); }
-inline matrix3x4 matrix3x4::rotation(quaternion q) { return matrix3x4(matrix3::rotation(q)); }
-inline matrix3x4 matrix3x4::rotation_around_x(radian angle) { return matrix3x4(matrix3::rotation_around_x(angle)); }
-inline matrix3x4 matrix3x4::rotation_around_y(radian angle) { return matrix3x4(matrix3::rotation_around_y(angle)); }
-inline matrix3x4 matrix3x4::rotation_around_z(radian angle) { return matrix3x4(matrix3::rotation_around_z(angle)); }
-inline matrix3x4 matrix3x4::rotation_around_x(normalized<complex> angle) { return matrix3x4(matrix3::rotation_around_x(angle)); }
-inline matrix3x4 matrix3x4::rotation_around_y(normalized<complex> angle) { return matrix3x4(matrix3::rotation_around_y(angle)); }
-inline matrix3x4 matrix3x4::rotation_around_z(normalized<complex> angle) { return matrix3x4(matrix3::rotation_around_z(angle)); }
-inline matrix4x3 matrix3x4::get_transposed() const
+#pragma region definition matrix4_t
+template<typename T>
+matrix4_t<T> matrix4_t<T>::zero() { return {T(0), T(0), T(0), T(0), T(0), T(0), T(0), T(0), T(0), T(0), T(0), T(0), T(0), T(0), T(0), T(0)}; }
+template<typename T>
+matrix4_t<T> matrix4_t<T>::identity() { return {T(1), T(0), T(0), T(0), T(0), T(1), T(0), T(0), T(0), T(0), T(1), T(0), T(0), T(0), T(0), T(1)}; }
+template<typename T>
+matrix4_t<T> matrix4_t<T>::rotation(euler_angles_t<T> r) { return matrix4_t(matrix3_t::rotation(r)); }
+template<typename T>
+matrix4_t<T> matrix4_t<T>::rotation(quaternion_t<T> q) { return matrix4_t(matrix3_t::rotation(q)); }
+template<typename T>
+matrix4_t<T> matrix4_t<T>::translation(vector3_t<T> t) { return {T(1), T(0), T(0), t.x, T(0), T(1), T(0), t.y, T(0), T(0), T(1), t.z, T(0), T(0), T(0), T(1)}; }
+template<typename T>
+matrix4_t<T> matrix4_t<T>::translation(T x, T y, T z) { return translation({x, y, z}); }
+template<typename T>
+matrix4_t<T> matrix4_t<T>::scale(vector3_t<T> s) { return {s.x, T(0), T(0), T(0), T(0), s.y, T(0), T(0), T(0), T(0), s.z, T(0), T(0), T(0), T(0), T(1)}; }
+template<typename T>
+matrix4_t<T> matrix4_t<T>::look_at(vector3_t<T> from, vector3_t<T> to, vector3_t<T> up)
 {
-	return {
-		m00, m01, m02, m03,
-		m10, m11, m12, m13,
-		m20, m21, m22, m23
-	};
-}
-
-inline float& matrix3x4::at(uint8_t x, uint8_t y) { return reinterpret_cast<float*>(this)[x + 3 * y]; }
-inline const float& matrix3x4::at(uint8_t x, uint8_t y) const { return reinterpret_cast<const float*>(this)[x + 3 * y]; }
-
-inline matrix3x4 matrix3x4::operator*(float f) const
-{
-	return {
-		m00 * f, m10 * f, m20 * f,
-		m01 * f, m11 * f, m21 * f,
-		m02 * f, m12 * f, m22 * f,
-		m03 * f, m13 * f, m23 * f
-	};
-}
-inline vector4 matrix3x4::operator*(vector3 v) const
-{
-	return {
-		m00 * v.x + m10 * v.y + m20 * v.z,
-		m01 * v.x + m11 * v.y + m21 * v.z,
-		m02 * v.x + m12 * v.y + m22 * v.z,
-		m03 * v.x + m13 * v.y + m23 * v.z
-	};
-}
-inline matrix3x4 matrix3x4::operator*(const matrix3& m) const
-{
-	return {
-		   m00 * m.m00 + m10 * m.m01 + m20 * m.m02,
-		   m00 * m.m10 + m10 * m.m11 + m20 * m.m12,
-		   m00 * m.m20 + m10 * m.m21 + m20 * m.m22,
-
-		   m01 * m.m00 + m11 * m.m01 + m21 * m.m02,
-		   m01 * m.m10 + m11 * m.m11 + m21 * m.m12,
-		   m01 * m.m20 + m11 * m.m21 + m21 * m.m22,
-
-		   m02 * m.m00 + m12 * m.m01 + m22 * m.m02,
-		   m02 * m.m10 + m12 * m.m11 + m22 * m.m12,
-		   m02 * m.m20 + m12 * m.m21 + m22 * m.m22,
-
-		   m03 * m.m00 + m13 * m.m01 + m23 * m.m02,
-		   m03 * m.m10 + m13 * m.m11 + m23 * m.m12,
-		   m03 * m.m20 + m13 * m.m21 + m23 * m.m22
-	};
-}
-inline matrix4 matrix3x4::operator*(const matrix4x3& m) const
-{
-	return {
-		m.m00 * m00 + m.m01 * m10 + m.m02 * m20,
-		m.m10 * m00 + m.m11 * m10 + m.m12 * m20,
-		m.m20 * m00 + m.m21 * m10 + m.m22 * m20,
-		m.m30 * m00 + m.m31 * m10 + m.m32 * m20,
-
-		m.m00 * m01 + m.m01 * m11 + m.m02 * m21,
-		m.m10 * m01 + m.m11 * m11 + m.m12 * m21,
-		m.m20 * m01 + m.m21 * m11 + m.m22 * m21,
-		m.m30 * m01 + m.m31 * m11 + m.m32 * m21,
-
-		m.m00 * m02 + m.m01 * m12 + m.m02 * m22,
-		m.m10 * m02 + m.m11 * m12 + m.m12 * m22,
-		m.m20 * m02 + m.m21 * m12 + m.m22 * m22,
-		m.m30 * m02 + m.m31 * m12 + m.m32 * m22,
-
-		m.m00 * m03 + m.m01 * m13 + m.m02 * m23,
-		m.m10 * m03 + m.m11 * m13 + m.m12 * m23,
-		m.m20 * m03 + m.m21 * m13 + m.m22 * m23,
-		m.m30 * m03 + m.m31 * m13 + m.m32 * m23
-	};
-}
-
-inline matrix4x3::matrix4x3(float m00_, float m10_, float m20_, float m30_,
-	float m01_, float m11_, float m21_, float m31_,
-	float m02_, float m12_, float m22_, float m32_) :
-	m00(m00_), m10(m10_), m20(m20_), m30(m30_),
-	m01(m01_), m11(m11_), m21(m21_), m31(m31_),
-	m02(m02_), m12(m12_), m22(m22_), m32(m32_)
-{}
-inline matrix4x3::matrix4x3(matrix2 m) :
-	matrix4x3(
-		m.m00, m.m10, 0.0f, 0.0f,
-		m.m01, m.m11, 0.0f, 0.0f,
-		0.0f, 0.0f, 1.0f, 0.0f
-	)
-{}
-inline matrix4x3::matrix4x3(const matrix3& m) :
-	matrix4x3(
-		m.m00, m.m10, m.m20, 0.0f,
-		m.m01, m.m11, m.m21, 0.0f,
-		m.m02, m.m12, m.m22, 0.0f
-	)
-{}
-inline matrix4x3::matrix4x3(const matrix4& m) :
-	matrix4x3(
-		m.m00, m.m10, m.m20, m.m30,
-		m.m01, m.m11, m.m21, m.m31,
-		m.m02, m.m12, m.m22, m.m32
-	)
-{}
-inline matrix4x3::matrix4x3(const transform3d& t)
-{
-	float xx = t.rotation.x * t.rotation.x;
-	float yy = t.rotation.y * t.rotation.y;
-	float zz = t.rotation.z * t.rotation.z;
-	float wx = t.rotation.w * t.rotation.x;
-	float wy = t.rotation.w * t.rotation.y;
-	float wz = t.rotation.w * t.rotation.z;
-	float xy = t.rotation.x * t.rotation.y;
-	float xz = t.rotation.x * t.rotation.z;
-	float yz = t.rotation.y * t.rotation.z;
-	*this = {
-		t.scale.x * (1.0f - 2.0f * (yy + zz)), t.scale.y * (2.0f * (xy - wz)),        t.scale.z * (2.0f * (xz + wy)),        t.position.x,
-		t.scale.x * (2.0f * (xy + wz)),        t.scale.y * (1.0f - 2.0f * (xx + zz)), t.scale.z * (2.0f * (yz - wx)),        t.position.y,
-		t.scale.x * (2.0f * (xz - wy)),        t.scale.y * (2.0f * (yz + wx)),        t.scale.z * (1.0f - 2.0f * (xx + yy)), t.position.z
-	};
-}
-inline matrix4x3::matrix4x3(const uniform_transform3d& t)
-{
-	float xx = t.rotation.x * t.rotation.x;
-	float yy = t.rotation.y * t.rotation.y;
-	float zz = t.rotation.z * t.rotation.z;
-	float wx = t.rotation.w * t.rotation.x;
-	float wy = t.rotation.w * t.rotation.y;
-	float wz = t.rotation.w * t.rotation.z;
-	float xy = t.rotation.x * t.rotation.y;
-	float xz = t.rotation.x * t.rotation.z;
-	float yz = t.rotation.y * t.rotation.z;
-	*this = {
-		t.scale * (1.0f - 2.0f * (yy + zz)), t.scale * (2.0f * (xy - wz)),        t.scale * (2.0f * (xz + wy)),        t.position.x,
-		t.scale * (2.0f * (xy + wz)),        t.scale * (1.0f - 2.0f * (xx + zz)), t.scale * (2.0f * (yz - wx)),        t.position.y,
-		t.scale * (2.0f * (xz - wy)),        t.scale * (2.0f * (yz + wx)),        t.scale * (1.0f - 2.0f * (xx + yy)), t.position.z
-	};
-}
-inline matrix4x3::matrix4x3(const unscaled_transform3d& t)
-{
-	float xx = t.rotation.x * t.rotation.x;
-	float yy = t.rotation.y * t.rotation.y;
-	float zz = t.rotation.z * t.rotation.z;
-	float wx = t.rotation.w * t.rotation.x;
-	float wy = t.rotation.w * t.rotation.y;
-	float wz = t.rotation.w * t.rotation.z;
-	float xy = t.rotation.x * t.rotation.y;
-	float xz = t.rotation.x * t.rotation.z;
-	float yz = t.rotation.y * t.rotation.z;
-	*this = {
-		(1.0f - 2.0f * (yy + zz)), (2.0f * (xy - wz)),        (2.0f * (xz + wy)),        t.position.x,
-		(2.0f * (xy + wz)),        (1.0f - 2.0f * (xx + zz)), (2.0f * (yz - wx)),        t.position.y,
-		(2.0f * (xz - wy)),        (2.0f * (yz + wx)),        (1.0f - 2.0f * (xx + yy)), t.position.z
-	};
-}
-
-inline matrix4x3 matrix4x3::zero() { return { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f }; }
-inline matrix4x3 matrix4x3::identity() { return { 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f }; }
-inline matrix4x3 matrix4x3::rotation(euler_angles r) { return matrix4x3(matrix3::rotation(r)); }
-inline matrix4x3 matrix4x3::rotation(quaternion q) { return matrix4x3(matrix3::rotation(q)); }
-inline matrix4x3 matrix4x3::translation(vector3 t) { return { 1.0f, 0.0f, 0.0f, t.x, 0.0f, 1.0f, 0.0f, t.y, 0.0f, 0.0f, 1.0f, t.z }; }
-inline matrix4x3 matrix4x3::rotation_around_x(radian angle) { return matrix4x3(matrix3::rotation_around_x(angle)); }
-inline matrix4x3 matrix4x3::rotation_around_y(radian angle) { return matrix4x3(matrix3::rotation_around_y(angle)); }
-inline matrix4x3 matrix4x3::rotation_around_z(radian angle) { return matrix4x3(matrix3::rotation_around_z(angle)); }
-inline matrix4x3 matrix4x3::rotation_around_x(normalized<complex> angle) { return matrix4x3(matrix3::rotation_around_x(angle)); }
-inline matrix4x3 matrix4x3::rotation_around_y(normalized<complex> angle) { return matrix4x3(matrix3::rotation_around_y(angle)); }
-inline matrix4x3 matrix4x3::rotation_around_z(normalized<complex> angle) { return matrix4x3(matrix3::rotation_around_z(angle)); }
-inline matrix3x4 matrix4x3::get_transposed() const
-{
-	return {
-		m00, m01, m02,
-		m10, m11, m12,
-		m20, m21, m22,
-		m30, m31, m32
-	};
-}
-
-inline float& matrix4x3::at(uint8_t x, uint8_t y) { return reinterpret_cast<float*>(this)[x + 4 * y]; }
-inline const float& matrix4x3::at(uint8_t x, uint8_t y) const { return reinterpret_cast<const float*>(this)[x + 4 * y]; }
-
-inline matrix4x3 matrix4x3::operator*(float f) const
-{
-	return {
-		m00 * f, m10 * f, m20 * f, m20 * f,
-		m01 * f, m11 * f, m21 * f, m21 * f,
-		m02 * f, m12 * f, m22 * f, m22 * f
-	};
-}
-inline vector3 matrix4x3::operator*(vector4 v) const
-{
-	return {
-		m00 * v.x + m10 * v.y + m20 * v.z + m30 * v.w,
-		m01 * v.x + m11 * v.y + m21 * v.z + m31 * v.w,
-		m02 * v.x + m12 * v.y + m22 * v.z + m32 * v.w
-	};
-}
-inline matrix3 matrix4x3::operator*(const matrix3x4& m) const
-{
-	return {
-		m.m00 * m00 + m.m01 * m10 + m.m02 * m20 + m.m03 * m30,
-		m.m10 * m00 + m.m11 * m10 + m.m12 * m20 + m.m13 * m30,
-		m.m20 * m00 + m.m21 * m10 + m.m22 * m20 + m.m23 * m30,
-
-		m.m00 * m01 + m.m01 * m11 + m.m02 * m21 + m.m03 * m31,
-		m.m10 * m01 + m.m11 * m11 + m.m12 * m21 + m.m13 * m31,
-		m.m20 * m01 + m.m21 * m11 + m.m22 * m21 + m.m23 * m31,
-
-		m.m00 * m02 + m.m01 * m12 + m.m02 * m22 + m.m03 * m32,
-		m.m10 * m02 + m.m11 * m12 + m.m12 * m22 + m.m13 * m32,
-		m.m20 * m02 + m.m21 * m12 + m.m22 * m22 + m.m23 * m32
-	};
-}
-inline matrix4x3 matrix4x3::operator*(const matrix4& m) const
-{
-	return {
-		m.m00 * m00 + m.m01 * m10 + m.m02 * m20 + m.m03 * m30,
-		m.m10 * m00 + m.m11 * m10 + m.m12 * m20 + m.m13 * m30,
-		m.m20 * m00 + m.m21 * m10 + m.m22 * m20 + m.m23 * m30,
-		m.m30 * m00 + m.m31 * m10 + m.m32 * m20 + m.m33 * m30,
-
-		m.m00 * m01 + m.m01 * m11 + m.m02 * m21 + m.m03 * m31,
-		m.m10 * m01 + m.m11 * m11 + m.m12 * m21 + m.m13 * m31,
-		m.m20 * m01 + m.m21 * m11 + m.m22 * m21 + m.m23 * m31,
-		m.m30 * m01 + m.m31 * m11 + m.m32 * m21 + m.m33 * m31,
-
-		m.m00 * m02 + m.m01 * m12 + m.m02 * m22 + m.m03 * m32,
-		m.m10 * m02 + m.m11 * m12 + m.m12 * m22 + m.m13 * m32,
-		m.m20 * m02 + m.m21 * m12 + m.m22 * m22 + m.m23 * m32,
-		m.m30 * m02 + m.m31 * m12 + m.m32 * m22 + m.m33 * m32
-	};
-}
-
-inline matrix4::matrix4(float m00_, float m10_, float m20_, float m30_,
-	float m01_, float m11_, float m21_, float m31_,
-	float m02_, float m12_, float m22_, float m32_,
-	float m03_, float m13_, float m23_, float m33_) :
-	m00(m00_), m10(m10_), m20(m20_), m30(m30_),
-	m01(m01_), m11(m11_), m21(m21_), m31(m31_),
-	m02(m02_), m12(m12_), m22(m22_), m32(m32_),
-	m03(m03_), m13(m13_), m23(m23_), m33(m33_)
-{}
-inline matrix4::matrix4(matrix2 m) :
-	matrix4(
-		m.m00, m.m10, 0.0f, 0.0f,
-		m.m01, m.m11, 0.0f, 0.0f,
-		0.0f,  0.0f,  1.0f, 0.0f,
-		0.0f,  0.0f,  0.0f, 1.0f
-	)
-{}
-inline matrix4::matrix4(const matrix3& m) :
-	matrix4(
-		m.m00, m.m10, m.m20, 0.0f,
-		m.m01, m.m11, m.m21, 0.0f,
-		m.m02, m.m12, m.m22, 0.0f,
-		0.0f,  0.0f,  0.0f,  1.0f
-	)
-{}
-inline matrix4::matrix4(const perspective& p) { *this = p.to_matrix4(); }
-inline matrix4::matrix4(const transform3d& t)
-{
-	float xx = t.rotation.x * t.rotation.x;
-	float yy = t.rotation.y * t.rotation.y;
-	float zz = t.rotation.z * t.rotation.z;
-	float wx = t.rotation.w * t.rotation.x;
-	float wy = t.rotation.w * t.rotation.y;
-	float wz = t.rotation.w * t.rotation.z;
-	float xy = t.rotation.x * t.rotation.y;
-	float xz = t.rotation.x * t.rotation.z;
-	float yz = t.rotation.y * t.rotation.z;
-	*this = {
-		t.scale.x * (1.0f - 2.0f * (yy + zz)), t.scale.y * (2.0f * (xy - wz)),        t.scale.z * (2.0f * (xz + wy)),        t.position.x,
-		t.scale.x * (2.0f * (xy + wz)),        t.scale.y * (1.0f - 2.0f * (xx + zz)), t.scale.z * (2.0f * (yz - wx)),        t.position.y,
-		t.scale.x * (2.0f * (xz - wy)),        t.scale.y * (2.0f * (yz + wx)),        t.scale.z * (1.0f - 2.0f * (xx + yy)), t.position.z,
-		0.0f,                                  0.0f,                                  0.0f,                                  1.0f
-	};
-}
-inline matrix4::matrix4(const uniform_transform3d& t)
-{
-	float xx = t.rotation.x * t.rotation.x;
-	float yy = t.rotation.y * t.rotation.y;
-	float zz = t.rotation.z * t.rotation.z;
-	float wx = t.rotation.w * t.rotation.x;
-	float wy = t.rotation.w * t.rotation.y;
-	float wz = t.rotation.w * t.rotation.z;
-	float xy = t.rotation.x * t.rotation.y;
-	float xz = t.rotation.x * t.rotation.z;
-	float yz = t.rotation.y * t.rotation.z;
-	*this = {
-		t.scale * (1.0f - 2.0f * (yy + zz)), t.scale * (2.0f * (xy - wz)),        t.scale * (2.0f * (xz + wy)),        t.position.x,
-		t.scale * (2.0f * (xy + wz)),        t.scale * (1.0f - 2.0f * (xx + zz)), t.scale * (2.0f * (yz - wx)),        t.position.y,
-		t.scale * (2.0f * (xz - wy)),        t.scale * (2.0f * (yz + wx)),        t.scale * (1.0f - 2.0f * (xx + yy)), t.position.z,
-		0.0f,                                0.0f,                                0.0f,                                1.0f
-	};
-}
-inline matrix4::matrix4(const unscaled_transform3d& t)
-{
-	float xx = t.rotation.x * t.rotation.x;
-	float yy = t.rotation.y * t.rotation.y;
-	float zz = t.rotation.z * t.rotation.z;
-	float wx = t.rotation.w * t.rotation.x;
-	float wy = t.rotation.w * t.rotation.y;
-	float wz = t.rotation.w * t.rotation.z;
-	float xy = t.rotation.x * t.rotation.y;
-	float xz = t.rotation.x * t.rotation.z;
-	float yz = t.rotation.y * t.rotation.z;
-	*this = {
-		(1.0f - 2.0f * (yy + zz)), (2.0f * (xy - wz)),        (2.0f * (xz + wy)),        t.position.x,
-		(2.0f * (xy + wz)),        (1.0f - 2.0f * (xx + zz)), (2.0f * (yz - wx)),        t.position.y,
-		(2.0f * (xz - wy)),        (2.0f * (yz + wx)),        (1.0f - 2.0f * (xx + yy)), t.position.z,
-		0.0f,                      0.0f,                      0.0f,                      1.0f
-	};
-}
-inline matrix4::matrix4(const std::array<float, 16>& a) : matrix4(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12], a[13], a[14], a[15]) {}
-inline matrix4::matrix4(const std::array<double, 16>& a) : matrix4(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12], a[13], a[14], a[15]) {}
-
-inline matrix4 matrix4::zero() { return {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}; }
-inline matrix4 matrix4::identity() { return {1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f}; }
-inline matrix4 matrix4::rotation(euler_angles r) { return matrix4(matrix3::rotation(r)); }
-inline matrix4 matrix4::rotation(quaternion q) { return matrix4(matrix3::rotation(q)); }
-inline matrix4 matrix4::translation(vector3 t) { return {1.0f, 0.0f, 0.0f, t.x, 0.0f, 1.0f, 0.0f, t.y, 0.0f, 0.0f, 1.0f, t.z, 0.0f, 0.0f, 0.0f, 1.0f}; }
-inline matrix4 matrix4::translation(float x, float y, float z) { return translation({x, y, z}); }
-inline matrix4 matrix4::scale(vector3 s) { return {s.x, 0.0f, 0.0f, 0.0f, 0.0f, s.y, 0.0f, 0.0f, 0.0f, 0.0f, s.z, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f}; }
-inline matrix4 matrix4::look_at(vector3 from, vector3 to, vector3 up)
-{
-	vector3 forward = (from - to).get_normalized();
-	vector3 right = cross(up.get_normalized(), forward);
-	vector3 true_up = cross(forward, right);
+	vector3_t<T> forward = (from - to).get_normalized();
+	vector3_t<T> right = cross(up.get_normalized(), forward);
+	vector3_t<T> true_up = cross(forward, right);
 
 	return {
 		right.x, true_up.x, forward.x, from.x,
 		right.y, true_up.y, forward.y, from.y,
 		right.z, true_up.z, forward.z, from.z,
-		0.0f,    0.0f,      0.0f,      1.0f
+		T(0),    T(0),      T(0),      T(1)
 	};
 }
-inline matrix4 matrix4::orthographic(float left, float right, float top, float bottom, float near, float far)
+template<typename T>
+matrix4_t<T> matrix4_t<T>::orthographic(T left, T right, T top, T bottom, T near, T far)
 {
-	float a = 1.0f / (right - left);
-	float b = 1.0f / (bottom - top);
-	float c = 1.0f / (near - far);
+	T a = T(1) / (right - left);
+	T b = T(1) / (bottom - top);
+	T c = T(1) / (near - far);
 
 	return {
-		2.0f * a, 0.0f,     0.0f, -(right + left) * a,
-		0.0f,     2.0f * b, 0.0f, -(bottom + top) * b,
-		0.0f,     0.0f,     c,    near * c,
-		0.0f,     0.0f,     0.0f, 1.0f,
+		T(2) * a, T(0),     T(0), -(right + left) * a,
+		T(0),     T(2) * b, T(0), -(bottom + top) * b,
+		T(0),     T(0),     c,    near * c,
+		T(0),     T(0),     T(0), T(1),
 	};
 }
-inline matrix4 matrix4::rotation_around_x(radian angle) { return matrix4(matrix3::rotation_around_x(angle)); }
-inline matrix4 matrix4::rotation_around_y(radian angle) { return matrix4(matrix3::rotation_around_y(angle)); }
-inline matrix4 matrix4::rotation_around_z(radian angle) { return matrix4(matrix3::rotation_around_z(angle)); }
-inline matrix4 matrix4::rotation_around_x(normalized<complex> angle) { return matrix4(matrix3::rotation_around_x(angle)); }
-inline matrix4 matrix4::rotation_around_y(normalized<complex> angle) { return matrix4(matrix3::rotation_around_y(angle)); }
-inline matrix4 matrix4::rotation_around_z(normalized<complex> angle) { return matrix4(matrix3::rotation_around_z(angle)); }
-inline bool matrix4::is_orthogonal() const
+template<typename T>
+matrix4_t<T> matrix4_t<T>::rotation_around_x(radian_t<T> angle) { return matrix4_t<T>(matrix3_t<T>::rotation_around_x(angle)); }
+template<typename T>
+matrix4_t<T> matrix4_t<T>::rotation_around_y(radian_t<T> angle) { return matrix4_t<T>(matrix3_t<T>::rotation_around_y(angle)); }
+template<typename T>
+matrix4_t<T> matrix4_t<T>::rotation_around_z(radian_t<T> angle) { return matrix4_t<T>(matrix3_t<T>::rotation_around_z(angle)); }
+template<typename T>
+matrix4_t<T> matrix4_t<T>::rotation_around_x(normalized<complex_t<T>> angle) { return matrix4_t<T>(matrix3_t<T>::rotation_around_x(angle)); }
+template<typename T>
+matrix4_t<T> matrix4_t<T>::rotation_around_y(normalized<complex_t<T>> angle) { return matrix4_t<T>(matrix3_t<T>::rotation_around_y(angle)); }
+template<typename T>
+matrix4_t<T> matrix4_t<T>::rotation_around_z(normalized<complex_t<T>> angle) { return matrix4_t<T>(matrix3_t<T>::rotation_around_z(angle)); }
+template<typename T>
+bool matrix4_t<T>::is_orthogonal() const
 {
 	return
-		nearly_equal(m00 * m01 + m10 * m11 + m20 * m21 + m30 * m31, 0.0f) &&
-		nearly_equal(m00 * m02 + m10 * m12 + m20 * m22 + m30 * m32, 0.0f) &&
-		nearly_equal(m00 * m03 + m10 * m13 + m20 * m23 + m30 * m33, 0.0f) &&
-		nearly_equal(m01 * m02 + m11 * m12 + m21 * m22 + m31 * m32, 0.0f) &&
-		nearly_equal(m01 * m03 + m11 * m13 + m21 * m23 + m31 * m33, 0.0f) &&
-		nearly_equal(m02 * m03 + m12 * m13 + m22 * m23 + m32 * m33, 0.0f) &&
-		nearly_equal(m00 * m00 + m10 * m10 + m20 * m20 + m30 * m30, 1.0f) &&
-		nearly_equal(m01 * m01 + m11 * m11 + m21 * m21 + m31 * m31, 1.0f) &&
-		nearly_equal(m02 * m02 + m12 * m12 + m22 * m22 + m32 * m32, 1.0f) &&
-		nearly_equal(m03 * m03 + m13 * m13 + m23 * m23 + m33 * m33, 1.0f);
+		nearly_equal(m00 * m01 + m10 * m11 + m20 * m21 + m30 * m31, T(0)) &&
+		nearly_equal(m00 * m02 + m10 * m12 + m20 * m22 + m30 * m32, T(0)) &&
+		nearly_equal(m00 * m03 + m10 * m13 + m20 * m23 + m30 * m33, T(0)) &&
+		nearly_equal(m01 * m02 + m11 * m12 + m21 * m22 + m31 * m32, T(0)) &&
+		nearly_equal(m01 * m03 + m11 * m13 + m21 * m23 + m31 * m33, T(0)) &&
+		nearly_equal(m02 * m03 + m12 * m13 + m22 * m23 + m32 * m33, T(0)) &&
+		nearly_equal(m00 * m00 + m10 * m10 + m20 * m20 + m30 * m30, T(1)) &&
+		nearly_equal(m01 * m01 + m11 * m11 + m21 * m21 + m31 * m31, T(1)) &&
+		nearly_equal(m02 * m02 + m12 * m12 + m22 * m22 + m32 * m32, T(1)) &&
+		nearly_equal(m03 * m03 + m13 * m13 + m23 * m23 + m33 * m33, T(1));
 }
-inline bool matrix4::is_homogenous() const
+template<typename T>
+bool matrix4_t<T>::is_homogenous() const
 {
 	return
-		nearly_equal(m03, 0.0f) &&
-		nearly_equal(m13, 0.0f) &&
-		nearly_equal(m23, 0.0f) &&
-		nearly_equal(m30, 0.0f) &&
-		nearly_equal(m31, 0.0f) &&
-		nearly_equal(m32, 0.0f) &&
-		nearly_equal(m33, 1.0f);
+		nearly_equal(m03, T(0)) &&
+		nearly_equal(m13, T(0)) &&
+		nearly_equal(m23, T(0)) &&
+		nearly_equal(m30, T(0)) &&
+		nearly_equal(m31, T(0)) &&
+		nearly_equal(m32, T(0)) &&
+		nearly_equal(m33, T(1));
 }
-inline matrix4& matrix4::inverse()
+template<typename T>
+matrix4_t<T> matrix4_t<T>::inversed() const
 {
-	if (is_orthogonal())
-	{
-		transpose();
-		return *this;
-	}
-
-	float det = get_determinant();
-	float invDet = (1.0f / det);
-	float recM00 = m00;
-	float recM10 = m10;
-	float recM20 = m20;
-	float recM01 = m01;
-	float recM11 = m11;
-	float recM02 = m02;
-
-	if (is_homogenous())
-	{
-		m00 = invDet * (recM11 * m22    - m21    * m12);
-		m10 = invDet * (m12    * recM20	- recM10 * m22);
-		m20 = invDet * (recM10 * m21    - recM20 * recM11);
-		m01 = invDet * (recM02 * m21    - recM01 * m22);
-		m11 = invDet * (recM00 * m22    - recM20 * recM02);
-		m21 = invDet * (recM01 * recM20 - recM00 * m21);
-		m02 = invDet * (recM01 * m12    - recM11 * recM02);
-		m12 = invDet * (recM02 * recM10 - recM00 * m12);
-		m22 = invDet * (recM00 * recM11 - recM10 * recM01);
-		return *this;
-	}
-
-	float recM30 = m30;
-	float recM21 = m21;
-	float recM31 = m31;
-	float recM12 = m12;
-	float recM22 = m22;
-	float recM03 = m03;
-	float recM13 = m13;
-
-	m00 = invDet * (
-		recM11 * recM22 * m33 -
-		recM11 * m23 * m32 -
-		recM21 * recM12 * m33 +
-		recM21 * recM13 * m32 +
-		recM31 * recM12 * m23 -
-		recM31 * recM13 * recM22);
-
-	m10 = invDet * (
-		-recM10 * recM22 * m33 +
-		recM10 * m23 * m32 +
-		recM20 * recM12 * m33 -
-		recM20 * recM13 * m32 -
-		recM30 * recM12 * m23 +
-		recM30 * recM13 * recM22
-	);
-
-	m20 = invDet * (
-		recM10 * recM21 * m33 -
-		recM10 * m23 * recM31 -
-		recM20 * recM11 * m33 +
-		recM20 * recM13 * recM31 +
-		recM30 * recM11 * m23 -
-		recM30 * recM13 * recM21
-	);
-
-	m30 = invDet * (
-		-recM10 * recM21 * m32 +
-		recM10 * recM22 * recM31 +
-		recM20 * recM11 * m32 -
-		recM20 * recM12 * recM31 -
-		recM30 * recM11 * recM22 +
-		recM30 * recM12 * recM21
-	);
-
-	m01 = invDet * (
-		-recM01 * recM22 * m33 +
-		recM01 * m23 * m32 +
-		recM21 * recM02 * m33 -
-		recM21 * recM03 * m32 -
-		recM31 * recM02 * m23 +
-		recM31 * recM03 * recM22
-	);
-
-	m11 = invDet * (
-		recM00 * recM22 * m33 -
-		recM00 * m23 * m32 -
-		recM20 * recM02 * m33 +
-		recM20 * recM03 * m32 +
-		recM30 * recM02 * m23 -
-		recM30 * recM03 * recM22
-	);
-
-	m21 = invDet * (
-		-recM00 * recM21 * m33 +
-		recM00 * m23 * recM31 +
-		recM20 * recM01 * m33 -
-		recM20 * recM03 * recM31 -
-		recM30 * recM01 * m23 +
-		recM30 * recM03 * recM21
-	);
-
-	m31 = invDet * (
-		recM00 * recM21 * m32 -
-		recM00 * recM22 * recM31 -
-		recM20 * recM01 * m32 +
-		recM20 * recM02 * recM31 +
-		recM30 * recM01 * recM22 -
-		recM30 * recM02 * recM21
-	);
-
-	m02 = invDet * (
-		recM01 * recM12 * m33 -
-		recM01 * recM13 * m32 -
-		recM11 * recM02 * m33 +
-		recM11 * recM03 * m32 +
-		recM31 * recM02 * recM13 -
-		recM31 * recM03 * recM12
-	);
-
-	m12 = invDet * (
-		-recM00 * recM12 * m33 +
-		recM00 * recM13 * m32 +
-		recM10 * recM02 * m33 -
-		recM10 * recM03 * m32 -
-		recM30 * recM02 * recM13 +
-		recM30 * recM03 * recM12
-	);
-
-	m22 = invDet * (
-		recM00 * recM11 * m33 -
-		recM00 * recM13 * recM31 -
-		recM10 * recM01 * m33 +
-		recM10 * recM03 * recM31 +
-		recM30 * recM01 * recM13 -
-		recM30 * recM03 * recM11
-	);
-
-	m32 = invDet * (
-		-recM00 * recM11 * m32 +
-		recM00 * recM12 * recM31 +
-		recM10 * recM01 * m32 -
-		recM10 * recM02 * recM31 -
-		recM30 * recM01 * recM12 +
-		recM30 * recM02 * recM11
-	);
-
-	m03 = invDet * (
-		-recM01 * recM12 * m23 +
-		recM01 * recM13 * recM22 +
-		recM11 * recM02 * m23 -
-		recM11 * recM03 * recM22 -
-		recM21 * recM02 * recM13 +
-		recM21 * recM03 * recM12
-	);
-
-	m13 = invDet * (
-		recM00 * recM12 * m23 -
-		recM00 * recM13 * recM22 -
-		recM10 * recM02 * m23 +
-		recM10 * recM03 * recM22 +
-		recM20 * recM02 * recM13 -
-		recM20 * recM03 * recM12
-	);
-
-	m23 = invDet * (
-		-recM00 * recM11 * m23 +
-		recM00 * recM13 * recM21 +
-		recM10 * recM01 * m23 -
-		recM10 * recM03 * recM21 -
-		recM20 * recM01 * recM13 +
-		recM20 * recM03 * recM11
-	);
-
-	m33 = invDet * (
-		recM00 * recM11 * recM22 -
-		recM00 * recM12 * recM21 -
-		recM10 * recM01 * recM22 +
-		recM10 * recM02 * recM21 +
-		recM20 * recM01 * recM12 -
-		recM20 * recM02 * recM11
-	);
-
-	return *this;
-}
-inline matrix4 matrix4::get_inversed() const
-{
-	matrix4 res = *this;
+	matrix4_t<T> res = *this;
 	res.inverse();
 	return res;
 }
-inline matrix4& matrix4::transpose()
+template<typename T>
+matrix4_t<T> matrix4_t<T>::transposed() const
 {
-	std::swap(m01, m10);
-	std::swap(m02, m20);
-	std::swap(m03, m30);
-	std::swap(m12, m21);
-	std::swap(m13, m31);
-	std::swap(m23, m32);
-	return *this;
-}
-inline matrix4 matrix4::get_transposed() const
-{
-	matrix4 res = *this;
+	matrix4_t<T> res = *this;
 	res.transpose();
 	return res;
 }
-inline float matrix4::get_determinant() const
+template<typename T>
+T matrix4_t<T>::determinant() const
 {
 	if (is_homogenous())
 	{
@@ -2657,17 +2180,20 @@ inline float matrix4::get_determinant() const
 			m22 * m10 * m01;
 	}
 
-	float det1 = m11 * (m22 * m33 - m32 * m23) - m21 * (m12 * m33 - m32 * m13) + m31 * (m12 * m23 - m22 * m13);
-	float det2 = m01 * (m22 * m33 - m32 * m23) - m21 * (m02 * m33 - m32 * m03) + m31 * (m02 * m23 - m22 * m03);
-	float det3 = m01 * (m12 * m33 - m32 * m13) - m11 * (m02 * m33 - m32 * m03) + m31 * (m02 * m13 - m12 * m03);
-	float det4 = m01 * (m12 * m23 - m22 * m13) - m11 * (m02 * m23 - m22 * m03) + m21 * (m02 * m13 - m12 * m03);
+	T det1 = m11 * (m22 * m33 - m32 * m23) - m21 * (m12 * m33 - m32 * m13) + m31 * (m12 * m23 - m22 * m13);
+	T det2 = m01 * (m22 * m33 - m32 * m23) - m21 * (m02 * m33 - m32 * m03) + m31 * (m02 * m23 - m22 * m03);
+	T det3 = m01 * (m12 * m33 - m32 * m13) - m11 * (m02 * m33 - m32 * m03) + m31 * (m02 * m13 - m12 * m03);
+	T det4 = m01 * (m12 * m23 - m22 * m13) - m11 * (m02 * m23 - m22 * m03) + m21 * (m02 * m13 - m12 * m03);
 	return m00 * det1 - m10 * det2 + m20 * det3 - m30 * det4;
 }
 
-inline float& matrix4::at(uint8_t x, uint8_t y) { return reinterpret_cast<float*>(this)[x + 4 * y]; }
-inline const float& matrix4::at(uint8_t x, uint8_t y) const { return reinterpret_cast<const float*>(this)[x + 4 * y]; }
+template<typename T>
+T& matrix4_t<T>::at(uint8_t x, uint8_t y) { return reinterpret_cast<T*>(this)[x + 4 * y]; }
+template<typename T>
+const T& matrix4_t<T>::at(uint8_t x, uint8_t y) const { return reinterpret_cast<const T*>(this)[x + 4 * y]; }
 
-inline matrix4 matrix4::operator*(float f) const
+template<typename T>
+matrix4_t<T> matrix4_t<T>::operator*(T f) const
 {
 	return {
 		m00 * f, m10 * f, m20 * f, m30 * f,
@@ -2676,7 +2202,8 @@ inline matrix4 matrix4::operator*(float f) const
 		m00 * f, m10 * f, m20 * f, m30 * f
 	};
 }
-inline matrix4 matrix4::operator/(float f) const
+template<typename T>
+matrix4_t<T> matrix4_t<T>::operator/(T f) const
 {
 	return {
 		m00 / f, m10 / f, m20 / f, m30 / f,
@@ -2685,7 +2212,8 @@ inline matrix4 matrix4::operator/(float f) const
 		m00 / f, m10 / f, m20 / f, m30 / f
 	};
 }
-inline vector4 matrix4::operator*(vector4 v) const
+template<typename T>
+vector4_t<T> matrix4_t<T>::operator*(vector4_t<T> v) const
 {
 	return {
 		m00 * v.x + m10 * v.y + m20 * v.z + m30 * v.w,
@@ -2694,27 +2222,8 @@ inline vector4 matrix4::operator*(vector4 v) const
 		m03 * v.x + m13 * v.y + m23 * v.z + m33 * v.w
 	};
 }
-inline matrix3x4 matrix4::operator*(const matrix3x4& m) const
-{
-	return {
-		m.m00 * m00 + m.m01 * m10 + m.m02 * m20 + m.m03 * m30,
-		m.m10 * m00 + m.m11 * m10 + m.m12 * m20 + m.m13 * m30,
-		m.m20 * m00 + m.m21 * m10 + m.m22 * m20 + m.m23 * m30,
-
-		m.m00 * m01 + m.m01 * m11 + m.m02 * m21 + m.m03 * m31,
-		m.m10 * m01 + m.m11 * m11 + m.m12 * m21 + m.m13 * m31,
-		m.m20 * m01 + m.m21 * m11 + m.m22 * m21 + m.m23 * m31,
-
-		m.m00 * m02 + m.m01 * m12 + m.m02 * m22 + m.m03 * m32,
-		m.m10 * m02 + m.m11 * m12 + m.m12 * m22 + m.m13 * m32,
-		m.m20 * m02 + m.m21 * m12 + m.m22 * m22 + m.m23 * m32,
-
-		m.m00 * m03 + m.m01 * m13 + m.m02 * m23 + m.m03 * m33,
-		m.m10 * m03 + m.m11 * m13 + m.m12 * m23 + m.m13 * m33,
-		m.m20 * m03 + m.m21 * m13 + m.m22 * m23 + m.m23 * m33
-	};
-}
-inline matrix4 matrix4::operator*(const matrix4& m) const
+template<typename T>
+matrix4_t<T> matrix4_t<T>::operator*(const matrix4_t<T>& m) const
 {
 	return {
 		m.m00 * m00 + m.m01 * m10 + m.m02 * m20 + m.m03 * m30,
@@ -2738,70 +2247,273 @@ inline matrix4 matrix4::operator*(const matrix4& m) const
 		m.m30 * m03 + m.m31 * m13 + m.m32 * m23 + m.m33 * m33
 	};
 }
+inline matrix4::matrix4(const std::array<float, 16>& a) : matrix4(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12], a[13], a[14], a[15]) {}
+inline matrix4::matrix4(const std::array<double, 16>& a) : matrix4(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12], a[13], a[14], a[15]) {}
 
-inline matrix4::operator std::array<float, 16>() const
+template<typename T>
+template<typename U>
+std::array<U, 16> matrix4_t<T>::to_array() const
 {
-	std::array<float, 16> res {
-		m00, m10, m20, m30,
-		m01, m11, m21, m31,
-		m02, m12, m22, m32,
-		m03, m13, m23, m33
-	};
-
-	return res;
-}
-inline matrix4::operator std::array<double, 16>() const
-{
-	std::array<double, 16> res {
-		m00, m10, m20, m30,
-		m01, m11, m21, m31,
-		m02, m12, m22, m32,
-		m03, m13, m23, m33
+	std::array<U, 16> res {
+		U(m00), U(m10), U(m20), U(m30),
+		U(m01), U(m11), U(m21), U(m31),
+		U(m02), U(m12), U(m22), U(m32),
+		U(m03), U(m13), U(m23), U(m33)
 	};
 
 	return res;
 }
 
-inline perspective::perspective(radian angle, float ratio, float near, float far) :
-	m_angle(angle),
-    m_ratio(ratio),
-    m_inv_ratio(1.0f / m_ratio),
-    m_near(near),
-    m_far(far),
-    m_invTanHalfFovy(1.0f / tan(m_angle / 2.0f))
-{}
-inline void perspective::set_angle(radian angle)
+template<typename T>
+matrix4_t<T> inverse(matrix4_t<T> m)
+{
+	if (m.is_orthogonal())
 	{
-	m_angle = angle;
-	m_invTanHalfFovy = 1.0f / tan(angle / 2.0f);
+		return transpose(m);
+	}
+
+	T det = m.determinant();
+	T invDet = T(1) / det;
+	T recM00 = m.m00;
+	T recM10 = m.m10;
+	T recM20 = m.m20;
+	T recM01 = m.m01;
+	T recM11 = m.m11;
+	T recM02 = m.m02;
+
+	if (m.is_homogenous())
+	{
+		m.m00 = invDet * (recM11 * m.m22 - m.m21 * m.m12);
+		m.m10 = invDet * (m.m12 * recM20 - recM10 * m.m22);
+		m.m20 = invDet * (recM10 * m.m21 - recM20 * recM11);
+		m.m01 = invDet * (recM02 * m.m21 - recM01 * m.m22);
+		m.m11 = invDet * (recM00 * m.m22 - recM20 * recM02);
+		m.m21 = invDet * (recM01 * recM20 - recM00 * m.m21);
+		m.m02 = invDet * (recM01 * m.m12 - recM11 * recM02);
+		m.m12 = invDet * (recM02 * recM10 - recM00 * m.m12);
+		m.m22 = invDet * (recM00 * recM11 - recM10 * recM01);
+		return m;
+	}
+
+	T recM30 = m.m30;
+	T recM21 = m.m21;
+	T recM31 = m.m31;
+	T recM12 = m.m12;
+	T recM22 = m.m22;
+	T recM03 = m.m03;
+	T recM13 = m.m13;
+
+	m.m00 = invDet * (
+		recM11 * recM22 * m.m33 -
+		recM11 * m.m23 * m.m32 -
+		recM21 * recM12 * m.m33 +
+		recM21 * recM13 * m.m32 +
+		recM31 * recM12 * m.m23 -
+		recM31 * recM13 * recM22);
+
+	m.m10 = invDet * (
+		-recM10 * recM22 * m.m33 +
+		recM10 * m.m23 * m.m32 +
+		recM20 * recM12 * m.m33 -
+		recM20 * recM13 * m.m32 -
+		recM30 * recM12 * m.m23 +
+		recM30 * recM13 * recM22
+		);
+
+	m.m20 = invDet * (
+		recM10 * recM21 * m.m33 -
+		recM10 * m.m23 * recM31 -
+		recM20 * recM11 * m.m33 +
+		recM20 * recM13 * recM31 +
+		recM30 * recM11 * m.m23 -
+		recM30 * recM13 * recM21
+		);
+
+	m.m30 = invDet * (
+		-recM10 * recM21 * m.m32 +
+		recM10 * recM22 * recM31 +
+		recM20 * recM11 * m.m32 -
+		recM20 * recM12 * recM31 -
+		recM30 * recM11 * recM22 +
+		recM30 * recM12 * recM21
+		);
+
+	m.m01 = invDet * (
+		-recM01 * recM22 * m.m33 +
+		recM01 * m.m23 * m.m32 +
+		recM21 * recM02 * m.m33 -
+		recM21 * recM03 * m.m32 -
+		recM31 * recM02 * m.m23 +
+		recM31 * recM03 * recM22
+		);
+
+	m.m11 = invDet * (
+		recM00 * recM22 * m.m33 -
+		recM00 * m.m23 * m.m32 -
+		recM20 * recM02 * m.m33 +
+		recM20 * recM03 * m.m32 +
+		recM30 * recM02 * m.m23 -
+		recM30 * recM03 * recM22
+		);
+
+	m.m21 = invDet * (
+		-recM00 * recM21 * m.m33 +
+		recM00 * m.m23 * recM31 +
+		recM20 * recM01 * m.m33 -
+		recM20 * recM03 * recM31 -
+		recM30 * recM01 * m.m23 +
+		recM30 * recM03 * recM21
+		);
+
+	m.m31 = invDet * (
+		recM00 * recM21 * m.m32 -
+		recM00 * recM22 * recM31 -
+		recM20 * recM01 * m.m32 +
+		recM20 * recM02 * recM31 +
+		recM30 * recM01 * recM22 -
+		recM30 * recM02 * recM21
+		);
+
+	m.m02 = invDet * (
+		recM01 * recM12 * m.m33 -
+		recM01 * recM13 * m.m32 -
+		recM11 * recM02 * m.m33 +
+		recM11 * recM03 * m.m32 +
+		recM31 * recM02 * recM13 -
+		recM31 * recM03 * recM12
+		);
+
+	m.m12 = invDet * (
+		-recM00 * recM12 * m.m33 +
+		recM00 * recM13 * m.m32 +
+		recM10 * recM02 * m.m33 -
+		recM10 * recM03 * m.m32 -
+		recM30 * recM02 * recM13 +
+		recM30 * recM03 * recM12
+		);
+
+	m.m22 = invDet * (
+		recM00 * recM11 * m.m33 -
+		recM00 * recM13 * recM31 -
+		recM10 * recM01 * m.m33 +
+		recM10 * recM03 * recM31 +
+		recM30 * recM01 * recM13 -
+		recM30 * recM03 * recM11
+		);
+
+	m.m32 = invDet * (
+		-recM00 * recM11 * m.m32 +
+		recM00 * recM12 * recM31 +
+		recM10 * recM01 * m.m32 -
+		recM10 * recM02 * recM31 -
+		recM30 * recM01 * recM12 +
+		recM30 * recM02 * recM11
+		);
+
+	m.m03 = invDet * (
+		-recM01 * recM12 * m.m23 +
+		recM01 * recM13 * recM22 +
+		recM11 * recM02 * m.m23 -
+		recM11 * recM03 * recM22 -
+		recM21 * recM02 * recM13 +
+		recM21 * recM03 * recM12
+		);
+
+	m.m13 = invDet * (
+		recM00 * recM12 * m.m23 -
+		recM00 * recM13 * recM22 -
+		recM10 * recM02 * m.m23 +
+		recM10 * recM03 * recM22 +
+		recM20 * recM02 * recM13 -
+		recM20 * recM03 * recM12
+		);
+
+	m.m23 = invDet * (
+		-recM00 * recM11 * m.m23 +
+		recM00 * recM13 * recM21 +
+		recM10 * recM01 * m.m23 -
+		recM10 * recM03 * recM21 -
+		recM20 * recM01 * recM13 +
+		recM20 * recM03 * recM11
+		);
+
+	m.m33 = invDet * (
+		recM00 * recM11 * recM22 -
+		recM00 * recM12 * recM21 -
+		recM10 * recM01 * recM22 +
+		recM10 * recM02 * recM21 +
+		recM20 * recM01 * recM12 -
+		recM20 * recM02 * recM11
+		);
+
+	return *this;
 }
-inline radian perspective::get_angle() const { return m_angle; }
-inline void perspective::set_ratio(float ratio)
+template<typename T>
+matrix4_t<T> transpose(matrix4_t<T> m)
+{
+	std::swap(m.m01, m.m10);
+	std::swap(m.m02, m.m20);
+	std::swap(m.m03, m.m30);
+	std::swap(m.m12, m.m21);
+	std::swap(m.m13, m.m31);
+	std::swap(m.m23, m.m32);
+	return m;
+}
+#pragma endregion
+
+#pragma region definition perspective_t
+template<typename T>
+void perspective_t<T>::set(radian_t<T> angle, T ratio, T near, T far)
+{
+	m_angle = angle;
+	m_ratio = ratio;
+	m_inv_ratio = T(1) / m_ratio;
+	m_near = near;
+	m_far = far;
+	m_invTanHalfFovy = T(1) / tan(m_angle / T(2));
+}
+template<typename T>
+void perspective_t<T>::set_angle(radian_t<T> angle)
+{
+	m_angle = angle;
+	m_invTanHalfFovy = T(1) / tan(angle / T(2));
+}
+template<typename T>
+radian_t<T> perspective_t<T>::get_angle() const { return m_angle; }
+template<typename T>
+void perspective_t<T>::set_ratio(T ratio)
 {
 	m_ratio = ratio;
-	m_inv_ratio = 1.0f / m_ratio;
+	m_inv_ratio = T(1) / m_ratio;
 }
-inline float perspective::get_ratio() const { return m_ratio; }
-inline void perspective::set_near(float near_plane) { m_near = near_plane; }
-inline float perspective::get_near() const { return m_near; }
-inline void perspective::set_far(float far_plane) { m_far = far_plane; }
-inline float perspective::get_far() const { return m_far; }
-inline matrix4 perspective::to_matrix4() const
+template<typename T>
+T perspective_t<T>::get_ratio() const { return m_ratio; }
+template<typename T>
+void perspective_t<T>::set_near(T near_plane_t) { m_near = near_plane_t; }
+template<typename T>
+T perspective_t<T>::get_near() const { return m_near; }
+template<typename T>
+void perspective_t<T>::set_far(T far_plane_t) { m_far = far_plane_t; }
+template<typename T>
+T perspective_t<T>::get_far() const { return m_far; }
+template<typename T>
+matrix4_t<T> perspective_t<T>::to_matrix4_t() const
 {
 	return {
-		m_inv_ratio * m_invTanHalfFovy, 0.0f,              0.0f,                     0.0f,
-		0.0f,                           -m_invTanHalfFovy, 0.0f,                     0.0f,
-		0.0f,                           0.0f,              m_far / (m_near - m_far), -(m_far * m_near) / (m_far - m_near),
-		0.0f,                           0.0f,              -1.0f,                    0.0f
+		m_inv_ratio * m_invTanHalfFovy, T(0),              T(0),                     T(0),
+		T(0),                           -m_invTanHalfFovy, T(0),                     T(0),
+		T(0),                           T(0),              m_far / (m_near - m_far), -(m_far * m_near) / (m_far - m_near),
+		T(0),                           T(0),              -T(1),                    T(0)
 	};
 }
 
-inline matrix4 operator*(const matrix4& m, const perspective& p)
+template<typename T>
+matrix4_t<T> operator*(const matrix4_t<T>& m, const perspective_t<T>& p)
 {
-	float a = p.m_inv_ratio * p.m_invTanHalfFovy;
-	float b = -p.m_invTanHalfFovy;
-	float c = p.m_far / (p.m_near - p.m_far);
-	float d = -(p.m_far * p.m_near) / (p.m_far - p.m_near);
+	T a = p.m_inv_ratio * p.m_invTanHalfFovy;
+	T b = -p.m_invTanHalfFovy;
+	T c = p.m_far / (p.m_near - p.m_far);
+	T d = -(p.m_far * p.m_near) / (p.m_far - p.m_near);
 	return {
 		a * m.m00,
 		b * m.m10,
@@ -2824,12 +2536,13 @@ inline matrix4 operator*(const matrix4& m, const perspective& p)
 		d * m.m23
 	};
 }
-inline matrix4 operator*(const perspective& p, const matrix4& m)
+template<typename T>
+matrix4_t<T> operator*(const perspective_t<T>& p, const matrix4_t<T>& m)
 {
-	float a = p.m_inv_ratio * p.m_invTanHalfFovy;
-	float b = -p.m_invTanHalfFovy;
-	float c = p.m_far / (p.m_near - p.m_far);
-	float d = -(p.m_far * p.m_near) / (p.m_far - p.m_near);
+	T a = p.m_inv_ratio * p.m_invTanHalfFovy;
+	T b = -p.m_invTanHalfFovy;
+	T c = p.m_far / (p.m_near - p.m_far);
+	T d = -(p.m_far * p.m_near) / (p.m_far - p.m_near);
 	return {
 		m.m00 * a,
 		m.m10 * a,
@@ -2853,174 +2566,184 @@ inline matrix4 operator*(const perspective& p, const matrix4& m)
 	};
 }
 
-inline matrix4 operator*(const unscaled_transform3d& t, const perspective& p)
+template<typename T>
+matrix4_t<T> operator*(const unscaled_transform3d_t<T>& t, const perspective_t<T>& p)
 {
-	float a = p.m_inv_ratio * p.m_invTanHalfFovy;
-	float b = -p.m_invTanHalfFovy;
-	float c = p.m_far / (p.m_near - p.m_far);
-	float d = -(p.m_far * p.m_near) / (p.m_far - p.m_near);
-	float xx = t.rotation.x * t.rotation.x;
-	float yy = t.rotation.y * t.rotation.y;
-	float zz = t.rotation.z * t.rotation.z;
-	float wx = t.rotation.w * t.rotation.x;
-	float wy = t.rotation.w * t.rotation.y;
-	float wz = t.rotation.w * t.rotation.z;
-	float xy = t.rotation.x * t.rotation.y;
-	float xz = t.rotation.x * t.rotation.z;
-	float yz = t.rotation.y * t.rotation.z;
+	T a = p.m_inv_ratio * p.m_invTanHalfFovy;
+	T b = -p.m_invTanHalfFovy;
+	T c = p.m_far / (p.m_near - p.m_far);
+	T d = -(p.m_far * p.m_near) / (p.m_far - p.m_near);
+	T xx = t.rotation.x * t.rotation.x;
+	T yy = t.rotation.y * t.rotation.y;
+	T zz = t.rotation.z * t.rotation.z;
+	T wx = t.rotation.w * t.rotation.x;
+	T wy = t.rotation.w * t.rotation.y;
+	T wz = t.rotation.w * t.rotation.z;
+	T xy = t.rotation.x * t.rotation.y;
+	T xz = t.rotation.x * t.rotation.z;
+	T yz = t.rotation.y * t.rotation.z;
 	return {
-		a * (1.0f - 2.0f * (yy + zz)),
-		b * (2.0f * (xy - wz)),
-		c * (2.0f * (xz + wy)) - t.position.x,
-		d * (2.0f * (xz + wy)),
+		a * (T(1) - T(2) * (yy + zz)),
+		b * (T(2) * (xy - wz)),
+		c * (T(2) * (xz + wy)) - t.position.x,
+		d * (T(2) * (xz + wy)),
 
-		a * (2.0f * (xy + wz)),
-		b * (1.0f - 2.0f * (xx + zz)),
-		c * (2.0f * (yz - wx)) - t.position.y,
-		d * (2.0f * (yz - wx)),
+		a * (T(2) * (xy + wz)),
+		b * (T(1) - T(2) * (xx + zz)),
+		c * (T(2) * (yz - wx)) - t.position.y,
+		d * (T(2) * (yz - wx)),
 
-		a * (2.0f * (xz - wy)),
-		b * (2.0f * (yz + wx)),
-		c * (1.0f - 2.0f * (xx + yy)) - t.position.z,
-		d * (1.0f - 2.0f * (xx + yy)),
+		a * (T(2) * (xz - wy)),
+		b * (T(2) * (yz + wx)),
+		c * (T(1) - T(2) * (xx + yy)) - t.position.z,
+		d * (T(1) - T(2) * (xx + yy)),
 
-		0.0f,
-		0.0f,
-		-1.0f,
-		0.0f
+		T(0),
+		T(0),
+		-T(1),
+		T(0)
 	};
 }
-inline matrix4 operator*(const perspective& p, const unscaled_transform3d& t)
+template<typename T>
+matrix4_t<T> operator*(const perspective_t<T>& p, const unscaled_transform3d_t<T>& t)
 {
-	float a = p.m_inv_ratio * p.m_invTanHalfFovy;
-	float b = -p.m_invTanHalfFovy;
-	float c = p.m_far / (p.m_near - p.m_far);
-	float d = -(p.m_far * p.m_near) / (p.m_far - p.m_near);
-	float xx = t.rotation.x * t.rotation.x;
-	float yy = t.rotation.y * t.rotation.y;
-	float zz = t.rotation.z * t.rotation.z;
-	float wx = t.rotation.w * t.rotation.x;
-	float wy = t.rotation.w * t.rotation.y;
-	float wz = t.rotation.w * t.rotation.z;
-	float xy = t.rotation.x * t.rotation.y;
-	float xz = t.rotation.x * t.rotation.z;
-	float yz = t.rotation.y * t.rotation.z;
+	T a = p.m_inv_ratio * p.m_invTanHalfFovy;
+	T b = -p.m_invTanHalfFovy;
+	T c = p.m_far / (p.m_near - p.m_far);
+	T d = -(p.m_far * p.m_near) / (p.m_far - p.m_near);
+	T xx = t.rotation.x * t.rotation.x;
+	T yy = t.rotation.y * t.rotation.y;
+	T zz = t.rotation.z * t.rotation.z;
+	T wx = t.rotation.w * t.rotation.x;
+	T wy = t.rotation.w * t.rotation.y;
+	T wz = t.rotation.w * t.rotation.z;
+	T xy = t.rotation.x * t.rotation.y;
+	T xz = t.rotation.x * t.rotation.z;
+	T yz = t.rotation.y * t.rotation.z;
 	return {
-		(1.0f - 2.0f * (yy + zz)) * a,
-		(2.0f * (xy - wz)) * a,
-		(2.0f * (xz + wy)) * a,
+		(T(1) - T(2) * (yy + zz)) * a,
+		(T(2) * (xy - wz)) * a,
+		(T(2) * (xz + wy)) * a,
 		t.position.x * a,
 
-		(2.0f * (xy + wz)) * b,
-		(1.0f - 2.0f * (xx + zz)) * b,
-		(2.0f * (yz - wx)) * b,
+		(T(2) * (xy + wz)) * b,
+		(T(1) - T(2) * (xx + zz)) * b,
+		(T(2) * (yz - wx)) * b,
 		t.position.y * b,
 
-		(2.0f * (xz - wy)) * c,
-		(2.0f * (yz + wx)) * c,
-		(1.0f - 2.0f * (xx + yy)) * c,
+		(T(2) * (xz - wy)) * c,
+		(T(2) * (yz + wx)) * c,
+		(T(1) - T(2) * (xx + yy)) * c,
 		t.position.z * c + d,
 
-		-(2.0f * (xz - wy)),
-		-(2.0f * (yz + wx)),
-		-(1.0f - 2.0f * (xx + yy)),
+		-(T(2) * (xz - wy)),
+		-(T(2) * (yz + wx)),
+		-(T(1) - T(2) * (xx + yy)),
 		-t.position.z
 	};
 }
+#pragma endregion
 
-inline euler_angles::euler_angles(radian x_, radian y_, radian z_) : x(x_), y(y_), z(z_) {}
+#pragma region definition quaternion_t
+template<typename T>
+quaternion_t<T> quaternion_t<T>::zero() { return {T(0), T(0), T(0), T(0)}; }
+template<typename T>
+quaternion_t<T> quaternion_t<T>::identity() { return {T(0), T(0), T(0), T(1)}; }
 
-inline quaternion::quaternion(float x_, float y_, float z_, float w_) : x(x_), y(y_), z(z_), w(w_) {}
-inline quaternion::quaternion(const normalized<vector3>& axis, radian angle)
+template<typename T>
+quaternion_t<T> quaternion_t<T>::inversed() const
 {
-	/*vector3 tmpAxis = vector3_get_normalized(axis);
-	tmpAxis = vector3_times_float(&tmpAxis, sinf(angle / 2.0f));*/
-
-	vector3 tmpAxis = axis * sin(angle / 2.0f);
-	*this = {tmpAxis.x, tmpAxis.y, tmpAxis.z, cos(angle / 2.0f)};
-}
-
-inline quaternion quaternion::zero() { return {0.0f, 0.0f, 0.0f, 0.0f}; }
-inline quaternion quaternion::identity() { return {0.0f, 0.0f, 0.0f, 1.0f}; }
-
-inline quaternion quaternion::get_inversed() const
-{
-	quaternion res = *this;
+	quaternion_t<T> res = *this;
 	inverse(res);
 	return res;
 }
-inline quaternion quaternion::get_conjugated() const
+template<typename T>
+quaternion_t<T> quaternion_t<T>::conjugated() const
 {
-	quaternion res = *this;
+	quaternion_t<T> res = *this;
 	conjugate(res);
 	return res;
 }
-inline quaternion quaternion::get_normalized() const
+template<typename T>
+quaternion_t<T> quaternion_t<T>::normalized() const
 {
-	quaternion res = *this;
+	quaternion_t<T> res = *this;
 	normalize(res);
 	return res;
 }
-inline quaternion quaternion::get_negated() const
+template<typename T>
+quaternion_t<T> quaternion_t<T>::clamped(quaternion_t<T> min, quaternion_t<T> max) const
 {
-	quaternion res = *this;
-	negate(res);
-	return res;
-}
-inline quaternion quaternion::get_clamped(quaternion min, quaternion max) const
-{
-	quaternion res = *this;
+	quaternion_t<T> res = *this;
 	clamp(res, min, max);
 	return res;
 }
 
-inline quaternion quaternion::operator+(quaternion q) const { return {x + q.x, y + q.y, z + q.z, w + q.w}; }
-inline quaternion quaternion::operator-(quaternion q) const { return {x - q.x, y - q.y, z - q.z, w - q.w}; }
-inline quaternion quaternion::operator*(quaternion q) const
+template<typename T>
+quaternion_t<T> quaternion_t<T>::operator+(quaternion_t<T> q) const { return {x + q.x, y + q.y, z + q.z, w + q.w}; }
+template<typename T>
+quaternion_t<T> quaternion_t<T>::operator-(quaternion_t<T> q) const { return {x - q.x, y - q.y, z - q.z, w - q.w}; }
+template<typename T>
+quaternion_t<T> quaternion_t<T>::operator*(quaternion_t<T> q) const
 {
-	quaternion res;
+	quaternion_t<T> res;
 	res.x =  x * q.w + y * q.z - z * q.y + w * q.x;
 	res.y = -x * q.z + y * q.w + z * q.x + w * q.y;
 	res.z =  x * q.y - y * q.x + z * q.w + w * q.z;
 	res.w = -x * q.x - y * q.y - z * q.z + w * q.w;
 	return res;
 }
-inline quaternion quaternion::operator*(float f) const { return {x * f, y * f, z * f, w * f}; }
-inline quaternion quaternion::operator/(float f) const { return {x / f, y / f, z / f, w / f}; }
+template<typename T>
+quaternion_t<T> quaternion_t<T>::operator*(T f) const { return {x * f, y * f, z * f, w * f}; }
+template<typename T>
+quaternion_t<T> quaternion_t<T>::operator/(T f) const { return {x / f, y / f, z / f, w / f}; }
 
-inline quaternion& quaternion::operator+=(quaternion q) { *this = *this + q; return *this; }
-inline quaternion& quaternion::operator-=(quaternion q) { *this = *this - q; return *this; }
-inline quaternion& quaternion::operator*=(quaternion q) { *this = *this * q; return *this; }
-inline quaternion& quaternion::operator*=(float f) { *this = *this * f; return *this; }
-inline quaternion& quaternion::operator/=(float f) { *this = *this / f; return *this; }
+template<typename T>
+quaternion_t<T>& quaternion_t<T>::operator+=(quaternion_t<T> q) { *this = *this + q; return *this; }
+template<typename T>
+quaternion_t<T>& quaternion_t<T>::operator-=(quaternion_t<T> q) { *this = *this - q; return *this; }
+template<typename T>
+quaternion_t<T>& quaternion_t<T>::operator*=(quaternion_t<T> q) { *this = *this * q; return *this; }
+template<typename T>
+quaternion_t<T>& quaternion_t<T>::operator*=(T f) { *this = *this * f; return *this; }
+template<typename T>
+quaternion_t<T>& quaternion_t<T>::operator/=(T f) { *this = *this / f; return *this; }
 
-inline quaternion quaternion::operator-() const { return get_negated(); }
+template<typename T>
+quaternion_t<T> quaternion_t<T>::operator-() const { return get_negated(); }
 
-inline bool quaternion::operator==(quaternion q) const { return x == q.x && y == q.y && z == q.z && w == q.w; }
-inline bool quaternion::operator!=(quaternion q) const { return !operator==(q); }
+template<typename T>
+bool quaternion_t<T>::operator==(quaternion_t<T> q) const { return x == q.x && y == q.y && z == q.z && w == q.w; }
+template<typename T>
+bool quaternion_t<T>::operator!=(quaternion_t<T> q) const { return !operator==(q); }
 
-inline vector3 operator*(const normalized<quaternion>& q, vector3 v)
+template<typename T>
+vector3_t<T> operator*(const normalized<quaternion_t<T>>& q, vector3_t<T> v)
 {
-	vector3 qvec = {q->x, q->y, q->z};
-	vector3 uv = cross(qvec, v);
-	vector3 uuv = cross(qvec, uv);
-	uv = uv * (2.0f * q->w);
-	uuv = uuv * 2.0f;
+	vector3_t qvec = {q->x, q->y, q->z};
+	vector3_t uv = cross(qvec, v);
+	vector3_t uuv = cross(qvec, uv);
+	uv = uv * (T(2) * q->w);
+	uuv = uuv * T(2);
 	return v + uv + uuv;
 }
 
-inline float norm(quaternion q) { return std::sqrtf(norm_squared(q)); }
-inline float norm_squared(quaternion q) { return q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w; }
-inline quaternion& normalize(quaternion& q)
+template<typename T>
+T norm(quaternion_t<T> q) { return std::sqrt(norm_squared(q)); }
+template<typename T>
+T norm_squared(quaternion_t<T> q) { return q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w; }
+template<typename T>
+quaternion_t<T> normalize(quaternion_t<T> q)
 {
-	float n = norm(q);
+	T n = norm(q);
 	q.x /= n;
 	q.y /= n;
 	q.z /= n;
 	q.w /= n;
 	return q;
 }
-inline quaternion& clamp(quaternion& q, quaternion min, quaternion max)
+template<typename T>
+quaternion_t<T> clamp(quaternion_t<T> q, quaternion_t<T> min, quaternion_t<T> max)
 {
 	q.x = cdm::clamp(q.x, min.x, max.x);
 	q.y = cdm::clamp(q.y, min.y, max.y);
@@ -3028,18 +2751,11 @@ inline quaternion& clamp(quaternion& q, quaternion min, quaternion max)
 	q.w = cdm::clamp(q.w, min.w, max.w);
 	return q;
 }
-inline quaternion& negate(quaternion& q)
+template<typename T>
+quaternion_t<T> inverse(quaternion_t<T> q)
 {
-	q.x = -q.x;
-	q.y = -q.y;
-	q.z = -q.z;
-	q.w = -q.w;
-	return q;
-}
-inline quaternion& inverse(quaternion& q)
-{
-	float n = norm(q);
-	if (nearly_equal(n, 1.0f))
+	T n = norm(q);
+	if (nearly_equal(n, T(1)))
 		return conjugate(q);
 
 	q.x /= -n;
@@ -3048,33 +2764,39 @@ inline quaternion& inverse(quaternion& q)
 	q.w /= n;
 	return q;
 }
-inline quaternion& conjugate(quaternion& q)
+template<typename T>
+quaternion_t<T> conjugate(quaternion_t<T> q)
 {
 	q.x = -q.x;
 	q.y = -q.y;
 	q.z = -q.z;
 	return q;
 }
-inline float dot(quaternion lhs, quaternion rhs) { return lhs.x * rhs.x + lhs.y * rhs.y + lhs.z * rhs.z + lhs.w * rhs.w; }
-inline quaternion cross(quaternion lhs, quaternion rhs)
+template<typename T>
+T dot(quaternion_t<T> lhs, quaternion_t<T> rhs) { return lhs.x * rhs.x + lhs.y * rhs.y + lhs.z * rhs.z + lhs.w * rhs.w; }
+template<typename T>
+quaternion_t<T> cross(quaternion_t<T> lhs, quaternion_t<T> rhs)
 {
 	return {
 		lhs.y * rhs.z - lhs.z * rhs.y,
 		lhs.z * rhs.x - lhs.x * rhs.z,
 		lhs.x * rhs.y - lhs.y * rhs.x,
-		1.0f
+		T(1)
 	};
 }
-inline quaternion lerp(quaternion begin, quaternion end, float percent) { return (end - begin) * percent + begin; }
-inline quaternion nlerp(quaternion begin, quaternion end, float percent) { return lerp(begin, end, percent).get_normalized(); }
-inline quaternion slerp(quaternion begin, quaternion end, float percent)
+template<typename T>
+quaternion_t<T> lerp(quaternion_t<T> begin, quaternion_t<T> end, T percent) { return (end - begin) * percent + begin; }
+template<typename T>
+quaternion_t<T> nlerp(quaternion_t<T> begin, quaternion_t<T> end, T percent) { return lerp(begin, end, percent).get_normalized(); }
+template<typename T>
+quaternion_t<T> slerp(quaternion_t<T> begin, quaternion_t<T> end, T percent)
 {
-	quaternion _end;
-	float d = dot(begin, end);
+	quaternion_t<T> _end;
+	T d = dot(begin, end);
 
 	if (d > 0.9995f)
 		return lerp(begin, end, percent);
-	if (d < 0.0f)
+	if (d < T(0))
 	{
 		_end = -end;
 		d = -d;
@@ -3082,86 +2804,102 @@ inline quaternion slerp(quaternion begin, quaternion end, float percent)
 	else
 		_end = end;
 
-	percent = cdm::clamp(percent, 0.0f, 1.0f);
-	d = cdm::clamp(d, -1.0f, 1.0f);
-	float theta = acosf(d) * percent;
+	percent = cdm::clamp(percent, T(0), T(1));
+	d = cdm::clamp(d, -T(1), T(1));
+	T theta = acosf(d) * percent;
 
-	quaternion res = begin * d;
+	quaternion_t<T> res = begin * d;
 	res = _end - res;
 
 	res = begin * cosf(theta) + res * sinf(theta);
 
 	return res;
 }
+#pragma endregion
 
-inline cartesian_direction2d::cartesian_direction2d(float x_, float y_) : cartesian_direction2d(normalized<vector2>({ x_, y_ })) {}
-inline cartesian_direction2d::cartesian_direction2d(const normalized<vector2>& direction) : x(direction->x), y(direction->y) {}
-inline cartesian_direction2d::cartesian_direction2d(polar_direction2d direction) : cartesian_direction2d(direction.angle) {}
-inline cartesian_direction2d::cartesian_direction2d(radian angle) : cartesian_direction2d(cos(angle), sin(angle)) {}
-
-inline cartesian_direction2d& cartesian_direction2d::rotate(radian angle)
+#pragma region definition cartesian_direction2d_t
+template<typename T>
+cartesian_direction2d_t<T> cartesian_direction2d_t<T>::from(const normalized<vector2_t<T>>& direction)
 {
-	const float c = cos(angle);
-	const float s = sin(angle);
+	cartesian_direction2d_t<T> d;
+	d.x = direction->x;
+	d.y = direction->y;
+	return d;
+}
+template<typename T>
+cartesian_direction2d_t<T> cartesian_direction2d_t<T>::from(polar_direction_t<T> direction) { return from(direction.angle); }
+template<typename T>
+cartesian_direction2d_t<T> cartesian_direction2d_t<T>::from(radian_t<T> angle)
+{
+	cartesian_direction2d_t<T> d;
+	d.x = cos(angle);
+	d.y = sin(angle);
+	return d;
+}
+
+template<typename T>
+cartesian_direction2d_t<T>& cartesian_direction2d_t<T>::rotate(radian_t<T> angle)
+{
+	const T c = cos(angle);
+	const T s = sin(angle);
     x = x * c - y * s;
     y = x * s + y * c;
 
 	return *this;
 }
-inline cartesian_direction2d cartesian_direction2d::get_rotated(radian angle)
+#pragma endregion
+
+#pragma region definition polar_direction_t
+template<typename T>
+polar_direction_t<T> polar_direction_t<T>::from(const normalized<vector2_t<T>>& direction)
 {
-	cartesian_direction2d res = *this;
-	res.rotate(angle);
-	return res;
+	angle = radian_t<T>(atan(direction->x));
 }
+template<typename T>
+polar_direction_t<T> polar_direction_t<T>::from(cartesian_direction2d_t<T> direction)
+{
+	angle = radian_t<T>(atan(direction.x));
+}
+template<typename T>
+polar_direction_t<T> polar_direction_t<T>::from(radian_t<T> angle_) { angle = angle_; }
 
-inline polar_direction2d::polar_direction2d(float x, float y) : polar_direction2d(radian(atan2(y, x))) {}
-inline polar_direction2d::polar_direction2d(const normalized<vector2>& direction) : polar_direction2d(direction->x, direction->y) {}
-inline polar_direction2d::polar_direction2d(cartesian_direction2d direction) : polar_direction2d(direction.y, direction.x) {}
-inline polar_direction2d::polar_direction2d(radian angle_) : angle(angle_) {}
-
-inline polar_direction2d& polar_direction2d::rotate(radian angle_)
+template<typename T>
+polar_direction_t<T>& polar_direction_t<T>::rotate(radian_t<T> angle_)
 {
 	angle += angle_;
 	return *this;
 }
-inline polar_direction2d polar_direction2d::get_rotated(radian angle)
+template<typename T>
+polar_direction_t<T>& polar_direction_t<T>::wrap()
 {
-	polar_direction2d res = *this;
-	res.rotate(angle);
-	return res;
-}
-inline polar_direction2d& polar_direction2d::wrap()
-{
-	int s = sign(float(angle));
-	while (angle > radian(pi) || angle <= -radian(pi))
-		angle -= radian(pi) * float(s);
+	int s = sign(T(angle));
+	while (angle > radian_t(pi) || angle <= -radian_t(pi))
+		angle -= radian_t(pi) * T(s);
 	return *this;
 }
-inline polar_direction2d polar_direction2d::get_wrapped()
-{
-	polar_direction2d res = *this;
-	res.wrap();
-	return res;
-}
+#pragma endregion
 
-inline bool line::are_parallel(line l1, line l2)
+#pragma region definition line_t
+template<typename T>
+bool are_parallel(line_t<T> l1, line_t<T> l2)
 {
 	return nearly_equal(l1.coefficient, l2.coefficient) || nearly_equal(l1.coefficient, -l2.coefficient);
 }
 
-inline bool collides(line l1, line l2)
+template<typename T>
+bool collides(line_t<T> l1, line_t<T> l2)
 {
-	return !line::are_parallel(l1, l2);
+	return !line_t<T>::are_parallel(l1, l2);
 }
-inline bool collides(line l1, line l2, vector2& intersection)
+template<typename T>
+bool collides(line_t<T> l1, line_t<T> l2, vector2_t<T>& intersection)
 {
 	bool collision = collides(l1, l2);
 
 	if (collision)
 	{
-		float a = l1.coefficient - l2.coefficient;
-		float b = l2.offset - l1.offset;
+		T a = l1.coefficient - l2.coefficient;
+		T b = l2.offset - l1.offset;
 		intersection.x = b / a;
 		intersection.y = l1.coefficient * intersection.x + l1.offset;
 
@@ -3170,96 +2908,97 @@ inline bool collides(line l1, line l2, vector2& intersection)
 
 	return collision;
 }
-inline bool collides(line l, vector2 v)
+template<typename T>
+bool collides(line_t<T> l, vector2_t<T> v)
 {
 	return nearly_equal(l.coefficient * v.x + l.offset, v.y);
 }
-inline bool collides(vector2 v, const line& l)
+template<typename T>
+bool collides(vector2_t<T> v, line_t<T> l)
 {
 	return collides(l, v);
 }
 
-inline float distance_between(const plane& p, vector3 v)
+template<typename T>
+T distance_between(plane_t<T> p, vector3_t<T> v)
 {
 	return -v.x * p.normal->x - v.y * p.normal->y - v.z * p.normal->z;
 }
-inline float distance_between(vector3 v, const plane& p)
+template<typename T>
+T distance_between(vector3_t<T> v, plane_t<T> p)
 {
 	return distance_between(p, v);
 }
+#pragma endregion
 
-inline bool aa_rect::contains(vector2 v) const
+#pragma region definition aa_rect_t
+template<typename T>
+bool aa_rect_t<T>::contains(vector2_t<T> v) const
 {
 	return (v.x >= origin.x) && (v.x <= origin.x + dimention.x) && (v.y >= origin.y) && (v.y <= origin.y + dimention.y);
 }
 
-inline bool collides(const aa_rect& r1, const aa_rect& r2)
+template<typename T>
+bool collides(aa_rect_t<T> r1, aa_rect_t<T> r2)
 {
 	return collides(r1, r2.origin) ||
-		collides(r1, r2.origin + vector2(r2.dimention.x, 0)) ||
-		collides(r1, r2.origin + vector2(0, r2.dimention.y)) ||
+		collides(r1, r2.origin + vector2_t(r2.dimention.x, 0)) ||
+		collides(r1, r2.origin + vector2_t(0, r2.dimention.y)) ||
 		collides(r1, r2.origin + r2.dimention);
 }
-inline bool collides(const aa_rect&, vector2)
-{
-	return false;
-}
-inline bool collides(vector2 v, const aa_rect& r)
-{
-	return collides(r, v);
-}
 
-//inline bool collides(const ray3d& r, const plane& p)
+//bool collides(const ray3d_t& r, const plane_t& p)
 //{
-//	float DdotN = r.direction->dot(p.normal);
+//	T DdotN = r.direction->dot(p.normal);
 //	if (std::abs(DdotN) > epsilon)
 //	{
-//		float t = -(r.origin.dot(p.normal) + p.distance) / DdotN;
+//		T t = -(r.origin.dot(p.normal) + p.distance) / DdotN;
 //		return t >= 0;
 //	}
 //	return false;
 //}
-//inline bool collides(const ray3d& r, const plane& p, vector3& intersection)
+//bool collides(const ray3d_t& r, const plane_t& p, vector3_t& intersection)
 //{
-//	float DdotN = r.direction->dot(p.normal);
+//	T DdotN = r.direction->dot(p.normal);
 //	if (std::abs(DdotN) > epsilon)
 //	{
-//		float t = -(r.origin.dot(p.normal) + p.distance) / DdotN;
+//		T t = -(r.origin.dot(p.normal) + p.distance) / DdotN;
 //		intersection = r.origin + t * r.direction;
 //		return t >= 0;
 //	}
 //	return false;
 //}
-//inline bool collides(const plane& p, const ray3d& r) { return collides(r, p); }
-//inline bool collides(const plane& p, const ray3d& r, vector3& intersection) { return collides(r, p, intersection); }
+//bool collides(const plane_t& p, const ray3d_t& r) { return collides(r, p); }
+//bool collides(const plane_t& p, const ray3d_t& r, vector3_t& intersection) { return collides(r, p, intersection); }
 
 // https://stackoverflow.com/a/565282
-inline bool intersects(const segment2d& s0,
-                       const segment2d& s1,
-                       vector2& outPoint,
-                       float e)
+template<typename T>
+bool intersects(segment2d_t<T> s0,
+                segment2d_t<T> s1,
+                vector2_t<T>& outPoint,
+                T e)
 {
-	vector2 p = s0.origin;
-	vector2 q = s1.origin;
-	vector2 r = from_to(p, s0.end);
-	vector2 s = from_to(q, s1.end);
+	vector2_t<T> p = s0.origin;
+	vector2_t<T> q = s1.origin;
+	vector2_t<T> r = from_to(p, s0.end);
+	vector2_t<T> s = from_to(q, s1.end);
 
-	vector2 qmp = q - p;
+	vector2_t<T> qmp = q - p;
 
-	float rcs = cross(r, s);
+	T rcs = cross(r, s);
 
-	if (nearly_equal(rcs, 0.0f, e)) // colinear
+	if (nearly_equal(rcs, T(0), e)) // coline_tar
 	{
-		if (nearly_equal(cross(qmp, r), 0.0f, e)) // same line, different segments
+		if (nearly_equal(cross(qmp, r), T(0), e)) // same line_t, different segments
 		{
-			float invrdr = 1.0f / dot(r, r);
-			float t0 = dot(qmp, r) * invrdr;
-			float t1 = dot(qmp + s, r) * invrdr;
+			T invrdr = T(1) / dot(r, r);
+			T t0 = dot(qmp, r) * invrdr;
+			T t1 = dot(qmp + s, r) * invrdr;
 
-			if (dot(s, r) < 0.0f)
+			if (dot(s, r) < T(0))
 				std::swap(t0, t1);
 
-			if (t0 <= 1.0f && t0 >= 0.0f || t1 <= 1.0f && t1 >= 0.0f)
+			if (t0 <= T(1) && t0 >= T(0) || t1 <= T(1) && t1 >= T(0))
 			{
 				outPoint = s0.origin;  /// TODO: better than that
 				return true;
@@ -3274,12 +3013,12 @@ inline bool intersects(const segment2d& s0,
 	}
 	else
 	{
-		float invrcs = 1.0f / rcs;
+		T invrcs = T(1) / rcs;
 
-		float t = cross(qmp, s) * invrcs;
-		float u = cross(qmp, r) * invrcs;
+		T t = cross(qmp, s) * invrcs;
+		T u = cross(qmp, r) * invrcs;
 
-		if (t >= 0.0f && t <= 1.0f && u >= 0.0f && u <= 1.0f)  // intersects
+		if (t >= T(0) && t <= T(1) && u >= T(0) && u <= T(1))  // intersects
 		{
 			outPoint = p + r * t;
 
@@ -3291,61 +3030,69 @@ inline bool intersects(const segment2d& s0,
 		}
 	}
 }
+#pragma endregion
 
-inline float plane::evaluate(vector3 point) const
+#pragma region definition plane_t
+template<typename T>
+T plane_t<T>::evaluate(vector3_t<T> point) const
 {
 	return normal->x * (point.x - origin.x) +
 	       normal->y * (point.y - origin.y) +
 	       normal->z * (point.z - origin.z);
 }
-inline vector3 plane::project3d(vector3 point) const
+template<typename T>
+vector3_t<T> plane_t<T>::project3d(vector3_t<T> point) const
 {
-	float distance = evaluate(point);
+	T distance = evaluate(point);
 	return point - normal * distance;
 }
-inline vector2 plane::project2d(vector3 point, normalized<vector3> plane_tangent) const
+template<typename T>
+vector2_t<T> plane_t<T>::project2d(vector3_t<T> point, normalized<vector3_t<T>> plane_t_tangent) const
 {
-	normalized<vector3> bitangent = cross(*normal, plane_tangent);
-	normalized<vector3> tangent = cross(*bitangent, normal);
+	normalized<vector3_t<T>> bitangent = cross(*normal, plane_t_tangent);
+	normalized<vector3_t<T>> tangent = cross(*bitangent, normal);
 
-	matrix3 TBN(tangent->x,   tangent->y,   tangent->z,
+	matrix3_t<T> TBN(tangent->x,   tangent->y,   tangent->z,
 	            bitangent->x, bitangent->y, bitangent->z,
 	            normal->x,    normal->y,    normal->z
 	);
 
-	vector3 plane_space_point = point - origin;
+	vector3_t<T> plane_t_space_point = point - origin;
 
-	return (TBN * plane_space_point).xy();
+	return (TBN * plane_t_space_point).xy();
 }
-inline vector3 plane::unproject(vector2 point, normalized<vector3> plane_tangent) const
+template<typename T>
+vector3_t<T> plane_t<T>::unproject(vector2_t<T> point, normalized<vector3_t<T>> plane_t_tangent) const
 {
-	normalized<vector3> bitangent = cross(*normal, plane_tangent);
-	normalized<vector3> tangent = cross(*bitangent, normal);
+	normalized<vector3_t<T>> bitangent = cross(*normal, plane_t_tangent);
+	normalized<vector3_t<T>> tangent = cross(*bitangent, normal);
 
-	matrix3 invTBN = matrix3(tangent->x,   tangent->y,   tangent->z,
+	matrix3_t<T> invTBN = matrix3_t(tangent->x,   tangent->y,   tangent->z,
 	                         bitangent->x, bitangent->y, bitangent->z,
 	                         normal->x,    normal->y,    normal->z
 	).get_inversed();
 
-	vector3 plane_space_point = vector3(point, 0.0f);
+	vector3_t<T> plane_t_space_point = vector3_t<T>{ point.x, point.y, T(0) };
 
-	return (invTBN * plane_space_point) + origin;
+	return (invTBN * plane_t_space_point) + origin;
 }
-inline normalized<vector3> plane::computeTangent(float e) const
+template<typename T>
+normalized<vector3_t<T>> plane_t<T>::computeTangent(T e) const
 {
-	vector3 tangent = project3d(vector3{1.0f, 0.0f, 0.0f} + origin) - origin;
+	vector3_t<T> tangent = project3d(vector3_t{T(1), T(0), T(0)} + origin) - origin;
 	if (norm_squared(tangent) < e)
-		tangent = project3d(vector3{0.0f, 1.0f, 0.0f} + origin) - origin;
-	return normalized<vector3>(tangent);
+		tangent = project3d(vector3_t{T(0), T(1), T(0)} + origin) - origin;
+	return normalized<vector3_t<T>>(tangent);
 }
 
-inline bool collides(const plane& plane, const ray3d& r, vector3& collision_point)
+template<typename T>
+bool collides(const plane_t<T>& plane_t, ray3d_t<T> r, vector3_t<T>& collision_point)
 {
-	float denom = dot(*plane.normal, r.direction);
-	if (abs(denom) > 0.0001f)
+	T denom = dot(*plane_t.normal, r.direction);
+	if (abs(denom) > T(0.0001))
 	{
-		float t = -dot(plane.origin - r.origin, plane.normal) / denom;
-		if (t >= 0.0f)
+		T t = -dot(plane_t.origin - r.origin, plane_t.normal) / denom;
+		if (t >= T(0))
 		{
 			collision_point = r.origin + r.direction * t;
 			return true;
@@ -3353,38 +3100,35 @@ inline bool collides(const plane& plane, const ray3d& r, vector3& collision_poin
 	}
 	return false;
 }
-inline bool collides_bidirectional(const plane& plane, const ray3d& r, vector3& collision_point)
+template<typename T>
+bool collides_bidirectional(const plane_t<T>& plane_t, ray3d_t<T> r, vector3_t<T>& collision_point)
 {
-	float denom = dot(*plane.normal, r.direction);
-	if (abs(denom) > 0.0001f)
+	T denom = dot(*plane_t.normal, r.direction);
+	if (abs(denom) > T(0.0001))
 	{
-		float t = -dot(plane.origin - r.origin, plane.normal) / denom;
+		T t = -dot(plane_t.origin - r.origin, plane_t.normal) / denom;
 
 		collision_point = r.origin + r.direction * t;
 		return true;
 	}
 	return false;
 }
-//inline bool collides(const plane& p, const ray3d& r, vector3& collision_point)
-//{
-//	p.
-//}
-//inline bool collides(const ray3d& r, const plane& p, vector3& collision_point)
-//{
-//	return collides(p, r, collision_point);
-//}
+#pragma endregion
 
-inline bool aabb::contains(vector3 p) const
+#pragma region definition aabb_t
+template<typename T>
+bool aabb_t<T>::contains(vector3_t<T> p) const
 {
 	return p.x >= min.x && p.x <= max.x &&
 		   p.y >= min.y && p.y <= max.y &&
 	       p.z >= min.z && p.z <= max.z;
-}
-inline vector3 aabb::get_center() const { return (max + min) / 2.0f; }
+}template<typename T>
+vector3_t<T> aabb_t<T>::get_center() const { return (max + min) / T(2); }
 
-inline aabb aabb::operator+(aabb rhs) const
+template<typename T>
+aabb_t<T> aabb_t<T>::operator+(aabb_t<T> rhs) const
 {
-	aabb res;
+	aabb_t<T> res;
 	res.min.x = std::min(min.x, rhs.min.x);
 	res.min.y = std::min(min.y, rhs.min.y);
 	res.min.z = std::min(min.z, rhs.min.z);
@@ -3395,20 +3139,21 @@ inline aabb aabb::operator+(aabb rhs) const
 	return res;
 }
 
-inline bool collides(aabb b, ray3d r)
+template<typename T>
+bool collides(aabb_t<T> b, ray3d_t<T> r)
 {
-	vector3 inv
+	vector3_t<T> inv
 	{
-		1.0f / r.direction->x,
-		1.0f / r.direction->y,
-		1.0f / r.direction->z
+		T(1) / r.direction->x,
+		T(1) / r.direction->y,
+		T(1) / r.direction->z
 	};
 
-	float t1 = (b.min.x - r.origin.x) * inv.x;
-	float t2 = (b.max.x - r.origin.x) * inv.x;
+	T t1 = (b.min.x - r.origin.x) * inv.x;
+	T t2 = (b.max.x - r.origin.x) * inv.x;
 
-	float tmin = std::min(t1, t2);
-	float tmax = std::max(t1, t2);
+	T tmin = std::min(t1, t2);
+	T tmax = std::max(t1, t2);
 
 	t1 = (b.min.y - r.origin.y) * inv.y;
 	t2 = (b.max.y - r.origin.y) * inv.y;
@@ -3424,7 +3169,8 @@ inline bool collides(aabb b, ray3d r)
 
 	return tmax >= tmin;
 }
-inline bool collides(const aabb& b1, const aabb& b2)
+template<typename T>
+bool collides(aabb_t<T> b1, aabb_t<T> b2)
 {
 	if (b1.contains(b2.min))
 		return true;
@@ -3435,7 +3181,7 @@ inline bool collides(const aabb& b1, const aabb& b2)
 	if (b2.contains(b1.max))
 		return true;
 
-	std::array<vector3, 6> otherPoints;
+	std::array<vector3_t<T>, 6> otherPoints;
 	otherPoints[0] = { b1.min.x, b1.min.y, b1.max.z };
 	otherPoints[1] = { b1.min.x, b1.max.y, b1.min.z };
 	otherPoints[2] = { b1.max.x, b1.min.y, b1.min.z };
@@ -3460,225 +3206,244 @@ inline bool collides(const aabb& b1, const aabb& b2)
 
 	return false;
 }
+#pragma endregion
 
-inline transform2d::transform2d(vector2 position_, normalized<complex> rotation_, vector2 scale_) :
-	position(position_),
-	rotation(rotation_),
-	scale(scale_)
-{}
-
-inline transform2d transform2d::operator*(const transform2d& t) const
+#pragma region definition transform2d_t
+template<typename T>
+transform2d_t<T> transform2d_t<T>::operator*(const transform2d_t<T>& t) const
 {
-	transform2d res;
-	res.position = rotation * vector2(scale.x * t.position.x, scale.y * t.position.y) + position;
+	transform2d_t<T> res;
+	res.position = rotation * vector2_t(scale.x * t.position.x, scale.y * t.position.y) + position;
 	res.rotation = rotation + t.rotation;
-	res.scale = vector2(scale.x * t.scale.x, scale.y * t.scale.y);
+	res.scale = vector2_t(scale.x * t.scale.x, scale.y * t.scale.y);
 	return res;
 }
-inline vector2 transform2d::operator*(vector2 v) const
+template<typename T>
+vector2_t<T> transform2d_t<T>::operator*(vector2_t<T> v) const
 {
-	return rotation * vector2(scale.x * v.x, scale.y * v.y) + position;
+	return rotation * vector2_t(scale.x * v.x, scale.y * v.y) + position;
 }
+#pragma endregion
 
-inline transform3d::transform3d(vector3 position_, quaternion rotation_, vector3 scale_) :
-	position(position_),
-	rotation(rotation_),
-	scale(scale_)
-{}
-
-inline transform3d transform3d::operator*(const transform3d& t) const
+#pragma region definition transform3d_t
+template<typename T>
+transform3d_t<T> transform3d_t<T>::operator*(const transform3d_t<T>& t) const
 {
-	transform3d res;
-	res.position = rotation * vector3(scale.x * t.position.x, scale.y * t.position.y, scale.z * t.position.z) + position;
+	transform3d_t<T> res;
+	res.position = rotation * vector3_t(scale.x * t.position.x, scale.y * t.position.y, scale.z * t.position.z) + position;
 	res.rotation = rotation * t.rotation;
-	res.scale = vector3(scale.x * t.scale.x, scale.y * t.scale.y, scale.z * t.scale.z);
+	res.scale = vector3_t(scale.x * t.scale.x, scale.y * t.scale.y, scale.z * t.scale.z);
 	return res;
 }
-inline vector3 transform3d::operator*(vector3 v) const
+template<typename T>
+vector3_t<T> transform3d_t<T>::operator*(vector3_t<T> v) const
 {
-	return rotation * vector3(scale.x * v.x, scale.y * v.y, scale.z * v.z) + position;
+	return rotation * vector3_t(scale.x * v.x, scale.y * v.y, scale.z * v.z) + position;
 }
-inline quaternion transform3d::operator*(quaternion q) const { return rotation * q; }
+template<typename T>
+quaternion_t<T> transform3d_t<T>::operator*(quaternion_t<T> q) const { return rotation * q; }
+#pragma endregion
 
-inline uniform_transform2d::uniform_transform2d(vector2 position_, radian rotation_, float scale_) :
-	position(position_),
-	rotation(rotation_),
-	scale(scale_)
-{}
-
-inline uniform_transform2d uniform_transform2d::operator*(uniform_transform2d t) const
+#pragma region definition uniform_transform2d_t
+template<typename T>
+uniform_transform2d_t<T> uniform_transform2d_t<T>::operator*(uniform_transform2d_t<T> t) const
 {
-	uniform_transform2d res;
-	matrix2 r = matrix2::rotation(rotation);
+	uniform_transform2d_t<T> res;
+	matrix2_t r = matrix2_t<T>::rotation(rotation);
 	res.position = r * (scale * t.position) + position;
 	res.rotation = rotation + t.rotation;
 	res.scale = scale * t.scale;
 	return res;
 }
-inline vector2 uniform_transform2d::operator*(vector2 v) const
+template<typename T>
+vector2_t<T> uniform_transform2d_t<T>::operator*(vector2_t<T> v) const
 {
-	matrix2 r = matrix2::rotation(rotation);
+	matrix2_t r = matrix2_t::rotation(rotation);
 	return r * (scale * v) + position;
 }
+#pragma endregion
 
-inline uniform_transform3d::uniform_transform3d(vector3 position_, quaternion rotation_, float scale_) :
-	position(position_),
-	rotation(rotation_),
-	scale(scale_)
-{}
-
-inline uniform_transform3d uniform_transform3d::operator*(const uniform_transform3d& t) const
+#pragma region definition uniform_transform3d_t
+template<typename T>
+uniform_transform3d_t<T> uniform_transform3d_t<T>::operator*(const uniform_transform3d_t<T>& t) const
 {
-	uniform_transform3d res;
+	uniform_transform3d_t<T> res;
 	res.position = rotation * (scale * t.position) + position;
 	res.rotation = rotation * t.rotation;
 	res.scale = scale * t.scale;
 	return res;
 }
-inline vector3 uniform_transform3d::operator*(vector3 v) const { return rotation * (scale * v) + position; }
-inline quaternion uniform_transform3d::operator*(quaternion q) const { return rotation * q; }
+template<typename T>
+vector3_t<T> uniform_transform3d_t<T>::operator*(vector3_t<T> v) const { return rotation * (scale * v) + position; }
+template<typename T>
+quaternion_t<T> uniform_transform3d_t<T>::operator*(quaternion_t<T> q) const { return rotation * q; }
+#pragma endregion
 
-inline unscaled_transform2d::unscaled_transform2d(vector2 position_, radian rotation_) :
-	position(position_),
-	rotation(rotation_)
-{}
-
-inline unscaled_transform2d unscaled_transform2d::operator*(unscaled_transform2d t) const
+#pragma region definition unscaled_transform2d_t
+template<typename T>
+unscaled_transform2d_t<T> unscaled_transform2d_t<T>::operator*(unscaled_transform2d_t<T> t) const
 {
-	unscaled_transform2d res;
-	matrix2 r = matrix2::rotation(rotation);
+	unscaled_transform2d_t<T> res;
+	matrix2_t r = matrix2_t<T>::rotation(rotation);
 	res.position = r * t.position + position;
 	res.rotation = rotation + t.rotation;
 	return res;
 }
-inline vector2 unscaled_transform2d::operator*(vector2 v) const
+template<typename T>
+vector2_t<T> unscaled_transform2d_t<T>::operator*(vector2_t<T> v) const
 {
-	matrix2 r = matrix2::rotation(rotation);
+	matrix2_t<T> r = matrix2_t::rotation(rotation);
 	return r * v + position;
 }
+#pragma endregion
 
-inline unscaled_transform3d::unscaled_transform3d(vector3 position_, quaternion rotation_) :
-	position(position_),
-	rotation(rotation_)
-{}
-
-inline unscaled_transform3d& unscaled_transform3d::translate_absolute(vector3 t)
+#pragma region definition unscaled_transform3d_t
+template<typename T>
+unscaled_transform3d_t<T>& unscaled_transform3d_t<T>::translate_absolute(vector3_t<T> t)
 {
 	position += t;
 	return *this;
 }
 
-inline unscaled_transform3d& unscaled_transform3d::translate_relative(vector3 t)
+template<typename T>
+unscaled_transform3d_t<T>& unscaled_transform3d_t<T>::translate_relative(vector3_t<T> t)
 {
 	position += rotation * t;
 	return *this;
 }
 
-inline unscaled_transform3d& unscaled_transform3d::rotate(quaternion r)
+template<typename T>
+unscaled_transform3d_t<T>& unscaled_transform3d_t<T>::rotate(quaternion_t<T> r)
 {
 	rotation = r * rotation;
 	return *this;
 }
 
-inline unscaled_transform3d& unscaled_transform3d::inverse()
+template<typename T>
+unscaled_transform3d_t<T> inverse(unscaled_transform3d_t<T> t)
 {
-	cdm::inverse(rotation);
-	position = rotation * -position;
-	return *this;
-}
-inline unscaled_transform3d unscaled_transform3d::get_inversed() const
-{
-	unscaled_transform3d res = *this;
-	res.inverse();
-	return res;
+	t.rotation = inverse(t.rotation);
+	t.position = t.rotation * -t.position;
+	return t;
 }
 
-inline matrix4 unscaled_transform3d::to_matrix() const
+template<typename T>
+matrix4_t<T> unscaled_transform3d_t<T>::to_matrix() const
 {
-	return matrix4(*this);
+	return matrix4_t<T>::from(*this);
 }
 
-inline unscaled_transform3d unscaled_transform3d::operator*(const unscaled_transform3d& t) const
+template<typename T>
+unscaled_transform3d_t<T> unscaled_transform3d_t<T>::operator*(const unscaled_transform3d_t<T>& t) const
 {
-	unscaled_transform3d res;
+	unscaled_transform3d_t<T> res;
 	res.position = rotation * t.position + position;
 	res.rotation = rotation * t.rotation;
 	return res;
 }
-inline vector3 unscaled_transform3d::operator*(vector3 v) const { return rotation * v + position; }
-inline quaternion unscaled_transform3d::operator*(quaternion q) const { return rotation * q; }
+template<typename T>
+vector3_t<T> unscaled_transform3d_t<T>::operator*(vector3_t<T> v) const { return rotation * v + position; }
+template<typename T>
+quaternion_t<T> unscaled_transform3d_t<T>::operator*(quaternion_t<T> q) const { return rotation * q; }
+#pragma endregion
 
-inline std::ostream& operator<<(std::ostream& os, vector2 v)
+#pragma region definition streams
+template<typename T>
+std::ostream& operator<<(std::ostream& os, vector2_t<T> v)
 {
-	return os << "vector2(" << v.x << ", " << v.y << ")";
+	return os << "vector2_t(" << v.x << ", " << v.y << ")";
 }
-inline std::ostream& operator<<(std::ostream& os, vector3 v)
+template<typename T>
+std::ostream& operator<<(std::ostream& os, vector3_t<T> v)
 {
-	return os << "vector3(" << v.x << ", " << v.y << ", " << v.z << ")";
+	return os << "vector3_t(" << v.x << ", " << v.y << ", " << v.z << ")";
 }
-inline std::ostream& operator<<(std::ostream& os, vector4 v)
+template<typename T>
+std::ostream& operator<<(std::ostream& os, vector4_t<T> v)
 {
-	return os << "vector4(" << v.x << ", " << v.y << ", " << v.z << ", " << v.w << ")";
+	return os << "vector4_t(" << v.x << ", " << v.y << ", " << v.z << ", " << v.w << ")";
 }
-inline std::ostream& operator<<(std::ostream& os, quaternion q)
+template<typename T>
+std::ostream& operator<<(std::ostream& os, quaternion_t<T> q)
 {
-	return os << "quaternion({" << q.x << ", " << q.y << ", " << q.z << "}, " << q.w << ")";
+	return os << "quaternion_t({" << q.x << ", " << q.y << ", " << q.z << "}, " << q.w << ")";
 }
-inline std::ostream& operator<<(std::ostream& os, plane p)
+template<typename T>
+std::ostream& operator<<(std::ostream& os, plane_t<T> p)
 {
-	return os << "plane(origin = " << p.origin << ", normal = " << p.normal << ")";
+	return os << "plane_t(origin = " << p.origin << ", normal = " << p.normal << ")";
 }
+template<typename T>
+std::ostream& operator<<(std::ostream& os, const cdm::matrix2_t<T>& m)
+{
+	return os
+		<<   "matrix2_t(" << m.m00 << "\t" << m.m10
+		<< "\n        " << m.m01 << "\t" << m.m11
+		<< ")";
+}
+template<typename T>
+std::ostream& operator<<(std::ostream& os, const cdm::matrix3_t<T>& m)
+{
+	return os
+		<<   "matrix3_t(" << m.m00 << "\t" << m.m10 << "\t" << m.m20
+		<< "\n        " << m.m01 << "\t" << m.m11 << "\t" << m.m21
+		<< "\n        " << m.m02 << "\t" << m.m12 << "\t" << m.m22
+		<< ")";
+}
+template<typename T>
+std::ostream& operator<<(std::ostream& os, const cdm::matrix4_t<T>& m)
+{
+	return os
+		<<   "matrix4_t(" << m.m00 << "\t" << m.m10 << "\t" << m.m20 << "\t" << m.m30
+		<< "\n        " << m.m01 << "\t" << m.m11 << "\t" << m.m21 << "\t" << m.m31
+		<< "\n        " << m.m02 << "\t" << m.m12 << "\t" << m.m22 << "\t" << m.m32
+		<< "\n        " << m.m03 << "\t" << m.m13 << "\t" << m.m23 << "\t" << m.m33
+		<< ")";
+}
+#pragma endregion
 
-inline std::ostream& operator<<(std::ostream& os, const cdm::matrix4& m)
-{
-	return os << "matrix4(" << m.m00 << "\t" << m.m10 << "\t" << m.m20 << "\t" << m.m30
-		    << "\n        " << m.m01 << "\t" << m.m11 << "\t" << m.m21 << "\t" << m.m31
-			<< "\n        " << m.m02 << "\t" << m.m12 << "\t" << m.m22 << "\t" << m.m32
-			<< "\n        " << m.m03 << "\t" << m.m13 << "\t" << m.m23 << "\t" << m.m33
-			<< ")";
-}
-
+#pragma region definition misc
 namespace detail
 {
-template<unsigned char x, unsigned char y>
-float get_quaternion_matrix_element(quaternion q)
+template<unsigned char x, unsigned char y, typename T>
+T get_quaternion_t_matrix_element(quaternion_t<T> q)
 {
 	static_assert(x < 3, "x must be [0;2]");
 	static_assert(y < 3, "y must be [0;2]");
 	if constexpr (y == 0)
 	{
 		if constexpr (x == 0)
-			return 1.0f - 2.0f * (q.y * q.y + q.z * q.z);
+			return T(1) - T(2) * (q.y * q.y + q.z * q.z);
 		if constexpr (x == 1)
-			return 2.0f * (q.x * q.y - q.z * q.w);
+			return T(2) * (q.x * q.y - q.z * q.w);
 		else
-			return 2.0f * (q.x * q.z + q.y * q.w);
+			return T(2) * (q.x * q.z + q.y * q.w);
 	}
 	if constexpr (y == 1)
 	{
 		if constexpr (x == 0)
-			return 2.0f * (q.x * q.y + q.z * q.w);
+			return T(2) * (q.x * q.y + q.z * q.w);
 		if constexpr (x == 1)
-			return 1.0f - 2.0f * (q.x * q.x + q.z * q.z);
+			return T(1) - T(2) * (q.x * q.x + q.z * q.z);
 		else
-			return 2.0f * (q.y * q.z - q.x * q.w);
+			return T(2) * (q.y * q.z - q.x * q.w);
 	}
 	else
 	{
 		if constexpr (x == 0)
-			return 2.0f * (q.x * q.z - q.y * q.w);
+			return T(2) * (q.x * q.z - q.y * q.w);
 		if constexpr (x == 1)
-			return 2.0f * (q.y * q.z + q.x * q.w);
+			return T(2) * (q.y * q.z + q.x * q.w);
 		else
-			return 1.0f - 2.0f * (q.x * q.x + q.y * q.y);
+			return T(1) - T(2) * (q.x * q.x + q.y * q.y);
 	}
 }
 } // namespace detail
 
-template<typename Functor>
-std::vector<vector3> function2D_sampler(const Functor& functor, float min, float max, float step)
+template<typename Functor, typename T>
+std::vector<vector3_t<T>> function2D_sampler(const Functor& functor, T min, T max, T step)
 {
-	std::vector<vector3> res;
+	std::vector<vector3_t<T>> res;
 
 	if (min > max)
 		std::swap(min, max);
@@ -3686,7 +3451,7 @@ std::vector<vector3> function2D_sampler(const Functor& functor, float min, float
 	if (step < epsilon)
 		step = epsilon;
 
-	for (float f = min; f < max; f += step)
+	for (T f = min; f < max; f += step)
 	{
 		res.push_back(functor(f));
 	}
@@ -3694,10 +3459,10 @@ std::vector<vector3> function2D_sampler(const Functor& functor, float min, float
 	return res;
 }
 
-template<typename Functor>
-std::vector<std::vector<vector3>> function3D_sampler(const Functor& functor, vector2 min, vector2 max, vector2 step)
+template<typename Functor, typename T>
+std::vector<std::vector<vector3_t<T>>> function3D_sampler(const Functor& functor, vector2_t<T> min, vector2_t<T> max, vector2_t<T> step)
 {
-	std::vector<std::vector<vector3>> res;
+	std::vector<std::vector<vector3_t<T>>> res;
 
 	if (min.x > max.x)
 		std::swap(min.x, max.x);
@@ -3712,17 +3477,17 @@ std::vector<std::vector<vector3>> function3D_sampler(const Functor& functor, vec
 	size_t xCount = 0;
 	size_t yCount = 0;
 
-	for (float x = min.x; x < max.x; x += step.x)
+	for (T x = min.x; x < max.x; x += step.x)
 		xCount++;
-	for (float y = min.y; y < max.y; y += step.y)
+	for (T y = min.y; y < max.y; y += step.y)
 		yCount++;
 	res.reserve(yCount);
 
-	for (float y = min.y; y < max.y; y += step.y)
+	for (T y = min.y; y < max.y; y += step.y)
 	{
-		std::vector<vector3> row;
+		std::vector<vector3_t<T>> row;
 		row.reserve(xCount);
-		for (float x = min.x; x < max.x; x += step.x)
+		for (T x = min.x; x < max.x; x += step.x)
 		{
 			row.push_back(functor(x, y));
 		}
@@ -3731,16 +3496,82 @@ std::vector<std::vector<vector3>> function3D_sampler(const Functor& functor, vec
 
 	return res;
 }
+#pragma endregion
 
 namespace literals
 {
-inline cdm::radian operator""_rad(long double d) { return cdm::radian(static_cast<float>(d)); }
-inline cdm::radian operator""_rad(unsigned long long int i) { return cdm::radian(static_cast<float>(i)); }
-inline cdm::radian operator""_pi(long double d) { return cdm::radian(static_cast<float>(d) * cdm::pi); }
-inline cdm::radian operator""_pi(unsigned long long int i) { return cdm::radian(static_cast<float>(i) * cdm::pi); }
-inline cdm::degree operator""_deg(long double d) { return cdm::degree(static_cast<float>(d)); }
-inline cdm::degree operator""_deg(unsigned long long int i) { return cdm::degree(static_cast<float>(i)); }
+#pragma region definition literals
+cdm::radian_t<float> operator""_rad(long double d) { return cdm::radian_t<float>(static_cast<float>(d)); }
+cdm::radian_t<float> operator""_rad(unsigned long long int i) { return cdm::radian_t<float>(static_cast<float>(i)); }
+cdm::radian_t<float> operator""_pi(long double d) { return cdm::radian_t<float>(static_cast<float>(d) * cdm::pi); }
+cdm::radian_t<float> operator""_pi(unsigned long long int i) { return cdm::radian_t<float>(static_cast<float>(i) * cdm::pi); }
+cdm::degree_t<float> operator""_deg(long double d) { return cdm::degree_t<float>(static_cast<float>(d)); }
+cdm::degree_t<float> operator""_deg(unsigned long long int i) { return cdm::degree_t<float>(static_cast<float>(i)); }
+cdm::radian_t<double> operator""_radd(long double d) { return cdm::radian_t<double>(static_cast<double>(d)); }
+cdm::radian_t<double> operator""_radd(unsigned long long int i) { return cdm::radian_t<double>(static_cast<double>(i)); }
+cdm::radian_t<double> operator""_pid(long double d) { return cdm::radian_t<double>(static_cast<double>(d) * cdm::pi); }
+cdm::radian_t<double> operator""_pid(unsigned long long int i) { return cdm::radian_t<double>(static_cast<double>(i) * cdm::pi); }
+cdm::degree_t<double> operator""_degd(long double d) { return cdm::degree_t<double>(static_cast<double>(d)); }
+cdm::degree_t<double> operator""_degd(unsigned long long int i) { return cdm::degree_t<double>(static_cast<double>(i)); }
+#pragma endregion
 } // namespace literals
+
+using complex = complex_t<float>;
+using complexd = complex_t<double>;
+using radian = radian_t<float>;
+using radiand = radian_t<double>;
+using degree = degree_t<float>;
+using degreed = degree_t<double>;
+using vector2 = vector2_t<float>;
+using vector2d = vector2_t<double>;
+using vector3 = vector3_t<float>;
+using vector3d = vector3_t<double>;
+using vector4 = vector4_t<float>;
+using vector4d = vector4_t<double>;
+using matrix2 = matrix2_t<float>;
+using matrix2d = matrix2_t<double>;
+using matrix3 = matrix3_t<float>;
+using matrix3d = matrix3_t<double>;
+using matrix4 = matrix4_t<float>;
+using matrix4d = matrix4_t<double>;
+using perspective = perspective_t<float>;
+using perspectived = perspective_t<double>;
+using euler_angles = euler_angles_t<float>;
+using euler_anglesd = euler_angles_t<double>;
+using quaternion = quaternion_t<float>;
+using quaterniond = quaternion_t<double>;
+using cartesian_direction2d = cartesian_direction2d_t<float>;
+using cartesian_direction2dd = cartesian_direction2d_t<double>;
+using polar_direction = polar_direction_t<float>;
+using polar_directiond = polar_direction_t<double>;
+using line = line_t<float>;
+using lined = line_t<double>;
+using segment2d = segment2d_t<float>;
+using segment2dd = segment2d_t<double>;
+using plane = plane_t<float>;
+using planed = plane_t<double>;
+using aa_rect = aa_rect_t<float>;
+using aa_rectd = aa_rect_t<double>;
+using circle = circle_t<float>;
+using circled = circle_t<double>;
+using ray2d = ray2d_t<float>;
+using ray2dd = ray2d_t<double>;
+using ray3d = ray3d_t<float>;
+using ray3dd = ray3d_t<double>;
+using aabb = aabb_t<float>;
+using aabbd = aabb_t<double>;
+using transform2d = transform2d_t<float>;
+using transform2dd = transform2d_t<double>;
+using transform3d = transform3d_t<float>;
+using transform3dd = transform3d_t<double>;
+using uniform_transform2d = uniform_transform2d_t<float>;
+using uniform_transform2dd = uniform_transform2d_t<double>;
+using uniform_transform3d = uniform_transform3d_t<float>;
+using uniform_transform3dd = uniform_transform3d_t<double>;
+using unscaled_transform2d = unscaled_transform2d_t<float>;
+using unscaled_transform2dd = unscaled_transform2d_t<double>;
+using unscaled_transform3d = unscaled_transform3d_t<float>;
+using unscaled_transform3dd = unscaled_transform3d_t<double>;
 } // namespace cdm
 
 #endif // CDM_MATHS_HPP

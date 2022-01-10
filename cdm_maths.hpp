@@ -1,4 +1,4 @@
-/* cdm_maths - v1.0.0 - geometric library - https://github.com/WubiCookie/cdm
+/* cdm_maths - v1.1.0 - geometric library - https://github.com/WubiCookie/cdm
    no warranty implied; use at your own risk
 
 LICENSE
@@ -403,7 +403,7 @@ struct vector2_t
 
 	template<typename U = T>
 	std::array<U, 2> to_array() const;
-	
+
 	T norm() const { return std::sqrt(norm_squared()); }
 	T norm_squared() const { return x * x + y * y; }
 	vector2_t& normalize()
@@ -545,7 +545,7 @@ template<typename T>
 struct vector4_t
 {
 	T x, y, z, w;
-	
+
 	vector4_t() = default;
 	vector4_t(T x_, T y_, T z_, T w_) : x{x_}, y{y_}, z{z_}, w{w_} {}
 	vector4_t(vector2_t<T> v, T z_, T w_) : vector4_t(v.x, v.y, z_, w_) {}
@@ -640,6 +640,13 @@ public:
 	normalized& operator=(const T& t);
 	normalized& operator=(T&& t) noexcept;
 };
+
+template<typename VecT>
+VecT cross(normalized<VecT> lhs, VecT rhs) { return cross(*lhs, rhs); }
+template<typename VecT>
+VecT cross(VecT lhs, normalized<VecT> rhs) { return cross(lhs, *rhs); }
+template<typename VecT>
+normalized<VecT> cross(normalized<VecT> lhs, normalized<VecT> rhs) { return normalized<VecT>::already_normalized(cross(*lhs, *rhs)); }
 #pragma endregion
 
 #pragma region declaration matrix2_t
@@ -721,7 +728,7 @@ struct matrix4_t
 	  m01, m11, m21, m31,
 	  m02, m12, m22, m32,
 	  m03, m13, m23, m33;
-	
+
 	matrix4_t() = default;
 	matrix4_t(T m00, T m10, T m20, T m30,
 	          T m01, T m11, T m21, T m31,
@@ -736,13 +743,13 @@ struct matrix4_t
 	explicit matrix4_t(const std::array<T, 16>& a);
 	matrix4_t(const matrix4_t&) = default;
 	matrix4_t(matrix4_t&&) = default;
-	
+
 	matrix4_t& operator=(const matrix4_t&) = default;
 	matrix4_t& operator=(matrix4_t&&) = default;
 
 	template<typename U = T>
 	std::array<U, 16> to_array() const;
-	
+
 	template<typename U>
 	operator matrix4_t<U>() const
 	{
@@ -763,7 +770,7 @@ struct matrix4_t
 	static matrix4_t scale(vector3_t<T> t);
 	static matrix4_t scale(T x, T y, T z);
 	static matrix4_t scale(T scale);
-	static matrix4_t look_at(vector3_t<T> from, vector3_t<T> to, vector3_t<T> up = { T(0), T(1), T(0) });
+	static matrix4_t look_at(vector3_t<T> from, vector3_t<T> to, normalized<vector3_t<T>> up = normalized<vector3_t<T>>::already_normalized(vector3_t<T>(T(0), T(1), T(0))));
 	static matrix4_t orthographic(T left, T right, T top, T bottom, T near, T far);
 	static matrix4_t rotation_around_x(radian_t<T> angle);
 	static matrix4_t rotation_around_y(radian_t<T> angle);
@@ -824,7 +831,7 @@ public:
 	friend matrix4_t<U> operator*(const matrix4_t<U>& m, const perspective_t<U>& p);
 	template<typename U>
 	friend matrix4_t<U> operator*(const perspective_t<U>& p, const matrix4_t<U>& m);
-	
+
 	template<typename U>
 	friend matrix4_t<U> operator*(const unscaled_transform3d_t<U>& t, const perspective_t<U>& p);
 	template<typename U>
@@ -855,7 +862,7 @@ struct quaternion_t
 
 	static quaternion_t zero();
 	static quaternion_t identity();
-	
+
 	T norm() const;
 	T norm_squared() const;
 
@@ -1104,7 +1111,7 @@ struct transform3d_t
 	vector3_t<T> position;
 	quaternion_t<T> rotation;
 	vector3_t<T> scale;
-	
+
 	matrix4_t<T> to_matrix4() const
 	{
 		matrix4_t<T> Tr{ matrix4_t<T>::translation(position) };
@@ -1139,7 +1146,7 @@ struct uniform_transform3d_t
 	vector3_t<T> position;
 	quaternion_t<T> rotation;
 	T scale;
-	
+
 	matrix4_t<T> to_matrix4() const
 	{
 		matrix4_t<T> Tr{ matrix4_t<T>::translation(position) };
@@ -1176,7 +1183,7 @@ struct unscaled_transform3d_t
 	unscaled_transform3d_t& translate_absolute(vector3_t<T> t);
 	unscaled_transform3d_t& translate_relative(vector3_t<T> t);
 	unscaled_transform3d_t& rotate(quaternion_t<T> r);
-	
+
 	unscaled_transform3d_t& inverse()
 	{
 		rotation.inverse();
@@ -1189,7 +1196,7 @@ struct unscaled_transform3d_t
 		res.inverse();
 		return res;
 	}
-	
+
 	matrix4_t<T> to_matrix4() const
 	{
 		matrix4_t<T> Tr{ matrix4_t<T>::translation(position) };
@@ -2197,7 +2204,7 @@ template<typename T>
 matrix4_t<T>::matrix4_t(T e00, T e10, T e20, T e30,
 	                    T e01, T e11, T e21, T e31,
 	                    T e02, T e12, T e22, T e32,
-	                    T e03, T e13, T e23, T e33) : 
+	                    T e03, T e13, T e23, T e33) :
 	m00{e00}, m10{e10}, m20{e20}, m30{e30},
 	m01{e01}, m11{e11}, m21{e21}, m31{e31},
 	m02{e02}, m12{e12}, m22{e22}, m32{e32},
@@ -2247,17 +2254,17 @@ matrix4_t<T> matrix4_t<T>::scale(T x, T y, T z) { return {x, T(0), T(0), T(0), T
 template<typename T>
 matrix4_t<T> matrix4_t<T>::scale(T scale) { return scale(scale, scale, scale); }
 template<typename T>
-matrix4_t<T> matrix4_t<T>::look_at(vector3_t<T> from, vector3_t<T> to, vector3_t<T> up)
+matrix4_t<T> matrix4_t<T>::look_at(vector3_t<T> from, vector3_t<T> to, normalized<vector3_t<T>> up)
 {
-	vector3_t<T> forward = (from - to).get_normalized();
-	vector3_t<T> right = cross(up.get_normalized(), forward);
-	vector3_t<T> true_up = cross(forward, right);
+	normalized<vector3_t<T>> forward = (from - to);
+	normalized<vector3_t<T>> right = cross(up, forward);
+	normalized<vector3_t<T>> true_up = cross(forward, right);
 
 	return {
-		right.x, true_up.x, forward.x, from.x,
-		right.y, true_up.y, forward.y, from.y,
-		right.z, true_up.z, forward.z, from.z,
-		T(0),    T(0),      T(0),      T(1)
+		right->x, true_up->x, forward->x, from->x,
+		right->y, true_up->y, forward->y, from->y,
+		right->z, true_up->z, forward->z, from->z,
+		T(0),     T(0),       T(0),       T(1)
 	};
 }
 template<typename T>
@@ -3164,9 +3171,9 @@ bool quaternion_t<T>::operator!=(quaternion_t<T> q) const { return !operator==(q
 template<typename T>
 vector3_t<T> operator*(const normalized<quaternion_t<T>>& q, vector3_t<T> v)
 {
-	vector3_t qvec = {q->x, q->y, q->z};
-	vector3_t uv = cross(qvec, v);
-	vector3_t uuv = cross(qvec, uv);
+	vector3_t<T> qvec = {q->x, q->y, q->z};
+	vector3_t<T> uv = cross(qvec, v);
+	vector3_t<T> uuv = cross(qvec, uv);
 	uv = uv * (T(2) * q->w);
 	uuv = uuv * T(2);
 	return v + uv + uuv;
@@ -3449,8 +3456,8 @@ vector3_t<T> plane_t<T>::project3d(vector3_t<T> point) const
 template<typename T>
 vector2_t<T> plane_t<T>::project2d(vector3_t<T> point, normalized<vector3_t<T>> plane_t_tangent) const
 {
-	normalized<vector3_t<T>> bitangent = cross(*normal, *plane_t_tangent);
-	normalized<vector3_t<T>> tangent = cross(*bitangent, *normal);
+	normalized<vector3_t<T>> bitangent = cross(normal, plane_t_tangent);
+	normalized<vector3_t<T>> tangent = cross(bitangent, normal);
 
 	matrix3_t<T> TBN(tangent->x,   tangent->y,   tangent->z,
 	                 bitangent->x, bitangent->y, bitangent->z,
@@ -3464,8 +3471,8 @@ vector2_t<T> plane_t<T>::project2d(vector3_t<T> point, normalized<vector3_t<T>> 
 template<typename T>
 vector3_t<T> plane_t<T>::unproject(vector2_t<T> point, normalized<vector3_t<T>> plane_t_tangent) const
 {
-	normalized<vector3_t<T>> bitangent = cross(*normal, *plane_t_tangent);
-	normalized<vector3_t<T>> tangent = cross(*bitangent, *normal);
+	normalized<vector3_t<T>> bitangent = cross(normal, plane_t_tangent);
+	normalized<vector3_t<T>> tangent = cross(bitangent, normal);
 
 	matrix3_t<T> invTBN = matrix3_t<T>(tangent->x,   tangent->y,   tangent->z,
 	                                   bitangent->x, bitangent->y, bitangent->z,
@@ -3793,6 +3800,11 @@ std::ostream& operator<<(std::ostream& os, const cdm::matrix4_t<T>& m)
 		<< "\n        " << m.m02 << "\t" << m.m12 << "\t" << m.m22 << "\t" << m.m32
 		<< "\n        " << m.m03 << "\t" << m.m13 << "\t" << m.m23 << "\t" << m.m33
 		<< ")";
+}
+template<typename T>
+std::ostream& operator<<(std::ostream& os, const cdm::normalized<T>& n)
+{
+	return os << *n;
 }
 #pragma endregion
 

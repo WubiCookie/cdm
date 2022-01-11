@@ -59,6 +59,10 @@ struct radian_t;
 template<typename T>
 struct degree_t;
 template<typename T>
+struct pi_fraction_t;
+template<typename T, T NumeratorT, T DenominatorT>
+struct static_pi_fraction_t;
+template<typename T>
 struct vector2_t;
 template<typename T>
 struct vector3_t;
@@ -132,9 +136,14 @@ constexpr int signnum(T val);
 #pragma endregion
 
 #pragma region constants declarations
-constexpr double pi = 3.141592653589793238462643;
+constexpr double pi = 3.1415926535897932384626433832795028841971693993751058209749445923;
 constexpr double deg_to_rad = pi / 180.0;
 constexpr double rad_to_deg = 180.0 / pi;
+constexpr double sqrt2 = 1.4142135623730950488016887242096980785696718753769480731766797379;
+constexpr double sqrt3 = 1.7320508075688772935274463415058723669428052538103806280558069794;
+constexpr double inv_sqrt2 = 0.7071067811865475244008443621048490392848359376884740365883398689;
+constexpr double inv_sqrt3 = 0.5773502691896257645091487805019574556476017512701268760186023264;
+constexpr double sqrt3_over2 = 0.8660254037844386467637231707529361834714026269051903140279034897;
 constexpr double epsilon = 1.0e-05;
 #pragma endregion
 
@@ -185,10 +194,10 @@ struct radian_t
 	T angle;
 
 	radian_t() = default;
-	explicit radian_t(T f);
+	constexpr explicit radian_t(T f);
 	radian_t(const radian_t& r) = default;
 	radian_t(radian_t&& r) = default;
-	radian_t(degree_t<T> d);
+	constexpr radian_t(degree_t<T> d);
 
 	explicit operator T() const;
 
@@ -212,41 +221,11 @@ radian_t<T> operator+(radian_t<T>, radian_t<T>);
 template<typename T>
 radian_t<T> operator-(radian_t<T>, radian_t<T>);
 template<typename T>
-radian_t<T> operator*(radian_t<T>, radian_t<T>);
-template<typename T>
-radian_t<T> operator/(radian_t<T>, radian_t<T>);
-template<typename T>
 radian_t<T> operator*(radian_t<T>, T);
-template<typename T>
-radian_t<T> operator/(radian_t<T>, T);
 template<typename T>
 radian_t<T> operator*(T, radian_t<T>);
 template<typename T>
-radian_t<T> operator/(T, radian_t<T>);
-template<typename T>
-bool operator<(T, radian_t<T>);
-template<typename T>
-bool operator>(T, radian_t<T>);
-template<typename T>
-bool operator==(T, radian_t<T>);
-template<typename T>
-bool operator!=(T, radian_t<T>);
-template<typename T>
-bool operator>=(T, radian_t<T>);
-template<typename T>
-bool operator<=(T, radian_t<T>);
-template<typename T>
-bool operator<(radian_t<T>, T);
-template<typename T>
-bool operator>(radian_t<T>, T);
-template<typename T>
-bool operator==(radian_t<T>, T);
-template<typename T>
-bool operator!=(radian_t<T>, T);
-template<typename T>
-bool operator>=(radian_t<T>, T);
-template<typename T>
-bool operator<=(radian_t<T>, T);
+radian_t<T> operator/(radian_t<T>, T);
 template<typename T>
 bool operator<(radian_t<T>, radian_t<T>);
 template<typename T>
@@ -293,10 +272,10 @@ struct degree_t
 	T angle;
 
 	degree_t() = default;
-	explicit degree_t(T f);
+	constexpr explicit degree_t(T f);
 	degree_t(const degree_t& d) = default;
 	degree_t(degree_t&& d) = default;
-	degree_t(radian_t<T> r);
+	constexpr degree_t(radian_t<T> r);
 
 	explicit operator T() const;
 
@@ -320,41 +299,11 @@ degree_t<T> operator+(degree_t<T>, degree_t<T>);
 template<typename T>
 degree_t<T> operator-(degree_t<T>, degree_t<T>);
 template<typename T>
-degree_t<T> operator*(degree_t<T>, degree_t<T>);
-template<typename T>
-degree_t<T> operator/(degree_t<T>, degree_t<T>);
-template<typename T>
 degree_t<T> operator*(degree_t<T>, T);
-template<typename T>
-degree_t<T> operator/(degree_t<T>, T);
 template<typename T>
 degree_t<T> operator*(T, degree_t<T>);
 template<typename T>
-degree_t<T> operator/(T, degree_t<T>);
-template<typename T>
-bool operator<(T, degree_t<T>);
-template<typename T>
-bool operator>(T, degree_t<T>);
-template<typename T>
-bool operator==(T, degree_t<T>);
-template<typename T>
-bool operator!=(T, degree_t<T>);
-template<typename T>
-bool operator>=(T, degree_t<T>);
-template<typename T>
-bool operator<=(T, degree_t<T>);
-template<typename T>
-bool operator<(degree_t<T>, T);
-template<typename T>
-bool operator>(degree_t<T>, T);
-template<typename T>
-bool operator==(degree_t<T>, T);
-template<typename T>
-bool operator!=(degree_t<T>, T);
-template<typename T>
-bool operator>=(degree_t<T>, T);
-template<typename T>
-bool operator<=(degree_t<T>, T);
+degree_t<T> operator/(degree_t<T>, T);
 template<typename T>
 bool operator<(degree_t<T>, degree_t<T>);
 template<typename T>
@@ -392,6 +341,350 @@ template<typename T>
 T acosh(degree_t<T> d);
 template<typename T>
 T atanh(degree_t<T> d);
+#pragma endregion
+
+#pragma region declaration pi_fraction_t
+template<typename T>
+struct pi_fraction_t
+{
+	static_assert(std::is_arithmetic_v<T>, "T must be arithmetic");
+	static_assert(std::is_signed_v<T>, "T must be signed");
+	static_assert(std::is_integral_v<T>, "T must be integral");
+
+	T numerator;
+	T denominator;
+
+	pi_fraction_t() = default;
+	pi_fraction_t(T num, T den) : numerator{num}, denominator{den} {}
+	pi_fraction_t(const pi_fraction_t& d) = default;
+	pi_fraction_t(pi_fraction_t&& d) = default;
+
+	pi_fraction_t& operator=(const pi_fraction_t&) = default;
+	pi_fraction_t& operator=(pi_fraction_t&&) = default;
+
+	template<typename U>
+	operator radian_t<U>() const { return radian_t<U>((U(numerator) * U(pi)) / U(denominator)); }
+	template<typename U>
+	operator degree_t<U>() const { return operator radian_t<U>(); }
+
+	pi_fraction_t operator-() const { return pi_fraction_t{-numerator, denominator}; }
+};
+
+//template<typename T>
+//radian_t<T> sin(pi_fraction_t<T> d);
+//template<typename T>
+//radian_t<T> cos(pi_fraction_t<T> d);
+//template<typename T>
+//radian_t<T> tan(pi_fraction_t<T> d);
+//template<typename T>
+//radian_t<T> asin(pi_fraction_t<T> d);
+//template<typename T>
+//radian_t<T> acos(pi_fraction_t<T> d);
+//template<typename T>
+//radian_t<T> atan(pi_fraction_t<T> d);
+//template<typename T>
+//radian_t<T> sinh(pi_fraction_t<T> d);
+//template<typename T>
+//radian_t<T> cosh(pi_fraction_t<T> d);
+//template<typename T>
+//radian_t<T> tanh(pi_fraction_t<T> d);
+//template<typename T>
+//radian_t<T> asinh(pi_fraction_t<T> d);
+//template<typename T>
+//radian_t<T> acosh(pi_fraction_t<T> d);
+//template<typename T>
+//radian_t<T> atanh(pi_fraction_t<T> d);
+#pragma endregion
+
+#pragma region declaration static_pi_fraction_t
+template<typename T, T NumeratorT, T DenominatorT>
+struct static_pi_fraction_t
+{
+	static_assert(std::is_arithmetic_v<T>, "T must be arithmetic");
+	static_assert(std::is_signed_v<T>, "T must be signed");
+	static_assert(std::is_integral_v<T>, "T must be integral");
+	static_assert(DenominatorT != T(0), "the denominator can not be 0");
+
+	template<T NumT, T DenT>
+	static constexpr std::pair<T, T> resign()
+	{
+		if constexpr (DenT < T(0))
+			return { -NumT, -DenT };
+		else
+			return { NumT, DenT };
+	}
+
+	template<T NumT, T DenT>
+	static constexpr std::pair<T, T> simplify()
+	{
+		constexpr auto p = resign<NumT, DenT>();
+		constexpr auto numt = p.first;
+		constexpr auto dent = p.second;
+
+		if constexpr (numt % dent == T(0))
+			return { numt / dent, T(1) };
+		else if constexpr (dent % numt == T(0))
+		{
+			if constexpr (numt > T(0))
+				return { T(1), dent / numt };
+			else
+				return { T(-1), -dent / numt };
+		}
+		else
+			return { numt, dent };
+	}
+
+	template<T NumT, T DenT>
+	static constexpr std::pair<T, T> wrap()
+	{
+		constexpr auto p = simplify<NumT, DenT>();
+		constexpr auto numt = p.first;
+		constexpr auto dent = p.second;
+
+		if constexpr (dent == T(1))
+			return { numt % T(2), T(1)};
+		else
+			return { numt, dent };
+	}
+
+	static constexpr T numerator{   wrap<NumeratorT, DenominatorT>().first };
+	static constexpr T denominator{ wrap<NumeratorT, DenominatorT>().second };
+
+	template<typename U>
+	constexpr operator radian_t<U>() const
+	{
+		if constexpr (numerator == T(0))
+			return radian_t<U>(U(0));
+		else
+			return radian_t<U>((U(numerator) * U(pi)) / U(denominator));
+	}
+	template<typename U>
+	constexpr operator degree_t<U>() const
+	{
+		if constexpr (numerator == T(0))
+			return degree_t<U>(U(0));
+		else
+			return degree_t<U>(radian_t<U>((U(numerator) * U(pi)) / U(denominator)));
+	}
+
+	static_pi_fraction_t<T, -numerator, denominator> operator-() const { return {}; }
+};
+
+template<typename T, T NumeratorTL, T DenominatorTL, T NumeratorTR, T DenominatorTR>
+constexpr bool operator==(const static_pi_fraction_t<T, NumeratorTL, DenominatorTL>& lhs, const static_pi_fraction_t<T, NumeratorTR, DenominatorTR>& rhs)
+{
+	return lhs.numerator == rhs.numerator
+	    && lhs.denominator == rhs.denominator;
+}
+template<typename T, T NumeratorTL, T DenominatorTL, T NumeratorTR, T DenominatorTR>
+constexpr bool operator!=(const static_pi_fraction_t<T, NumeratorTL, DenominatorTL>& lhs, const static_pi_fraction_t<T, NumeratorTR, DenominatorTR>& rhs)
+{
+	return !(lhs == rhs);
+}
+
+template<typename U, typename T, T NumeratorT, T DenominatorT>
+U sin(static_pi_fraction_t<T, NumeratorT, DenominatorT> d)
+{
+	if constexpr (d.numerator == T(0))
+		return U(0);
+	else if constexpr (d == static_pi_fraction_t<T, T(1), T(1)>{})
+			return U(0);
+	else if constexpr (d == static_pi_fraction_t<T, T(1), T(2)>{})
+			return U(1);
+	else if constexpr (d == static_pi_fraction_t<T, T(1), T(3)>{})
+			return U(sqrt3_over2);
+	else if constexpr (d == static_pi_fraction_t<T, T(1), T(4)>{})
+			return U(inv_sqrt2);
+	else if constexpr (d == static_pi_fraction_t<T, T(1), T(6)>{})
+			return U(0.5);
+
+	else if constexpr (d == static_pi_fraction_t<T, T(-1), T(1)>{})
+			return U(-0);
+	else if constexpr (d == static_pi_fraction_t<T, T(-1), T(2)>{})
+			return U(-1);
+	else if constexpr (d == static_pi_fraction_t<T, T(-1), T(3)>{})
+			return U(-sqrt3_over2);
+	else if constexpr (d == static_pi_fraction_t<T, T(-1), T(4)>{})
+			return U(-inv_sqrt2);
+	else if constexpr (d == static_pi_fraction_t<T, T(-1), T(6)>{})
+			return U(-0.5);
+
+	else if constexpr (d == static_pi_fraction_t<T, T(2), T(1)>{})
+			return U(0);
+	else if constexpr (d == static_pi_fraction_t<T, T(2), T(3)>{})
+			return U(sqrt3_over2);
+
+	else if constexpr (d == static_pi_fraction_t<T, T(-2), T(1)>{})
+			return U(-0);
+	else if constexpr (d == static_pi_fraction_t<T, T(-2), T(3)>{})
+			return U(-sqrt3_over2);
+
+	else if constexpr (d == static_pi_fraction_t<T, T(3), T(2)>{})
+			return U(-1);
+	else if constexpr (d == static_pi_fraction_t<T, T(3), T(4)>{})
+			return U(inv_sqrt2);
+
+	else if constexpr (d == static_pi_fraction_t<T, T(-3), T(2)>{})
+			return U(1);
+	else if constexpr (d == static_pi_fraction_t<T, T(-3), T(4)>{})
+			return U(-inv_sqrt2);
+
+	constexpr radian_t<U> r = d;
+	return sin(r);
+}
+template<typename U, typename T, T numerator, T denominator>
+U cos(static_pi_fraction_t<T, numerator, denominator> d)
+{
+	if constexpr (d.numerator == T(0))
+		return U(1);
+	else if constexpr (d.numerator == T(1) || d.numerator == T(-1))
+	{
+		if constexpr (d.denominator == T(1))
+			return U(-1);
+		else if constexpr (d.denominator == T(2))
+			return U(0);
+		else if constexpr (d.denominator == T(3))
+			return U(0.5);
+		else if constexpr (d.denominator == T(4))
+			return U(inv_sqrt2);
+		else if constexpr (d.denominator == T(6))
+			return U(sqrt3_over2);
+	}
+	else if constexpr (d.numerator == T(2) || d.numerator == T(-2))
+	{
+		if constexpr (d.denominator == T(1))
+			return U(1);
+		else if constexpr (d.denominator == T(3))
+			return U(-0.5);
+	}
+	else if constexpr (d.numerator == T(3) || d.numerator == T(-3))
+	{
+		if constexpr (d.denominator == T(2))
+			return U(0);
+		else if constexpr (d.denominator == T(4))
+			return U(-inv_sqrt2);
+	}
+
+	constexpr radian_t<U> r = d;
+	return cos(r);
+}
+template<typename U, typename T, T numerator, T denominator>
+U tan(static_pi_fraction_t<T, numerator, denominator> d)
+{
+	if constexpr (d.numerator == T(0))
+		return U(0);
+	else if constexpr (d.numerator == T(1))
+	{
+		if constexpr (d.denominator == T(1))
+			return U(0);
+		else if constexpr (d.denominator == T(2))
+			return -std::numeric_limits<U>::infinity();
+		else if constexpr (d.denominator == T(3))
+			return U(sqrt3);
+		else if constexpr (d.denominator == T(4))
+			return U(1);
+		else if constexpr (d.denominator == T(6))
+			return U(inv_sqrt3);
+	}
+	else if constexpr (d.numerator == T(-1))
+	{
+		if constexpr (d.denominator == T(1))
+			return U(-0);
+		else if constexpr (d.denominator == T(2))
+			return std::numeric_limits<U>::infinity();
+		else if constexpr (d.denominator == T(3))
+			return U(-sqrt3);
+		else if constexpr (d.denominator == T(4))
+			return U(-1);
+		else if constexpr (d.denominator == T(6))
+			return U(-inv_sqrt3);
+	}
+	else if constexpr (d.numerator == T(2))
+	{
+		if constexpr (d.denominator == T(1))
+			return U(0);
+		else if constexpr (d.denominator == T(3))
+			return U(-sqrt3);
+	}
+	else if constexpr (d.numerator == T(-2))
+	{
+		if constexpr (d.denominator == T(1))
+			return U(0);
+		else if constexpr (d.denominator == T(3))
+			return U(sqrt3);
+	}
+	else if constexpr (d.numerator == T(3))
+	{
+		if constexpr (d.denominator == T(2))
+			return -std::numeric_limits<U>::infinity();
+		else if constexpr (d.denominator == T(4))
+			return U(-1);
+	}
+	else if constexpr (d.numerator == T(-3))
+	{
+		if constexpr (d.denominator == T(2))
+			return std::numeric_limits<U>::infinity();
+		else if constexpr (d.denominator == T(4))
+			return U(1);
+	}
+
+	constexpr radian_t<U> r = d;
+	return tan(r);
+}
+template<typename U, typename T, T numerator, T denominator>
+U asin(static_pi_fraction_t<T, numerator, denominator> d)
+{
+	/// TODO: implement
+	return asin(radian_t<U>(d));
+}
+template<typename U, typename T, T numerator, T denominator>
+U acos(static_pi_fraction_t<T, numerator, denominator> d)
+{
+	/// TODO: implement
+	return acos(radian_t<U>(d));
+}
+template<typename U, typename T, T numerator, T denominator>
+U atan(static_pi_fraction_t<T, numerator, denominator> d)
+{
+	/// TODO: implement
+	return atan(radian_t<U>(d));
+}
+template<typename U, typename T, T numerator, T denominator>
+U sinh(static_pi_fraction_t<T, numerator, denominator> d)
+{
+	/// TODO: implement
+	return sinh(radian_t<U>(d));
+}
+template<typename U, typename T, T numerator, T denominator>
+U cosh(static_pi_fraction_t<T, numerator, denominator> d)
+{
+	/// TODO: implement
+	return cosh(radian_t<U>(d));
+}
+template<typename U, typename T, T numerator, T denominator>
+U tanh(static_pi_fraction_t<T, numerator, denominator> d)
+{
+	/// TODO: implement
+	return tanh(radian_t<U>(d));
+}
+template<typename U, typename T, T numerator, T denominator>
+U asinh(static_pi_fraction_t<T, numerator, denominator> d)
+{
+	/// TODO: implement
+	return asinh(radian_t<U>(d));
+}
+template<typename U, typename T, T numerator, T denominator>
+U acosh(static_pi_fraction_t<T, numerator, denominator> d)
+{
+	/// TODO: implement
+	return acosh(radian_t<U>(d));
+}
+template<typename U, typename T, T numerator, T denominator>
+U atanh(static_pi_fraction_t<T, numerator, denominator> d)
+{
+	/// TODO: implement
+	return atanh(radian_t<U>(d));
+}
 #pragma endregion
 
 #pragma region declaration vector2_t
@@ -1651,9 +1944,9 @@ complex_t<T> conjugate(complex_t<T> c) { c.i = -c.i; return c; }
 
 #pragma region definition radian_t
 template<typename T>
-radian_t<T>::radian_t(T f) : angle(f) {}
+constexpr radian_t<T>::radian_t(T f) : angle(f) {}
 template<typename T>
-radian_t<T>::radian_t(degree_t<T> d) : angle(d.angle * T(deg_to_rad)) {}
+constexpr radian_t<T>::radian_t(degree_t<T> d) : angle(d.angle * T(deg_to_rad)) {}
 
 template<typename T>
 radian_t<T>::operator T() const { return angle; }
@@ -1686,41 +1979,11 @@ radian_t<T> operator+(radian_t<T> r1, radian_t<T> r2) { return radian_t<T>{ r1.a
 template<typename T>
 radian_t<T> operator-(radian_t<T> r1, radian_t<T> r2) { return radian_t<T>{ r1.angle - r2.angle }; }
 template<typename T>
-radian_t<T> operator*(radian_t<T> r1, radian_t<T> r2) { return radian_t<T>{ r1.angle * r2.angle }; }
-template<typename T>
-radian_t<T> operator/(radian_t<T> r1, radian_t<T> r2) { return radian_t<T>{ r1.angle / r2.angle }; }
-template<typename T>
 radian_t<T> operator*(radian_t<T> r, T f) { return radian_t<T>{ r.angle * f }; }
-template<typename T>
-radian_t<T> operator/(radian_t<T> r, T f) { return radian_t<T>{ r.angle / f }; }
 template<typename T>
 radian_t<T> operator*(T f, radian_t<T> r) { return radian_t<T>{ f * r.angle }; }
 template<typename T>
-radian_t<T> operator/(T f, radian_t<T> r) { return radian_t<T>{ f / r.angle }; }
-template<typename T>
-bool operator<(T lhs, radian_t<T> rhs) { return T(lhs) < T(rhs); }
-template<typename T>
-bool operator>(T lhs, radian_t<T> rhs) { return T(lhs) > T(rhs); }
-template<typename T>
-bool operator==(T lhs, radian_t<T> rhs) { return T(lhs) == T(rhs); }
-template<typename T>
-bool operator!=(T lhs, radian_t<T> rhs) { return T(lhs) != T(rhs); }
-template<typename T>
-bool operator>=(T lhs, radian_t<T> rhs) { return T(lhs) >= T(rhs); }
-template<typename T>
-bool operator<=(T lhs, radian_t<T> rhs) { return T(lhs) <= T(rhs); }
-template<typename T>
-bool operator<(radian_t<T> lhs, T rhs) { return T(lhs) < T(rhs); }
-template<typename T>
-bool operator>(radian_t<T> lhs, T rhs) { return T(lhs) > T(rhs); }
-template<typename T>
-bool operator==(radian_t<T> lhs, T rhs) { return T(lhs) == T(rhs); }
-template<typename T>
-bool operator!=(radian_t<T> lhs, T rhs) { return T(lhs) != T(rhs); }
-template<typename T>
-bool operator>=(radian_t<T> lhs, T rhs) { return T(lhs) >= T(rhs); }
-template<typename T>
-bool operator<=(radian_t<T> lhs, T rhs) { return T(lhs) <= T(rhs); }
+radian_t<T> operator/(radian_t<T> r, T f) { return radian_t<T>{ r.angle / f }; }
 template<typename T>
 bool operator<(radian_t<T> lhs, radian_t<T> rhs) { return T(lhs) < T(rhs); }
 template<typename T>
@@ -1762,9 +2025,9 @@ T atanh(radian_t<T> r) { return std::atanh(r.angle); }
 
 #pragma region definition degree_t
 template<typename T>
-degree_t<T>::degree_t(T f) : angle(f) {}
+constexpr degree_t<T>::degree_t(T f) : angle(f) {}
 template<typename T>
-degree_t<T>::degree_t(radian_t<T> r) : angle(r.angle * T(rad_to_deg)) {}
+constexpr degree_t<T>::degree_t(radian_t<T> r) : angle(r.angle * T(rad_to_deg)) {}
 
 template<typename T>
 degree_t<T>::operator T() const { return angle; }
@@ -1794,41 +2057,11 @@ degree_t<T> operator+(degree_t<T> d1, degree_t<T> d2) { return degree_t<T>{ d1.a
 template<typename T>
 degree_t<T> operator-(degree_t<T> d1, degree_t<T> d2) { return degree_t<T>{ d1.angle - d2.angle }; }
 template<typename T>
-degree_t<T> operator*(degree_t<T> d1, degree_t<T> d2) { return degree_t<T>{ d1.angle * d2.angle }; }
-template<typename T>
-degree_t<T> operator/(degree_t<T> d1, degree_t<T> d2) { return degree_t<T>{ d1.angle / d2.angle }; }
-template<typename T>
 degree_t<T> operator*(degree_t<T> d, T f) { return degree_t<T>{ d.angle * f }; }
-template<typename T>
-degree_t<T> operator/(degree_t<T> d, T f) { return degree_t<T>{ d.angle / f }; }
 template<typename T>
 degree_t<T> operator*(T f, degree_t<T> d) { return degree_t<T>{ f * d.angle }; }
 template<typename T>
-degree_t<T> operator/(T f, degree_t<T> d) { return degree_t<T>{ f / d.angle }; }
-template<typename T>
-bool operator<(T lhs, degree_t<T> rhs) { return T(lhs) < T(rhs); }
-template<typename T>
-bool operator>(T lhs, degree_t<T> rhs) { return T(lhs) > T(rhs); }
-template<typename T>
-bool operator==(T lhs, degree_t<T> rhs) { return T(lhs) == T(rhs); }
-template<typename T>
-bool operator!=(T lhs, degree_t<T> rhs) { return T(lhs) != T(rhs); }
-template<typename T>
-bool operator>=(T lhs, degree_t<T> rhs) { return T(lhs) >= T(rhs); }
-template<typename T>
-bool operator<=(T lhs, degree_t<T> rhs) { return T(lhs) <= T(rhs); }
-template<typename T>
-bool operator<(degree_t<T> lhs, T rhs) { return T(lhs) < T(rhs); }
-template<typename T>
-bool operator>(degree_t<T> lhs, T rhs) { return T(lhs) > T(rhs); }
-template<typename T>
-bool operator==(degree_t<T> lhs, T rhs) { return T(lhs) == T(rhs); }
-template<typename T>
-bool operator!=(degree_t<T> lhs, T rhs) { return T(lhs) != T(rhs); }
-template<typename T>
-bool operator>=(degree_t<T> lhs, T rhs) { return T(lhs) >= T(rhs); }
-template<typename T>
-bool operator<=(degree_t<T> lhs, T rhs) { return T(lhs) <= T(rhs); }
+degree_t<T> operator/(degree_t<T> d, T f) { return degree_t<T>{ d.angle / f }; }
 template<typename T>
 bool operator<(degree_t<T> lhs, degree_t<T> rhs) { return T(lhs) < T(rhs); }
 template<typename T>
@@ -1843,29 +2076,29 @@ template<typename T>
 bool operator<=(degree_t<T> lhs, degree_t<T> rhs) { return T(lhs) <= T(rhs); }
 
 template<typename T>
-T sin(degree_t<T> d) { return sin(radian_t<T>::from(d)); }
+T sin(degree_t<T> d) { return sin(radian_t<T>(d)); }
 template<typename T>
-T cos(degree_t<T> d) { return cos(radian_t<T>::from(d)); }
+T cos(degree_t<T> d) { return cos(radian_t<T>(d)); }
 template<typename T>
-T tan(degree_t<T> d) { return tan(radian_t<T>::from(d)); }
+T tan(degree_t<T> d) { return tan(radian_t<T>(d)); }
 template<typename T>
-T asin(degree_t<T> d) { return asin(radian_t<T>::from(d)); }
+T asin(degree_t<T> d) { return asin(radian_t<T>(d)); }
 template<typename T>
-T acos(degree_t<T> d) { return acos(radian_t<T>::from(d)); }
+T acos(degree_t<T> d) { return acos(radian_t<T>(d)); }
 template<typename T>
-T atan(degree_t<T> d) { return atan(radian_t<T>::from(d)); }
+T atan(degree_t<T> d) { return atan(radian_t<T>(d)); }
 template<typename T>
-T sinh(degree_t<T> d) { return sinh(radian_t<T>::from(d)); }
+T sinh(degree_t<T> d) { return sinh(radian_t<T>(d)); }
 template<typename T>
-T cosh(degree_t<T> d) { return cosh(radian_t<T>::from(d)); }
+T cosh(degree_t<T> d) { return cosh(radian_t<T>(d)); }
 template<typename T>
-T tanh(degree_t<T> d) { return tanh(radian_t<T>::from(d)); }
+T tanh(degree_t<T> d) { return tanh(radian_t<T>(d)); }
 template<typename T>
-T asinh(degree_t<T> d) { return asinh(radian_t<T>::from(d)); }
+T asinh(degree_t<T> d) { return asinh(radian_t<T>(d)); }
 template<typename T>
-T acosh(degree_t<T> d) { return acosh(radian_t<T>::from(d)); }
+T acosh(degree_t<T> d) { return acosh(radian_t<T>(d)); }
 template<typename T>
-T atanh(degree_t<T> d) { return atanh(radian_t<T>::from(d)); }
+T atanh(degree_t<T> d) { return atanh(radian_t<T>(d)); }
 #pragma endregion
 
 #pragma region definition vector2_t
@@ -4064,6 +4297,26 @@ quaternion_t<T> unscaled_transform3d_t<T>::operator*(quaternion_t<T> q) const { 
 
 #pragma region definition streams
 template<typename T>
+std::ostream& operator<<(std::ostream& o, const radian_t<T>& a)
+{
+    return o << "radian_t(" << a.angle << ")";
+}
+template<typename T>
+std::ostream& operator<<(std::ostream& o, const degree_t<T>& a)
+{
+    return o << "degree_t(" << a.angle << ")";
+}
+template<typename T>
+std::ostream& operator<<(std::ostream& o, const pi_fraction_t<T>& f)
+{
+    return o << "pi_fraction_t(" << f.numerator << "pi / " << f.denominator << ")";
+}
+template<typename T, T NumT, T DenT>
+std::ostream& operator<<(std::ostream& o, const static_pi_fraction_t<T, NumT, DenT>& f)
+{
+    return o << "static_pi_fraction_t(" << f.numerator << "pi / " << f.denominator << ")";
+}
+template<typename T>
 std::ostream& operator<<(std::ostream& os, vector2_t<T> v)
 {
 	return os << "vector2_t(" << v.x << ", " << v.y << ")";
@@ -4221,78 +4474,81 @@ std::vector<std::vector<vector3_t<T>>> function3D_sampler(const Functor& functor
 namespace literals
 {
 #pragma region definition literals
-inline cdm::radian_t<float> operator""_rad(long double d) { return cdm::radian_t<float>(static_cast<float>(d)); }
-inline cdm::radian_t<float> operator""_rad(unsigned long long int i) { return cdm::radian_t<float>(static_cast<float>(i)); }
-inline cdm::radian_t<float> operator""_pi(long double d) { return cdm::radian_t<float>(static_cast<float>(d) * cdm::pi); }
-inline cdm::radian_t<float> operator""_pi(unsigned long long int i) { return cdm::radian_t<float>(static_cast<float>(i) * cdm::pi); }
-inline cdm::degree_t<float> operator""_deg(long double d) { return cdm::degree_t<float>(static_cast<float>(d)); }
-inline cdm::degree_t<float> operator""_deg(unsigned long long int i) { return cdm::degree_t<float>(static_cast<float>(i)); }
-inline cdm::radian_t<double> operator""_radd(long double d) { return cdm::radian_t<double>(static_cast<double>(d)); }
+inline cdm::radian_t<float>  operator""_rad (long double d)            { return cdm::radian_t<float> (static_cast<float> (d)); }
+inline cdm::radian_t<float>  operator""_rad (unsigned long long int i) { return cdm::radian_t<float> (static_cast<float> (i)); }
+inline cdm::radian_t<float>  operator""_pi  (long double d)            { return cdm::radian_t<float> (static_cast<float> (d) * cdm::pi); }
+inline cdm::radian_t<float>  operator""_pi  (unsigned long long int i) { return cdm::radian_t<float> (static_cast<float> (i) * cdm::pi); }
+inline cdm::degree_t<float>  operator""_deg (long double d)            { return cdm::degree_t<float> (static_cast<float> (d)); }
+inline cdm::degree_t<float>  operator""_deg (unsigned long long int i) { return cdm::degree_t<float> (static_cast<float> (i)); }
+inline cdm::radian_t<double> operator""_radd(long double d)            { return cdm::radian_t<double>(static_cast<double>(d)); }
 inline cdm::radian_t<double> operator""_radd(unsigned long long int i) { return cdm::radian_t<double>(static_cast<double>(i)); }
-inline cdm::radian_t<double> operator""_pid(long double d) { return cdm::radian_t<double>(static_cast<double>(d) * cdm::pi); }
-inline cdm::radian_t<double> operator""_pid(unsigned long long int i) { return cdm::radian_t<double>(static_cast<double>(i) * cdm::pi); }
-inline cdm::degree_t<double> operator""_degd(long double d) { return cdm::degree_t<double>(static_cast<double>(d)); }
+inline cdm::radian_t<double> operator""_pid (long double d)            { return cdm::radian_t<double>(static_cast<double>(d) * cdm::pi); }
+inline cdm::radian_t<double> operator""_pid (unsigned long long int i) { return cdm::radian_t<double>(static_cast<double>(i) * cdm::pi); }
+inline cdm::degree_t<double> operator""_degd(long double d)            { return cdm::degree_t<double>(static_cast<double>(d)); }
 inline cdm::degree_t<double> operator""_degd(unsigned long long int i) { return cdm::degree_t<double>(static_cast<double>(i)); }
 #pragma endregion
 } // namespace literals
 
 using namespace literals;
 
-using complex = complex_t<float>;
+using complex  = complex_t<float>;
 using complexd = complex_t<double>;
-using radian = radian_t<float>;
+using radian  = radian_t<float>;
 using radiand = radian_t<double>;
-using degree = degree_t<float>;
+using degree  = degree_t<float>;
 using degreed = degree_t<double>;
-using vector2 = vector2_t<float>;
+using pi_fraction = pi_fraction_t<int>;
+template<int NumT, int DenT>
+using static_pi_fraction = static_pi_fraction_t<int, NumT, DenT>;
+using vector2  = vector2_t<float>;
 using vector2d = vector2_t<double>;
-using vector3 = vector3_t<float>;
+using vector3  = vector3_t<float>;
 using vector3d = vector3_t<double>;
-using vector4 = vector4_t<float>;
+using vector4  = vector4_t<float>;
 using vector4d = vector4_t<double>;
-using matrix2 = matrix2_t<float>;
+using matrix2  = matrix2_t<float>;
 using matrix2d = matrix2_t<double>;
-using matrix3 = matrix3_t<float>;
+using matrix3  = matrix3_t<float>;
 using matrix3d = matrix3_t<double>;
-using matrix4 = matrix4_t<float>;
+using matrix4  = matrix4_t<float>;
 using matrix4d = matrix4_t<double>;
-using perspective = perspective_t<float>;
+using perspective  = perspective_t<float>;
 using perspectived = perspective_t<double>;
-using euler_angles = euler_angles_t<float>;
+using euler_angles  = euler_angles_t<float>;
 using euler_anglesd = euler_angles_t<double>;
-using quaternion = quaternion_t<float>;
+using quaternion  = quaternion_t<float>;
 using quaterniond = quaternion_t<double>;
-using cartesian_direction2d = cartesian_direction2d_t<float>;
+using cartesian_direction2d  = cartesian_direction2d_t<float>;
 using cartesian_direction2dd = cartesian_direction2d_t<double>;
-using polar_direction = polar_direction_t<float>;
+using polar_direction  = polar_direction_t<float>;
 using polar_directiond = polar_direction_t<double>;
-using line = line_t<float>;
+using line  = line_t<float>;
 using lined = line_t<double>;
-using segment2d = segment2d_t<float>;
+using segment2d  = segment2d_t<float>;
 using segment2dd = segment2d_t<double>;
-using plane = plane_t<float>;
+using plane  = plane_t<float>;
 using planed = plane_t<double>;
-using aa_rect = aa_rect_t<float>;
+using aa_rect  = aa_rect_t<float>;
 using aa_rectd = aa_rect_t<double>;
-using circle = circle_t<float>;
+using circle  = circle_t<float>;
 using circled = circle_t<double>;
-using ray2d = ray2d_t<float>;
+using ray2d  = ray2d_t<float>;
 using ray2dd = ray2d_t<double>;
-using ray3d = ray3d_t<float>;
+using ray3d  = ray3d_t<float>;
 using ray3dd = ray3d_t<double>;
-using aabb = aabb_t<float>;
+using aabb  = aabb_t<float>;
 using aabbd = aabb_t<double>;
-using transform2d = transform2d_t<float>;
+using transform2d  = transform2d_t<float>;
 using transform2dd = transform2d_t<double>;
-using transform3d = transform3d_t<float>;
+using transform3d  = transform3d_t<float>;
 using transform3dd = transform3d_t<double>;
-using uniform_transform2d = uniform_transform2d_t<float>;
+using uniform_transform2d  = uniform_transform2d_t<float>;
 using uniform_transform2dd = uniform_transform2d_t<double>;
-using uniform_transform3d = uniform_transform3d_t<float>;
+using uniform_transform3d  = uniform_transform3d_t<float>;
 using uniform_transform3dd = uniform_transform3d_t<double>;
-using unscaled_transform2d = unscaled_transform2d_t<float>;
+using unscaled_transform2d  = unscaled_transform2d_t<float>;
 using unscaled_transform2dd = unscaled_transform2d_t<double>;
-using unscaled_transform3d = unscaled_transform3d_t<float>;
+using unscaled_transform3d  = unscaled_transform3d_t<float>;
 using unscaled_transform3dd = unscaled_transform3d_t<double>;
 } // namespace cdm
 

@@ -969,6 +969,10 @@ template<typename T>
 radian_t<T> angle_between(vector2_t<T> v1, vector2_t<T> v2);
 template<typename T>
 bool nearly_equal(vector2_t<T> v1, vector2_t<T> v2, T e = T(epsilon));
+template<typename T>
+vector2_t<T> element_wise_min(vector2_t<T> v0, vector2_t<T> v1);
+template<typename T>
+vector2_t<T> element_wise_max(vector2_t<T> v0, vector2_t<T> v1);
 #pragma endregion
 
 #pragma region declaration vector3_t
@@ -1043,6 +1047,10 @@ template<typename T>
 radian_t<T> angle_between(vector3_t<T> v1, vector3_t<T> v2);
 template<typename T>
 bool nearly_equal(vector3_t<T> v1, vector3_t<T> v2, T e = epsilon);
+template<typename T>
+vector3_t<T> element_wise_min(vector3_t<T> v0, vector3_t<T> v1);
+template<typename T>
+vector3_t<T> element_wise_max(vector3_t<T> v0, vector3_t<T> v1);
 #pragma endregion
 
 #pragma region declaration vector4_t
@@ -1114,6 +1122,10 @@ template<typename T>
 vector4_t<T> from_to(vector4_t<T> from, vector4_t<T> to);
 template<typename T>
 bool nearly_equal(vector4_t<T> v1, vector4_t<T> v2, T e = epsilon);
+template<typename T>
+vector4_t<T> element_wise_min(vector4_t<T> v0, vector4_t<T> v1);
+template<typename T>
+vector4_t<T> element_wise_max(vector4_t<T> v0, vector4_t<T> v1);
 #pragma endregion
 
 #pragma region declaration normalized
@@ -1697,9 +1709,9 @@ struct quaternion_t
 
 	quaternion_t() = default;
 	quaternion_t(T x_, T y_, T z_, T w_) : x{x_}, y{y_}, z{z_}, w{w_} {}
-	quaternion_t(const normalized<vector3_t<T>>& axis, radian_t<T> angle);
+	quaternion_t(normalized<vector3_t<T>> axis, radian_t<T> angle);
 	template<typename U, U NumeratorT, U DenominatorT>
-	quaternion_t(const normalized<vector3_t<T>>& axis, static_pi_fraction_t<U, NumeratorT, DenominatorT> angle);
+	quaternion_t(normalized<vector3_t<T>> axis, static_pi_fraction_t<U, NumeratorT, DenominatorT> angle);
 
 	template<typename U>
 	explicit operator quaternion_t<U>() const
@@ -2414,6 +2426,22 @@ template<typename T>
 radian_t<T> angle_between(vector2_t<T> v1, vector2_t<T> v2) { return radian_t{ atan2f(v2.y, v2.x) - atan2f(v1.y, v1.x) }; }
 template<typename T>
 bool nearly_equal(vector2_t<T> v1, vector2_t<T> v2, T e) { return cdm::nearly_equal(v1.x, v2.x, e) && cdm::nearly_equal(v1.y, v2.y, e); }
+template<typename T>
+vector2_t<T> element_wise_min(vector2_t<T> v0, vector2_t<T> v1)
+{
+	return {
+		v0.x < v1.x ? v0.x : v1.x,
+		v0.y < v1.y ? v0.y : v1.y
+	};
+};
+template<typename T>
+vector2_t<T> element_wise_max(vector2_t<T> v0, vector2_t<T> v1)
+{
+	return {
+		v0.x > v1.x ? v0.x : v1.x,
+		v0.y > v1.y ? v0.y : v1.y
+	};
+};
 #pragma endregion
 
 #pragma region definition vector3_t
@@ -2513,6 +2541,24 @@ bool nearly_equal(vector3_t<T> v1, vector3_t<T> v2, T e)
 	       nearly_equal(v1.y, v2.y, e) &&
 	       nearly_equal(v1.z, v2.z, e);
 }
+template<typename T>
+vector3_t<T> element_wise_min(vector3_t<T> v0, vector3_t<T> v1)
+{
+	return {
+		v0.x < v1.x ? v0.x : v1.x,
+		v0.y < v1.y ? v0.y : v1.y,
+		v0.z < v1.z ? v0.z : v1.z
+	};
+};
+template<typename T>
+vector3_t<T> element_wise_max(vector3_t<T> v0, vector3_t<T> v1)
+{
+	return {
+		v0.x > v1.x ? v0.x : v1.x,
+		v0.y > v1.y ? v0.y : v1.y,
+		v0.z > v1.z ? v0.z : v1.z
+	};
+};
 #pragma endregion
 
 #pragma region definition vector4_t
@@ -2599,6 +2645,26 @@ bool nearly_equal(vector4_t<T> v1, vector4_t<T> v2, T e)
 	       nearly_equal(v1.z, v2.z, e) &&
 	       nearly_equal(v1.w, v2.w, e);
 }
+template<typename T>
+vector4_t<T> element_wise_min(vector4_t<T> v0, vector4_t<T> v1)
+{
+	return {
+		v0.x < v1.x ? v0.x : v1.x,
+		v0.y < v1.y ? v0.y : v1.y,
+		v0.z < v1.z ? v0.z : v1.z,
+		v0.w < v1.w ? v0.w : v1.w
+	};
+};
+template<typename T>
+vector4_t<T> element_wise_max(vector4_t<T> v0, vector4_t<T> v1)
+{
+	return {
+		v0.x > v1.x ? v0.x : v1.x,
+		v0.y > v1.y ? v0.y : v1.y,
+		v0.z > v1.z ? v0.z : v1.z,
+		v0.w > v1.w ? v0.w : v1.w
+	};
+};
 #pragma endregion
 
 #pragma region definition normalized
@@ -3894,10 +3960,17 @@ matrix4_t<T> operator*(const perspective_t<T>& p, const unscaled_transform3d_t<T
 
 #pragma region definition quaternion_t
 template<typename T>
-quaternion_t<T>::quaternion_t(const normalized<vector3_t<T>>& axis, radian_t<T> angle)
+quaternion_t<T>::quaternion_t(normalized<vector3_t<T>> axis, radian_t<T> angle)
 {
 	vector3_t<T> tmpAxis = *axis * sin(angle / 2.0f);
 	*this = {tmpAxis.x, tmpAxis.y, tmpAxis.z, cos(angle / 2.0f)};
+}
+template<typename T>
+template<typename U, U NumeratorT, U DenominatorT>
+quaternion_t<T>::quaternion_t(normalized<vector3_t<T>> axis, static_pi_fraction_t<U, NumeratorT, DenominatorT> angle)
+{
+	vector3_t<T> tmpAxis = *axis * sin<T>(static_pi_fraction_t<U, angle.numerator, angle.denominator * U(2)>{});
+	*this = {tmpAxis.x, tmpAxis.y, tmpAxis.z, cos<T>(static_pi_fraction_t<U, angle.numerator, angle.denominator * U(2)>{})};
 }
 
 template<typename T>

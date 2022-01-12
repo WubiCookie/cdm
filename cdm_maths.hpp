@@ -370,30 +370,216 @@ struct pi_fraction_t
 	pi_fraction_t operator-() const { return pi_fraction_t{-numerator, denominator}; }
 };
 
-//template<typename T>
-//radian_t<T> sin(pi_fraction_t<T> d);
-//template<typename T>
-//radian_t<T> cos(pi_fraction_t<T> d);
-//template<typename T>
-//radian_t<T> tan(pi_fraction_t<T> d);
-//template<typename T>
-//radian_t<T> asin(pi_fraction_t<T> d);
-//template<typename T>
-//radian_t<T> acos(pi_fraction_t<T> d);
-//template<typename T>
-//radian_t<T> atan(pi_fraction_t<T> d);
-//template<typename T>
-//radian_t<T> sinh(pi_fraction_t<T> d);
-//template<typename T>
-//radian_t<T> cosh(pi_fraction_t<T> d);
-//template<typename T>
-//radian_t<T> tanh(pi_fraction_t<T> d);
-//template<typename T>
-//radian_t<T> asinh(pi_fraction_t<T> d);
-//template<typename T>
-//radian_t<T> acosh(pi_fraction_t<T> d);
-//template<typename T>
-//radian_t<T> atanh(pi_fraction_t<T> d);
+template<typename U, typename T>
+U sin(pi_fraction_t<T> d)
+{
+	if constexpr (d.numerator == T(0))
+		return U(0);
+	else if constexpr (d == static_pi_fraction_t<T, T(1), T(1)>{})
+			return U(0);
+	else if constexpr (d == static_pi_fraction_t<T, T(1), T(2)>{})
+			return U(1);
+	else if constexpr (d == static_pi_fraction_t<T, T(1), T(3)>{})
+			return U(sqrt3_over2);
+	else if constexpr (d == static_pi_fraction_t<T, T(1), T(4)>{})
+			return U(inv_sqrt2);
+	else if constexpr (d == static_pi_fraction_t<T, T(1), T(6)>{})
+			return U(0.5);
+
+	else if constexpr (d == static_pi_fraction_t<T, T(-1), T(1)>{})
+			return U(-0);
+	else if constexpr (d == static_pi_fraction_t<T, T(-1), T(2)>{})
+			return U(-1);
+	else if constexpr (d == static_pi_fraction_t<T, T(-1), T(3)>{})
+			return U(-sqrt3_over2);
+	else if constexpr (d == static_pi_fraction_t<T, T(-1), T(4)>{})
+			return U(-inv_sqrt2);
+	else if constexpr (d == static_pi_fraction_t<T, T(-1), T(6)>{})
+			return U(-0.5);
+
+	else if constexpr (d == static_pi_fraction_t<T, T(2), T(1)>{})
+			return U(0);
+	else if constexpr (d == static_pi_fraction_t<T, T(2), T(3)>{})
+			return U(sqrt3_over2);
+
+	else if constexpr (d == static_pi_fraction_t<T, T(-2), T(1)>{})
+			return U(-0);
+	else if constexpr (d == static_pi_fraction_t<T, T(-2), T(3)>{})
+			return U(-sqrt3_over2);
+
+	else if constexpr (d == static_pi_fraction_t<T, T(3), T(2)>{})
+			return U(-1);
+	else if constexpr (d == static_pi_fraction_t<T, T(3), T(4)>{})
+			return U(inv_sqrt2);
+
+	else if constexpr (d == static_pi_fraction_t<T, T(-3), T(2)>{})
+			return U(1);
+	else if constexpr (d == static_pi_fraction_t<T, T(-3), T(4)>{})
+			return U(-inv_sqrt2);
+
+	constexpr radian_t<U> r = d;
+	return sin(r);
+}
+template<typename U, typename T>
+U cos(pi_fraction_t<T> d)
+{
+	if constexpr (d.numerator == T(0))
+		return U(1);
+	else if constexpr (d.numerator == T(1) || d.numerator == T(-1))
+	{
+		if constexpr (d.denominator == T(1))
+			return U(-1);
+		else if constexpr (d.denominator == T(2))
+			return U(0);
+		else if constexpr (d.denominator == T(3))
+			return U(0.5);
+		else if constexpr (d.denominator == T(4))
+			return U(inv_sqrt2);
+		else if constexpr (d.denominator == T(6))
+			return U(sqrt3_over2);
+	}
+	else if constexpr (d.numerator == T(2) || d.numerator == T(-2))
+	{
+		if constexpr (d.denominator == T(1))
+			return U(1);
+		else if constexpr (d.denominator == T(3))
+			return U(-0.5);
+	}
+	else if constexpr (d.numerator == T(3) || d.numerator == T(-3))
+	{
+		if constexpr (d.denominator == T(2))
+			return U(0);
+		else if constexpr (d.denominator == T(4))
+			return U(-inv_sqrt2);
+	}
+
+	constexpr radian_t<U> r = d;
+	return cos(r);
+}
+template<typename U, typename T>
+U tan(pi_fraction_t<T> d)
+{
+	if constexpr (d.numerator == T(0))
+		return U(0);
+	else if constexpr (d.numerator == T(1))
+	{
+		if constexpr (d.denominator == T(1))
+			return U(0);
+		else if constexpr (d.denominator == T(2))
+			return -std::numeric_limits<U>::infinity();
+		else if constexpr (d.denominator == T(3))
+			return U(sqrt3);
+		else if constexpr (d.denominator == T(4))
+			return U(1);
+		else if constexpr (d.denominator == T(6))
+			return U(inv_sqrt3);
+	}
+	else if constexpr (d.numerator == T(-1))
+	{
+		if constexpr (d.denominator == T(1))
+			return U(-0);
+		else if constexpr (d.denominator == T(2))
+			return std::numeric_limits<U>::infinity();
+		else if constexpr (d.denominator == T(3))
+			return U(-sqrt3);
+		else if constexpr (d.denominator == T(4))
+			return U(-1);
+		else if constexpr (d.denominator == T(6))
+			return U(-inv_sqrt3);
+	}
+	else if constexpr (d.numerator == T(2))
+	{
+		if constexpr (d.denominator == T(1))
+			return U(0);
+		else if constexpr (d.denominator == T(3))
+			return U(-sqrt3);
+	}
+	else if constexpr (d.numerator == T(-2))
+	{
+		if constexpr (d.denominator == T(1))
+			return U(0);
+		else if constexpr (d.denominator == T(3))
+			return U(sqrt3);
+	}
+	else if constexpr (d.numerator == T(3))
+	{
+		if constexpr (d.denominator == T(2))
+			return -std::numeric_limits<U>::infinity();
+		else if constexpr (d.denominator == T(4))
+			return U(-1);
+	}
+	else if constexpr (d.numerator == T(-3))
+	{
+		if constexpr (d.denominator == T(2))
+			return std::numeric_limits<U>::infinity();
+		else if constexpr (d.denominator == T(4))
+			return U(1);
+	}
+
+	constexpr radian_t<U> r = d;
+	return tan(r);
+}
+template<typename U, typename T>
+U asin(pi_fraction_t<T> d)
+{
+	/// TODO: implement
+	constexpr radian_t<U> r = d;
+	return asin(r);
+}
+template<typename U, typename T>
+U acos(pi_fraction_t<T> d)
+{
+	/// TODO: implement
+	return acos(radian_t<U>(d));
+}
+template<typename U, typename T>
+U atan(pi_fraction_t<T> d)
+{
+	/// TODO: implement
+	return atan(radian_t<U>(d));
+}
+template<typename U, typename T>
+U sinh(pi_fraction_t<T> d)
+{
+	/// TODO: implement
+	constexpr radian_t<U> r = d;
+	return sinh(r);
+}
+template<typename U, typename T>
+U cosh(pi_fraction_t<T> d)
+{
+	/// TODO: implement
+	constexpr radian_t<U> r = d;
+	return cosh(r);
+}
+template<typename U, typename T>
+U tanh(pi_fraction_t<T> d)
+{
+	/// TODO: implement
+	constexpr radian_t<U> r = d;
+	return tanh(r);
+}
+template<typename U, typename T>
+U asinh(pi_fraction_t<T> d)
+{
+	/// TODO: implement
+	constexpr radian_t<U> r = d;
+	return asinh(r);
+}
+template<typename U, typename T>
+U acosh(pi_fraction_t<T> d)
+{
+	/// TODO: implement
+	constexpr radian_t<U> r = d;
+	return acosh(r);
+}
+template<typename U, typename T>
+U atanh(pi_fraction_t<T> d)
+{
+	/// TODO: implement
+	constexpr radian_t<U> r = d;
+	return atanh(r);
+}
 #pragma endregion
 
 #pragma region declaration static_pi_fraction_t
@@ -466,6 +652,7 @@ struct static_pi_fraction_t
 		else
 			return degree_t<U>(radian_t<U>((U(numerator) * U(pi)) / U(denominator)));
 	}
+	constexpr operator pi_fraction_t<T>() const { return { numerator, denominator }; }
 
 	static_pi_fraction_t<T, -numerator, denominator> operator-() const { return {}; }
 };
@@ -532,8 +719,8 @@ U sin(static_pi_fraction_t<T, NumeratorT, DenominatorT> d)
 	constexpr radian_t<U> r = d;
 	return sin(r);
 }
-template<typename U, typename T, T numerator, T denominator>
-U cos(static_pi_fraction_t<T, numerator, denominator> d)
+template<typename U, typename T, T NumeratorT, T DenominatorT>
+U cos(static_pi_fraction_t<T, NumeratorT, DenominatorT> d)
 {
 	if constexpr (d.numerator == T(0))
 		return U(1);
@@ -568,8 +755,8 @@ U cos(static_pi_fraction_t<T, numerator, denominator> d)
 	constexpr radian_t<U> r = d;
 	return cos(r);
 }
-template<typename U, typename T, T numerator, T denominator>
-U tan(static_pi_fraction_t<T, numerator, denominator> d)
+template<typename U, typename T, T NumeratorT, T DenominatorT>
+U tan(static_pi_fraction_t<T, NumeratorT, DenominatorT> d)
 {
 	if constexpr (d.numerator == T(0))
 		return U(0);
@@ -631,59 +818,66 @@ U tan(static_pi_fraction_t<T, numerator, denominator> d)
 	constexpr radian_t<U> r = d;
 	return tan(r);
 }
-template<typename U, typename T, T numerator, T denominator>
-U asin(static_pi_fraction_t<T, numerator, denominator> d)
+template<typename U, typename T, T NumeratorT, T DenominatorT>
+U asin(static_pi_fraction_t<T, NumeratorT, DenominatorT> d)
 {
 	/// TODO: implement
-	return asin(radian_t<U>(d));
+	constexpr radian_t<U> r = d;
+	return asin(r);
 }
-template<typename U, typename T, T numerator, T denominator>
-U acos(static_pi_fraction_t<T, numerator, denominator> d)
+template<typename U, typename T, T NumeratorT, T DenominatorT>
+U acos(static_pi_fraction_t<T, NumeratorT, DenominatorT> d)
 {
 	/// TODO: implement
 	return acos(radian_t<U>(d));
 }
-template<typename U, typename T, T numerator, T denominator>
-U atan(static_pi_fraction_t<T, numerator, denominator> d)
+template<typename U, typename T, T NumeratorT, T DenominatorT>
+U atan(static_pi_fraction_t<T, NumeratorT, DenominatorT> d)
 {
 	/// TODO: implement
 	return atan(radian_t<U>(d));
 }
-template<typename U, typename T, T numerator, T denominator>
-U sinh(static_pi_fraction_t<T, numerator, denominator> d)
+template<typename U, typename T, T NumeratorT, T DenominatorT>
+U sinh(static_pi_fraction_t<T, NumeratorT, DenominatorT> d)
 {
 	/// TODO: implement
-	return sinh(radian_t<U>(d));
+	constexpr radian_t<U> r = d;
+	return sinh(r);
 }
-template<typename U, typename T, T numerator, T denominator>
-U cosh(static_pi_fraction_t<T, numerator, denominator> d)
+template<typename U, typename T, T NumeratorT, T DenominatorT>
+U cosh(static_pi_fraction_t<T, NumeratorT, DenominatorT> d)
 {
 	/// TODO: implement
-	return cosh(radian_t<U>(d));
+	constexpr radian_t<U> r = d;
+	return cosh(r);
 }
-template<typename U, typename T, T numerator, T denominator>
-U tanh(static_pi_fraction_t<T, numerator, denominator> d)
+template<typename U, typename T, T NumeratorT, T DenominatorT>
+U tanh(static_pi_fraction_t<T, NumeratorT, DenominatorT> d)
 {
 	/// TODO: implement
-	return tanh(radian_t<U>(d));
+	constexpr radian_t<U> r = d;
+	return tanh(r);
 }
-template<typename U, typename T, T numerator, T denominator>
-U asinh(static_pi_fraction_t<T, numerator, denominator> d)
+template<typename U, typename T, T NumeratorT, T DenominatorT>
+U asinh(static_pi_fraction_t<T, NumeratorT, DenominatorT> d)
 {
 	/// TODO: implement
-	return asinh(radian_t<U>(d));
+	constexpr radian_t<U> r = d;
+	return asinh(r);
 }
-template<typename U, typename T, T numerator, T denominator>
-U acosh(static_pi_fraction_t<T, numerator, denominator> d)
+template<typename U, typename T, T NumeratorT, T DenominatorT>
+U acosh(static_pi_fraction_t<T, NumeratorT, DenominatorT> d)
 {
 	/// TODO: implement
-	return acosh(radian_t<U>(d));
+	constexpr radian_t<U> r = d;
+	return acosh(r);
 }
-template<typename U, typename T, T numerator, T denominator>
-U atanh(static_pi_fraction_t<T, numerator, denominator> d)
+template<typename U, typename T, T NumeratorT, T DenominatorT>
+U atanh(static_pi_fraction_t<T, NumeratorT, DenominatorT> d)
 {
 	/// TODO: implement
-	return atanh(radian_t<U>(d));
+	constexpr radian_t<U> r = d;
+	return atanh(r);
 }
 #pragma endregion
 
@@ -692,6 +886,15 @@ template<typename T>
 struct vector2_t
 {
 	T x, y;
+
+	template<typename U>
+	explicit operator vector2_t<U>() const
+	{
+		return vector2_t<U>{
+			static_cast<U>(x),
+			static_cast<U>(y)
+		};
+	}
 
 	template<typename U = T>
 	std::array<U, 2> to_array() const;
@@ -990,7 +1193,7 @@ public:
 	std::array<U, 4> to_array() const;
 
 	template<typename U>
-	operator matrix2_t<U>() const
+	explicit operator matrix2_t<U>() const
 	{
 		return {
 			U(m00), U(m10),
@@ -1102,6 +1305,7 @@ struct matrix3_t
 	friend class matrix3_t;
 	template<typename U>
 	friend class matrix4_t;
+
 private:
 	T m00, m01, m02,
 	  m10, m11, m12,
@@ -1125,7 +1329,7 @@ public:
 	std::array<U, 9> to_array() const;
 
 	template<typename U>
-	operator matrix3_t<U>() const
+	explicit operator matrix3_t<U>() const
 	{
 		return {
 			U(m00), U(m10), U(m20),
@@ -1146,6 +1350,12 @@ public:
 	static matrix3_t rotation_around_x(normalized<complex_t<T>> angle);
 	static matrix3_t rotation_around_y(normalized<complex_t<T>> angle);
 	static matrix3_t rotation_around_z(normalized<complex_t<T>> angle);
+	template<typename U, U NumeratorT, U DenominatorT>
+	static matrix3_t rotation_around_x(static_pi_fraction_t<U, NumeratorT, DenominatorT> angle);
+	template<typename U, U NumeratorT, U DenominatorT>
+	static matrix3_t rotation_around_y(static_pi_fraction_t<U, NumeratorT, DenominatorT> angle);
+	template<typename U, U NumeratorT, U DenominatorT>
+	static matrix3_t rotation_around_z(static_pi_fraction_t<U, NumeratorT, DenominatorT> angle);
 	matrix3_t& inverse();
 	matrix3_t get_inversed() const;
 	matrix3_t& transpose();
@@ -1288,7 +1498,7 @@ public:
 	std::array<U, 16> to_array() const;
 
 	template<typename U>
-	operator matrix4_t<U>() const
+	explicit operator matrix4_t<U>() const
 	{
 		return {
 			U(m00), U(m10), U(m20), U(m30),
@@ -1317,6 +1527,12 @@ public:
 	static matrix4_t rotation_around_x(normalized<complex_t<T>> angle);
 	static matrix4_t rotation_around_y(normalized<complex_t<T>> angle);
 	static matrix4_t rotation_around_z(normalized<complex_t<T>> angle);
+	template<typename T, T NumeratorT, T DenominatorT>
+	static matrix4_t rotation_around_x(static_pi_fraction_t<T, NumeratorT, DenominatorT> angle);
+	template<typename T, T NumeratorT, T DenominatorT>
+	static matrix4_t rotation_around_y(static_pi_fraction_t<T, NumeratorT, DenominatorT> angle);
+	template<typename T, T NumeratorT, T DenominatorT>
+	static matrix4_t rotation_around_z(static_pi_fraction_t<T, NumeratorT, DenominatorT> angle);
 	bool is_orthogonal() const;
 	bool is_homogenous() const;
 	matrix4_t& inverse();
@@ -1482,6 +1698,19 @@ struct quaternion_t
 	quaternion_t() = default;
 	quaternion_t(T x_, T y_, T z_, T w_) : x{x_}, y{y_}, z{z_}, w{w_} {}
 	quaternion_t(const normalized<vector3_t<T>>& axis, radian_t<T> angle);
+	template<typename U, U NumeratorT, U DenominatorT>
+	quaternion_t(const normalized<vector3_t<T>>& axis, static_pi_fraction_t<U, NumeratorT, DenominatorT> angle);
+
+	template<typename U>
+	explicit operator quaternion_t<U>() const
+	{
+		return quaternion_t<U>{
+			static_cast<U>(x),
+			static_cast<U>(y),
+			static_cast<U>(z),
+			static_cast<U>(w)
+		};
+	}
 
 	template<typename U = T>
 	std::array<U, 4> to_array() const;
@@ -2630,6 +2859,42 @@ matrix3_t<T> matrix3_t<T>::rotation_around_z(normalized<complex_t<T>> angle)
 	};
 }
 template<typename T>
+template<typename U, U NumeratorT, U DenominatorT>
+matrix3_t<T> matrix3_t<T>::rotation_around_x(static_pi_fraction_t<U, NumeratorT, DenominatorT> angle)
+{
+	T c = cos<T>(angle);
+	T s = sin<T>(angle);
+	return {
+		T(1), T(0), T(0),
+		T(0), c,    s,
+		T(0), -s,   c
+	};
+}
+template<typename T>
+template<typename U, U NumeratorT, U DenominatorT>
+matrix3_t<T> matrix3_t<T>::rotation_around_y(static_pi_fraction_t<U, NumeratorT, DenominatorT> angle)
+{
+	T c = cos<T>(angle);
+	T s = sin<T>(angle);
+	return {
+		c,    T(0), s,
+		T(0), T(1), T(0),
+		-s,   T(0), c
+	};
+}
+template<typename T>
+template<typename U, U NumeratorT, U DenominatorT>
+matrix3_t<T> matrix3_t<T>::rotation_around_z(static_pi_fraction_t<U, NumeratorT, DenominatorT> angle)
+{
+	T c = cos<T>(angle);
+	T s = sin<T>(angle);
+	return {
+		c,    -s,   T(0),
+		s,    c,    T(0),
+		T(0), T(0), T(1)
+	};
+}
+template<typename T>
 matrix3_t<T>& matrix3_t<T>::inverse()
 {
 	if (is_orthogonal())
@@ -2888,6 +3153,24 @@ template<typename T>
 matrix4_t<T> matrix4_t<T>::rotation_around_y(normalized<complex_t<T>> angle) { return matrix4_t<T>(matrix3_t<T>::rotation_around_y(angle)); }
 template<typename T>
 matrix4_t<T> matrix4_t<T>::rotation_around_z(normalized<complex_t<T>> angle) { return matrix4_t<T>(matrix3_t<T>::rotation_around_z(angle)); }
+template<typename T>
+template<typename U, U NumeratorT, U DenominatorT>
+matrix4_t<T> matrix4_t<T>::rotation_around_x(static_pi_fraction_t<U, NumeratorT, DenominatorT> angle)
+{
+	return matrix4_t<T>(matrix3_t<T>::rotation_around_x(angle));
+}
+template<typename T>
+template<typename U, U NumeratorT, U DenominatorT>
+matrix4_t<T> matrix4_t<T>::rotation_around_y(static_pi_fraction_t<U, NumeratorT, DenominatorT> angle)
+{
+	return matrix4_t<T>(matrix3_t<T>::rotation_around_y(angle));
+}
+template<typename T>
+template<typename U, U NumeratorT, U DenominatorT>
+matrix4_t<T> matrix4_t<T>::rotation_around_z(static_pi_fraction_t<U, NumeratorT, DenominatorT> angle)
+{
+	return matrix4_t<T>(matrix3_t<T>::rotation_around_z(angle));
+}
 template<typename T>
 bool matrix4_t<T>::is_orthogonal() const
 {

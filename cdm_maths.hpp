@@ -154,7 +154,13 @@ struct complex_t
 	T r;
 	T i;
 
-	static complex_t from(radian_t<T> angle);
+	complex_t() = default;
+	complex_t(T r_, T i_) : r{r_}, i{i_} {}
+	explicit complex_t(radian_t<T> angle);
+	complex_t(const complex_t&) = default;
+	complex_t(complex_t&&) = default;
+	complex_t& operator=(const complex_t&) = default;
+	complex_t& operator=(complex_t&&) = default;
 
 	complex_t operator+(complex_t c) const;
 	complex_t operator-(complex_t c) const;
@@ -998,8 +1004,6 @@ struct vector3_t
 	template<typename U = T>
 	std::array<U, 3> to_array() const;
 
-	radian_t<T> angle_around_axis(vector3_t v, vector3_t axis);
-
 	vector2_t<T> xy() const;
 
 	vector3_t operator+(vector3_t v) const;
@@ -1051,6 +1055,8 @@ template<typename T>
 vector3_t<T> element_wise_min(vector3_t<T> v0, vector3_t<T> v1);
 template<typename T>
 vector3_t<T> element_wise_max(vector3_t<T> v0, vector3_t<T> v1);
+template<typename T>
+radian_t<T> angle_around_axis(vector3_t<T> v0, vector3_t<T> v1, normalized<vector3_t<T>> axis);
 #pragma endregion
 
 #pragma region declaration vector4_t
@@ -2104,13 +2110,7 @@ constexpr int signnum(T val)
 
 #pragma region definition complex_t
 template<typename T>
-complex_t<T> complex_t<T>::from(radian_t<T> angle)
-{
-	complex_t<T> c;
-	c.r = cos(angle);
-	c.i = sin(angle);
-	return c;
-}
+complex_t<T>::complex_t<T>(radian_t<T> angle) : r{cos(angle)}, i{sin(angle)} {}
 
 template<typename T>
 complex_t<T> complex_t<T>::operator+(complex_t<T> c) const
@@ -2446,14 +2446,6 @@ vector2_t<T> element_wise_max(vector2_t<T> v0, vector2_t<T> v1)
 
 #pragma region definition vector3_t
 template<typename T>
-radian_t<T> vector3_t<T>::angle_around_axis(vector3_t<T> v, vector3_t<T> axis)
-{
-	vector3_t<T> c = cross(*this, v);
-	T angle = atan2f(norm(c), dot(*this, v));
-	return radian_t<T>{ dot(c, axis) < T(0) ? -angle : angle };
-}
-
-template<typename T>
 vector2_t<T> vector3_t<T>::xy() const { return {x, y}; }
 
 template<typename T>
@@ -2559,6 +2551,13 @@ vector3_t<T> element_wise_max(vector3_t<T> v0, vector3_t<T> v1)
 		v0.z > v1.z ? v0.z : v1.z
 	};
 };
+template<typename T>
+radian_t<T> angle_around_axis(vector3_t<T> v0, vector3_t<T> v1, normalized<vector3_t<T>> axis)
+{
+	vector3_t<T> c = cross(v0, v1);
+	T angle = atan2f(norm(c), dot(v0, v1));
+	return radian_t<T>{ dot(c, *axis) < T(0) ? -angle : angle };
+}
 #pragma endregion
 
 #pragma region definition vector4_t

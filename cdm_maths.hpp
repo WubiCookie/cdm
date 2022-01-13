@@ -806,8 +806,6 @@ U tan(static_pi_fraction_t<T, NumeratorT, DenominatorT> d)
 	{
 		if constexpr (d.denominator == T(1))
 			return U(0);
-		else if constexpr (d.denominator == T(2))
-			return -std::numeric_limits<U>::infinity();
 		else if constexpr (d.denominator == T(3))
 			return U(sqrt3);
 		else if constexpr (d.denominator == T(4))
@@ -819,8 +817,6 @@ U tan(static_pi_fraction_t<T, NumeratorT, DenominatorT> d)
 	{
 		if constexpr (d.denominator == T(1))
 			return U(-0);
-		else if constexpr (d.denominator == T(2))
-			return std::numeric_limits<U>::infinity();
 		else if constexpr (d.denominator == T(3))
 			return U(-sqrt3);
 		else if constexpr (d.denominator == T(4))
@@ -844,16 +840,12 @@ U tan(static_pi_fraction_t<T, NumeratorT, DenominatorT> d)
 	}
 	else if constexpr (d.numerator == T(3))
 	{
-		if constexpr (d.denominator == T(2))
-			return -std::numeric_limits<U>::infinity();
-		else if constexpr (d.denominator == T(4))
+		if constexpr (d.denominator == T(4))
 			return U(-1);
 	}
 	else if constexpr (d.numerator == T(-3))
 	{
-		if constexpr (d.denominator == T(2))
-			return std::numeric_limits<U>::infinity();
-		else if constexpr (d.denominator == T(4))
+		if constexpr (d.denominator == T(4))
 			return U(1);
 	}
 
@@ -1251,7 +1243,7 @@ struct matrix2_t
 	friend class matrix4_t;
 
 private:
-	T m00, m10, m01, m11;
+	T m00, m01, m10, m11;
 
 	matrix2_t(T m00, T m10, T m01, T m11);
 
@@ -1376,9 +1368,9 @@ public:
 	template <typename U = T>
 	std::array<U, 9> to_array() const
 	{
-		return {static_cast<U>(m00), static_cast<U>(m01), static_cast<U>(m02),
-		        static_cast<U>(m10), static_cast<U>(m11), static_cast<U>(m12),
-		        static_cast<U>(m20), static_cast<U>(m21), static_cast<U>(m22)};
+		return {static_cast<U>(m00), static_cast<U>(m10), static_cast<U>(m20),
+		        static_cast<U>(m01), static_cast<U>(m11), static_cast<U>(m21),
+		        static_cast<U>(m02), static_cast<U>(m12), static_cast<U>(m22)};
 	}
 
 	template <typename U>
@@ -1590,11 +1582,11 @@ public:
 	template <typename U = T>
 	std::array<U, 16> to_array() const
 	{
-		return {static_cast<U>(m00), static_cast<U>(m01), static_cast<U>(m02),
-		        static_cast<U>(m03), static_cast<U>(m10), static_cast<U>(m11),
-		        static_cast<U>(m12), static_cast<U>(m13), static_cast<U>(m20),
-		        static_cast<U>(m21), static_cast<U>(m22), static_cast<U>(m23),
-		        static_cast<U>(m30), static_cast<U>(m31), static_cast<U>(m32),
+		return {static_cast<U>(m00), static_cast<U>(m10), static_cast<U>(m20),
+		        static_cast<U>(m30), static_cast<U>(m01), static_cast<U>(m11),
+		        static_cast<U>(m21), static_cast<U>(m31), static_cast<U>(m02),
+		        static_cast<U>(m12), static_cast<U>(m22), static_cast<U>(m32),
+		        static_cast<U>(m03), static_cast<U>(m13), static_cast<U>(m23),
 		        static_cast<U>(m33)};
 	}
 
@@ -4057,18 +4049,6 @@ matrix4_t<T> matrix4_t<T>::operator*(const matrix4_t<T>& m) const
 	        m.m10 * m03 + m.m11 * m13 + m.m12 * m23 + m.m13 * m33,
 	        m.m20 * m03 + m.m21 * m13 + m.m22 * m23 + m.m23 * m33,
 	        m.m30 * m03 + m.m31 * m13 + m.m32 * m23 + m.m33 * m33};
-}
-
-template <typename T>
-template <typename U>
-std::array<U, 16> matrix4_t<T>::to_array() const
-{
-	return {static_cast<U>(m00), static_cast<U>(m10), static_cast<U>(m20),
-	        static_cast<U>(m30), static_cast<U>(m01), static_cast<U>(m11),
-	        static_cast<U>(m21), static_cast<U>(m31), static_cast<U>(m02),
-	        static_cast<U>(m12), static_cast<U>(m22), static_cast<U>(m32),
-	        static_cast<U>(m03), static_cast<U>(m13), static_cast<U>(m23),
-	        static_cast<U>(m33)};
 }
 
 template <typename T>

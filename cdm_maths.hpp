@@ -1336,7 +1336,7 @@ private:
 public:
 	matrix3_t() = default;
 	explicit matrix3_t(matrix2_t<T> m);
-	explicit matrix3_t(const std::array<T, 16>& a);
+	explicit matrix3_t(const std::array<T, 9>& a);
 	matrix3_t(const matrix3_t&) = default;
 	matrix3_t(matrix3_t&&) = default;
 
@@ -1381,24 +1381,27 @@ public:
 	T determinant() const;
 	bool is_orthogonal() const;
 
+	template<bool IsConstT>
 	struct proxy
 	{
 	protected:
-		std::reference_wrapper<T> x;
-		std::reference_wrapper<T> y;
-		std::reference_wrapper<T> z;
+		using Type = std::conditional_t<IsConstT, const T, T>;
 
-		constexpr T& vector(int i)
+		std::reference_wrapper<Type> x;
+		std::reference_wrapper<Type> y;
+		std::reference_wrapper<Type> z;
+
+		constexpr Type& vector(int i)
 		{
-			return std::array<std::reference_wrapper<T>, 3>{
+			return std::array<std::reference_wrapper<Type>, 3>{
 				x,
 				y,
 				z
 			}[i];
 		}
-		constexpr const T& vector(int i) const
+		constexpr const Type& vector(int i) const
 		{
-			return std::array<std::reference_wrapper<const T>, 3>{
+			return std::array<std::reference_wrapper<const Type>, 3>{
 				x,
 				y,
 				z
@@ -1406,12 +1409,12 @@ public:
 		}
 
 	public:
-		constexpr proxy(T& e0, T& e1, T& e2) : x{e0}, y{e1}, z{e2} {}
+		constexpr proxy(Type& e0, Type& e1, Type& e2) : x{e0}, y{e1}, z{e2} {}
 		constexpr proxy(const proxy&) = default;
 		constexpr proxy(proxy&&) = default;
 		constexpr proxy& operator=(const proxy&) = default;
 		constexpr proxy& operator=(proxy&&) = default;
-		constexpr proxy& operator=(vector3_t<T> v)
+		constexpr proxy& operator=(vector4_t<T> v)
 		{
 			x = v.x;
 			y = v.y;
@@ -1422,51 +1425,82 @@ public:
 		constexpr vector2_t<T> xy() const { return vector2_t<T>{x, y}; }
 		constexpr operator vector3_t<T>() const { return vector3_t<T>{x, y, z}; }
 	};
-	struct column_proxy : proxy
+	template<bool IsConstT>
+	struct column_proxy : proxy<IsConstT>
 	{
 		using proxy::proxy;
-		constexpr T& row(int i)
+		constexpr proxy<IsConstT>::Type& row(int i)
 		{
 			return proxy::vector(i);
 		}
-		constexpr const T& row(int i) const
+		constexpr const proxy<IsConstT>::Type& row(int i) const
 		{
 			return proxy::vector(i);
 		}
 	};
-	struct row_proxy : proxy
+	template<bool IsConstT>
+	struct row_proxy : proxy<IsConstT>
 	{
 		using proxy::proxy;
-		constexpr T& column(int i)
+		constexpr proxy<IsConstT>::Type& column(int i)
 		{
 			return proxy::vector(i);
 		}
-		constexpr const T& column(int i) const
+		constexpr const proxy<IsConstT>::Type& column(int i) const
 		{
 			return proxy::vector(i);
 		}
 	};
 
-	constexpr column_proxy column(int i)
+	constexpr column_proxy<false> column(int i)
 	{
 		return std::array{
-			column_proxy(m00, m01, m02),
-			column_proxy(m10, m11, m12),
-			column_proxy(m20, m21, m22)
+			column_proxy<false>{m00, m01, m02},
+			column_proxy<false>{m10, m11, m12},
+			column_proxy<false>{m20, m21, m22},
 		}[i];
 	}
-	constexpr row_proxy row(int i)
+	constexpr column_proxy<true> column(int i) const
 	{
 		return std::array{
-			row_proxy(m00, m10, m20),
-			row_proxy(m01, m11, m21),
-			row_proxy(m02, m12, m22)
+			column_proxy<true>{m00, m01, m02},
+			column_proxy<true>{m10, m11, m12},
+			column_proxy<true>{m20, m21, m22},
+		}[i];
+	}
+	constexpr row_proxy<false> row(int i)
+	{
+		return std::array{
+			row_proxy<false>{m00, m10, m20},
+			row_proxy<false>{m01, m11, m21},
+			row_proxy<false>{m02, m12, m22},
+		}[i];
+	}
+	constexpr row_proxy<true> row(int i) const
+	{
+		return std::array{
+			row_proxy<true>{m00, m10, m20},
+			row_proxy<true>{m01, m11, m21},
+			row_proxy<true>{m02, m12, m22},
 		}[i];
 	}
 
 	matrix3_t operator*(T f) const;
 	vector3_t<T> operator*(vector3_t<T> v) const;
 	matrix3_t operator*(const matrix3_t& m) const;
+
+	bool operator==(const matrix3_t& m) const
+	{
+		return m00 == m.m00
+			&& m01 == m.m01
+			&& m02 == m.m02
+			&& m10 == m.m10
+			&& m11 == m.m11
+			&& m12 == m.m12
+			&& m20 == m.m20
+			&& m21 == m.m21
+			&& m22 == m.m22;
+	}
 };
 
 template<typename T>
@@ -1559,26 +1593,29 @@ public:
 	matrix4_t get_transposed() const;
 	T determinant() const;
 
+	template<bool IsConstT>
 	struct proxy
 	{
 	protected:
-		std::reference_wrapper<T> x;
-		std::reference_wrapper<T> y;
-		std::reference_wrapper<T> z;
-		std::reference_wrapper<T> w;
+		using Type = std::conditional_t<IsConstT, const T, T>;
 
-		constexpr T& vector(int i)
+		std::reference_wrapper<Type> x;
+		std::reference_wrapper<Type> y;
+		std::reference_wrapper<Type> z;
+		std::reference_wrapper<Type> w;
+
+		constexpr Type& vector(int i)
 		{
-			return std::array<std::reference_wrapper<T>, 4>{
+			return std::array<std::reference_wrapper<Type>, 4>{
 				x,
 				y,
 				z,
 				w
 			}[i];
 		}
-		constexpr const T& vector(int i) const
+		constexpr const Type& vector(int i) const
 		{
-			return std::array<std::reference_wrapper<const T>, 4>{
+			return std::array<std::reference_wrapper<const Type>, 4>{
 				x,
 				y,
 				z,
@@ -1587,7 +1624,7 @@ public:
 		}
 
 	public:
-		constexpr proxy(T& e0, T& e1, T& e2, T& e3) : x{e0}, y{e1}, z{e2}, w{e3} {}
+		constexpr proxy(Type& e0, Type& e1, Type& e2, Type& e3) : x{e0}, y{e1}, z{e2}, w{e3} {}
 		constexpr proxy(const proxy&) = default;
 		constexpr proxy(proxy&&) = default;
 		constexpr proxy& operator=(const proxy&) = default;
@@ -1605,47 +1642,67 @@ public:
 		constexpr vector3_t<T> xyz() const { return vector3_t<T>{x, y, z}; }
 		constexpr operator vector4_t<T>() const { return vector4_t<T>{x, y, z, w}; }
 	};
-	struct column_proxy : proxy
+	template<bool IsConstT>
+	struct column_proxy : proxy<IsConstT>
 	{
 		using proxy::proxy;
-		constexpr T& row(int i)
+		constexpr proxy<IsConstT>::Type& row(int i)
 		{
 			return proxy::vector(i);
 		}
-		constexpr const T& row(int i) const
+		constexpr const proxy<IsConstT>::Type& row(int i) const
 		{
 			return proxy::vector(i);
 		}
 	};
-	struct row_proxy : proxy
+	template<bool IsConstT>
+	struct row_proxy : proxy<IsConstT>
 	{
 		using proxy::proxy;
-		constexpr T& column(int i)
+		constexpr proxy<IsConstT>::Type& column(int i)
 		{
 			return proxy::vector(i);
 		}
-		constexpr const T& column(int i) const
+		constexpr const proxy<IsConstT>::Type& column(int i) const
 		{
 			return proxy::vector(i);
 		}
 	};
 
-	constexpr column_proxy column(int i)
+	constexpr column_proxy<false> column(int i)
 	{
 		return std::array{
-			column_proxy{m00, m01, m02, m03},
-			column_proxy{m10, m11, m12, m13},
-			column_proxy{m20, m21, m22, m23},
-			column_proxy{m30, m31, m32, m33},
+			column_proxy<false>{m00, m01, m02, m03},
+			column_proxy<false>{m10, m11, m12, m13},
+			column_proxy<false>{m20, m21, m22, m23},
+			column_proxy<false>{m30, m31, m32, m33},
 		}[i];
 	}
-	constexpr row_proxy row(int i)
+	constexpr column_proxy<true> column(int i) const
 	{
 		return std::array{
-			row_proxy{m00, m10, m20, m30},
-			row_proxy{m01, m11, m21, m31},
-			row_proxy{m02, m12, m22, m32},
-			row_proxy{m03, m13, m23, m33},
+			column_proxy<true>{m00, m01, m02, m03},
+			column_proxy<true>{m10, m11, m12, m13},
+			column_proxy<true>{m20, m21, m22, m23},
+			column_proxy<true>{m30, m31, m32, m33},
+		}[i];
+	}
+	constexpr row_proxy<false> row(int i)
+	{
+		return std::array{
+			row_proxy<false>{m00, m10, m20, m30},
+			row_proxy<false>{m01, m11, m21, m31},
+			row_proxy<false>{m02, m12, m22, m32},
+			row_proxy<false>{m03, m13, m23, m33},
+		}[i];
+	}
+	constexpr row_proxy<true> row(int i) const
+	{
+		return std::array{
+			row_proxy<true>{m00, m10, m20, m30},
+			row_proxy<true>{m01, m11, m21, m31},
+			row_proxy<true>{m02, m12, m22, m32},
+			row_proxy<true>{m03, m13, m23, m33},
 		}[i];
 	}
 
@@ -1653,6 +1710,26 @@ public:
 	matrix4_t operator/(T f) const;
 	vector4_t<T> operator*(vector4_t<T> v) const;
 	matrix4_t operator*(const matrix4_t& m) const;
+
+	bool operator==(const matrix4_t& m) const
+	{
+		return m00 == m.m00
+			&& m01 == m.m01
+			&& m02 == m.m02
+			&& m03 == m.m03
+			&& m10 == m.m10
+			&& m11 == m.m11
+			&& m12 == m.m12
+			&& m13 == m.m13
+			&& m20 == m.m20
+			&& m21 == m.m21
+			&& m22 == m.m22
+			&& m23 == m.m23
+			&& m30 == m.m30
+			&& m31 == m.m31
+			&& m32 == m.m32
+			&& m33 == m.m33;
+	}
 };
 #pragma endregion
 
@@ -2110,7 +2187,7 @@ constexpr int signnum(T val)
 
 #pragma region definition complex_t
 template<typename T>
-complex_t<T>::complex_t<T>(radian_t<T> angle) : r{cos(angle)}, i{sin(angle)} {}
+complex_t<T>::complex_t(radian_t<T> angle) : r{cos(angle)}, i{sin(angle)} {}
 
 template<typename T>
 complex_t<T> complex_t<T>::operator+(complex_t<T> c) const
@@ -2728,6 +2805,8 @@ matrix2_t<T>::matrix2_t(T e00, T e10,
 	m01{e01}, m11{e11}
 {}
 template<typename T>
+matrix2_t<T>::matrix2_t(const std::array<T, 4>& a) : matrix2_t(a[0], a[1], a[2], a[3]) {}
+template<typename T>
 matrix2_t<T> matrix2_t<T>::zero() { return {T(0), T(0), T(0), T(0)}; }
 template<typename T>
 matrix2_t<T> matrix2_t<T>::identity() { return {T(1), T(0), T(0), T(1)}; }
@@ -2803,6 +2882,8 @@ matrix3_t<T>::matrix3_t(T e00, T e10, T e20,
 	m01{e01}, m11{e11}, m21{e21},
 	m02{e02}, m12{e12}, m22{e22}
 {}
+template<typename T>
+matrix3_t<T>::matrix3_t(const std::array<T, 9>& a) : matrix3_t(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8]) {}
 template<typename T>
 matrix3_t<T> matrix3_t<T>::zero() { return {T(0), T(0), T(0), T(0), T(0), T(0), T(0), T(0), T(0)}; }
 template<typename T>
@@ -4708,19 +4789,19 @@ template<typename T>
 std::ostream& operator<<(std::ostream& os, const cdm::matrix3_t<T>& m)
 {
 	return os
-		<<   "matrix3_t(" << m.m00 << "\t" << m.m10 << "\t" << m.m20
-		<< "\n        " << m.m01 << "\t" << m.m11 << "\t" << m.m21
-		<< "\n        " << m.m02 << "\t" << m.m12 << "\t" << m.m22
+		<<   "matrix3_t(" << m.column(0).row(0) << "\t" << m.column(1).row(0) << "\t" << m.column(2).row(0)
+		<< "\n        "   << m.column(0).row(1) << "\t" << m.column(1).row(1) << "\t" << m.column(2).row(1)
+		<< "\n        "   << m.column(0).row(2) << "\t" << m.column(1).row(2) << "\t" << m.column(2).row(2)
 		<< ")";
 }
 template<typename T>
 std::ostream& operator<<(std::ostream& os, const cdm::matrix4_t<T>& m)
 {
 	return os
-		<<   "matrix4_t(" << m.m00 << "\t" << m.m10 << "\t" << m.m20 << "\t" << m.m30
-		<< "\n        " << m.m01 << "\t" << m.m11 << "\t" << m.m21 << "\t" << m.m31
-		<< "\n        " << m.m02 << "\t" << m.m12 << "\t" << m.m22 << "\t" << m.m32
-		<< "\n        " << m.m03 << "\t" << m.m13 << "\t" << m.m23 << "\t" << m.m33
+		<<   "matrix4_t(" << m.column(0).row(0) << "\t" << m.column(1).row(0) << "\t" << m.column(2).row(0) << "\t" << m.column(3).row(0)
+		<< "\n        "   << m.column(0).row(1) << "\t" << m.column(1).row(1) << "\t" << m.column(2).row(1) << "\t" << m.column(3).row(1)
+		<< "\n        "   << m.column(0).row(2) << "\t" << m.column(1).row(2) << "\t" << m.column(2).row(2) << "\t" << m.column(3).row(2)
+		<< "\n        "   << m.column(0).row(3) << "\t" << m.column(1).row(3) << "\t" << m.column(2).row(3) << "\t" << m.column(3).row(3)
 		<< ")";
 }
 template<typename T>

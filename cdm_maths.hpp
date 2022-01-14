@@ -1614,7 +1614,7 @@ public:
 	static matrix4_t translation(T x, T y, T z);
 	static matrix4_t scale(vector3_t<T> t);
 	static matrix4_t scale(T x, T y, T z);
-	static matrix4_t scale(T scale);
+	static matrix4_t scale(T s);
 	static matrix4_t look_at(vector3_t<T> from,
 	                         vector3_t<T> to,
 	                         normalized<vector3_t<T>> up =
@@ -3875,9 +3875,9 @@ matrix4_t<T> matrix4_t<T>::scale(T x, T y, T z)
 	        T(0), T(0), z,    T(0), T(0), T(0), T(0), T(1)};
 }
 template <typename T>
-matrix4_t<T> matrix4_t<T>::scale(T scale)
+matrix4_t<T> matrix4_t<T>::scale(T s)
 {
-	return scale(scale, scale, scale);
+	return scale(s, s, s);
 }
 template <typename T>
 matrix4_t<T> matrix4_t<T>::look_at(vector3_t<T> from,

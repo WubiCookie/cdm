@@ -116,6 +116,9 @@ struct unscaled_transform2d_t;
 template <typename T>
 struct unscaled_transform3d_t;
 
+template <typename T>
+using direction_t = normalized<vector3_t<T>>;
+
 namespace detail
 {
 template <uint8_t x, uint8_t y, typename T>
@@ -205,8 +208,10 @@ complex_t<T> conjugate(complex_t<T> c);
 template <typename T>
 struct radian_t
 {
+private:
 	T angle;
 
+public:
 	radian_t() = default;
 	constexpr explicit radian_t(T f);
 	radian_t(const radian_t& r) = default;
@@ -283,8 +288,10 @@ T atanh(radian_t<T> r);
 template <typename T>
 struct degree_t
 {
+private:
 	T angle;
 
+public:
 	degree_t() = default;
 	constexpr explicit degree_t(T f);
 	degree_t(const degree_t& d) = default;
@@ -651,7 +658,9 @@ struct static_pi_fraction_t
 		constexpr auto dent = p.second;
 
 		if constexpr (dent == T(1))
-			return {numt % T(2), T(1)};
+			return {numt % T(2), dent};
+		else if constexpr (dent == T(2))
+			return {numt % T(4), dent};
 		else
 			return {numt, dent};
 	}
@@ -921,11 +930,17 @@ struct vector2_t
 {
 	T x, y;
 
+	vector2_t() = default;
+	vector2_t(T x_, T y_) : x{x_}, y{y_} {}
+	vector2_t(std::array<T, 2> a) : vector2_t(a[0], a[1]) {}
+
 	template <typename U>
 	explicit operator vector2_t<U>() const
 	{
 		return vector2_t<U>{static_cast<U>(x), static_cast<U>(y)};
 	}
+
+	operator std::array<T, 2>() const { return {x, y}; }
 
 	template <typename U = T>
 	std::array<U, 2> to_array() const
@@ -954,7 +969,7 @@ struct vector2_t
 		y = cdm::clamp(y, min.y, max.y);
 		return *this;
 	}
-	vector2_t get_clamp(vector2_t min, vector2_t max) const
+	vector2_t get_clamped(vector2_t min, vector2_t max) const
 	{
 		vector2_t res{*this};
 		res.clamp(min, max);
@@ -1030,6 +1045,7 @@ struct vector3_t
 	vector3_t() = default;
 	vector3_t(T x_, T y_, T z_) : x{x_}, y{y_}, z{z_} {}
 	vector3_t(vector2_t<T> v, T z_) : vector3_t(v.x, v.y, z_) {}
+	vector3_t(std::array<T, 3> a) : vector3_t(a[0], a[1], a[2]) {}
 
 	template <typename U>
 	explicit operator vector3_t<U>() const
@@ -1038,6 +1054,8 @@ struct vector3_t
 		                    static_cast<U>(z)};
 	}
 
+	operator std::array<T, 3>() const { return {x, y, z}; }
+
 	template <typename U = T>
 	std::array<U, 3> to_array() const
 	{
@@ -1045,6 +1063,36 @@ struct vector3_t
 	}
 
 	vector2_t<T> xy() const;
+
+	T norm() const { return std::sqrt(norm_squared()); }
+	T norm_squared() const { return x * x + y * y + z * z; }
+	vector3_t& normalize()
+	{
+		T n = norm();
+		x /= n;
+		y /= n;
+		z /= n;
+		return *this;
+	}
+	vector3_t get_normalized() const
+	{
+		vector3_t res{*this};
+		res.normalize();
+		return res;
+	}
+	vector3_t& clamp(vector3_t min, vector3_t max)
+	{
+		x = cdm::clamp(x, min.x, max.x);
+		y = cdm::clamp(y, min.y, max.y);
+		z = cdm::clamp(z, min.z, max.z);
+		return *this;
+	}
+	vector3_t get_clamped(vector3_t min, vector3_t max) const
+	{
+		vector3_t res{*this};
+		res.clamp(min, max);
+		return res;
+	}
 
 	vector3_t operator+(vector3_t v) const;
 	vector3_t operator-(vector3_t v) const;
@@ -1098,7 +1146,7 @@ vector3_t<T> element_wise_max(vector3_t<T> v0, vector3_t<T> v1);
 template <typename T>
 radian_t<T> angle_around_axis(vector3_t<T> v0,
                               vector3_t<T> v1,
-                              normalized<vector3_t<T>> axis);
+                              direction_t<T> axis);
 #pragma endregion
 
 #pragma region declaration vector4_t
@@ -1111,6 +1159,7 @@ struct vector4_t
 	vector4_t(T x_, T y_, T z_, T w_) : x{x_}, y{y_}, z{z_}, w{w_} {}
 	vector4_t(vector2_t<T> v, T z_, T w_) : vector4_t(v.x, v.y, z_, w_) {}
 	vector4_t(vector3_t<T> v, T w_) : vector4_t(v.x, v.y, v.z, w_) {}
+	vector4_t(std::array<T, 4>&) : vector4_t(a[0], a[1], a[2], a[3]) {}
 
 	template <typename U>
 	explicit operator vector4_t<U>() const
@@ -1118,6 +1167,8 @@ struct vector4_t
 		return vector4_t<U>{static_cast<U>(x), static_cast<U>(y),
 		                    static_cast<U>(z), static_cast<U>(w)};
 	}
+
+	operator std::array<T, 4>() const { return {x, y, z, w}; }
 
 	template <typename U = T>
 	std::array<U, 4> to_array() const
@@ -1358,12 +1409,28 @@ private:
 public:
 	matrix3_t() = default;
 	explicit matrix3_t(matrix2_t<T> m);
-	explicit matrix3_t(const std::array<T, 9>& a);
+	matrix3_t(const std::array<T, 9>& a);
 	matrix3_t(const matrix3_t&) = default;
 	matrix3_t(matrix3_t&&) = default;
 
 	matrix3_t& operator=(const matrix3_t&) = default;
 	matrix3_t& operator=(matrix3_t&&) = default;
+
+	template <typename U>
+	explicit operator matrix3_t<U>() const
+	{
+		return {U(m00), U(m10), U(m20), U(m01), U(m11),
+		        U(m21), U(m02), U(m12), U(m22)};
+	}
+
+	operator std::array<T, 9>() const
+	{
+		return {
+		    m00, m10, m20,  //
+		    m01, m11, m21,  //
+		    m02, m12, m22   //
+		};
+	}
 
 	template <typename U = T>
 	std::array<U, 9> to_array() const
@@ -1371,13 +1438,6 @@ public:
 		return {static_cast<U>(m00), static_cast<U>(m10), static_cast<U>(m20),
 		        static_cast<U>(m01), static_cast<U>(m11), static_cast<U>(m21),
 		        static_cast<U>(m02), static_cast<U>(m12), static_cast<U>(m22)};
-	}
-
-	template <typename U>
-	explicit operator matrix3_t<U>() const
-	{
-		return {U(m00), U(m10), U(m20), U(m01), U(m11),
-		        U(m21), U(m02), U(m12), U(m22)};
 	}
 
 	static matrix3_t zero();
@@ -1388,8 +1448,27 @@ public:
 	static matrix3_t columns(vector3_t<T> column0,
 	                         vector3_t<T> column1,
 	                         vector3_t<T> column2);
+
+private:
+	static matrix3_t rotation(direction_t<T> axis, T sinAngle, T cosAngle);
+
+public:
+	static matrix3_t rotation(direction_t<T> axis, radian_t<T> angle);
+	static matrix3_t rotation(direction_t<T> axis,
+	                          normalized<complex_t<T>> angle);
+	template <typename U, U NumeratorT, U DenominatorT>
+	static matrix3_t rotation(
+	    direction_t<T> axis,
+	    static_pi_fraction_t<U, NumeratorT, DenominatorT> angle);
 	static matrix3_t rotation(euler_angles_t<T> r);
 	static matrix3_t rotation(quaternion_t<T> q);
+
+private:
+	static matrix3_t rotation_around_x(T sinAngle, T cosAngle);
+	static matrix3_t rotation_around_y(T sinAngle, T cosAngle);
+	static matrix3_t rotation_around_z(T sinAngle, T cosAngle);
+
+public:
 	static matrix3_t rotation_around_x(radian_t<T> angle);
 	static matrix3_t rotation_around_y(radian_t<T> angle);
 	static matrix3_t rotation_around_z(radian_t<T> angle);
@@ -1405,6 +1484,9 @@ public:
 	template <typename U, U NumeratorT, U DenominatorT>
 	static matrix3_t rotation_around_z(
 	    static_pi_fraction_t<U, NumeratorT, DenominatorT> angle);
+	static matrix3_t scale(vector3_t<T> t);
+	static matrix3_t scale(T x, T y, T z);
+	static matrix3_t scale(T s);
 	matrix3_t& inverse();
 	matrix3_t get_inversed() const;
 	matrix3_t& transpose();
@@ -1523,11 +1605,6 @@ public:
 		       m22 == m.m22;
 	}
 };
-
-template <typename T>
-matrix3_t<T> inverse(matrix3_t<T> m);
-template <typename T>
-matrix3_t<T> transpose(matrix3_t<T> m);
 #pragma endregion
 
 #pragma region declaration matrix4_t
@@ -1579,23 +1656,45 @@ public:
 	matrix4_t& operator=(const matrix4_t&) = default;
 	matrix4_t& operator=(matrix4_t&&) = default;
 
-	template <typename U = T>
-	std::array<U, 16> to_array() const
-	{
-		return {static_cast<U>(m00), static_cast<U>(m10), static_cast<U>(m20),
-		        static_cast<U>(m30), static_cast<U>(m01), static_cast<U>(m11),
-		        static_cast<U>(m21), static_cast<U>(m31), static_cast<U>(m02),
-		        static_cast<U>(m12), static_cast<U>(m22), static_cast<U>(m32),
-		        static_cast<U>(m03), static_cast<U>(m13), static_cast<U>(m23),
-		        static_cast<U>(m33)};
-	}
-
 	template <typename U>
 	explicit operator matrix4_t<U>() const
 	{
 		return {U(m00), U(m10), U(m20), U(m30), U(m01), U(m11),
 		        U(m21), U(m31), U(m02), U(m12), U(m22), U(m32),
 		        U(m03), U(m13), U(m23), U(m33)};
+	}
+
+	operator std::array<T, 16>() const
+	{
+		return {
+		    m00, m10, m20, m30,  //
+		    m01, m11, m21, m31,  //
+		    m02, m12, m22, m32,  //
+		    m03, m13, m23, m33   //
+		};
+	}
+
+	template <typename U = T>
+	std::array<U, 16> to_array() const
+	{
+		return {
+		    static_cast<U>(m00),  //
+		    static_cast<U>(m10),  //
+		    static_cast<U>(m20),  //
+		    static_cast<U>(m30),  //
+		    static_cast<U>(m01),  //
+		    static_cast<U>(m11),  //
+		    static_cast<U>(m21),  //
+		    static_cast<U>(m31),  //
+		    static_cast<U>(m02),  //
+		    static_cast<U>(m12),  //
+		    static_cast<U>(m22),  //
+		    static_cast<U>(m32),  //
+		    static_cast<U>(m03),  //
+		    static_cast<U>(m13),  //
+		    static_cast<U>(m23),  //
+		    static_cast<U>(m33)   //
+		};
 	}
 
 	static matrix4_t zero();
@@ -1608,6 +1707,13 @@ public:
 	                         vector4_t<T> column1,
 	                         vector4_t<T> column2,
 	                         vector4_t<T> column3);
+	static matrix4_t rotation(direction_t<T> axis, radian_t<T> angle);
+	static matrix4_t rotation(direction_t<T> axis,
+	                          normalized<complex_t<T>> angle);
+	template <typename U, U NumeratorT, U DenominatorT>
+	static matrix4_t rotation(
+	    direction_t<T> axis,
+	    static_pi_fraction_t<U, NumeratorT, DenominatorT> angle);
 	static matrix4_t rotation(euler_angles_t<T> r);
 	static matrix4_t rotation(quaternion_t<T> q);
 	static matrix4_t translation(vector3_t<T> t);
@@ -1615,11 +1721,11 @@ public:
 	static matrix4_t scale(vector3_t<T> t);
 	static matrix4_t scale(T x, T y, T z);
 	static matrix4_t scale(T s);
-	static matrix4_t look_at(vector3_t<T> from,
-	                         vector3_t<T> to,
-	                         normalized<vector3_t<T>> up =
-	                             normalized<vector3_t<T>>::already_normalized(
-	                                 vector3_t<T>(T(0), T(1), T(0))));
+	static matrix4_t look_at(
+	    vector3_t<T> from,
+	    vector3_t<T> to,
+	    direction_t<T> up = direction_t<T>::already_normalized(
+	        vector3_t<T>(T(0), T(1), T(0))));
 	static matrix4_t orthographic(T left,
 	                              T right,
 	                              T top,
@@ -1837,9 +1943,9 @@ struct quaternion_t
 
 	quaternion_t() = default;
 	quaternion_t(T x_, T y_, T z_, T w_) : x{x_}, y{y_}, z{z_}, w{w_} {}
-	quaternion_t(normalized<vector3_t<T>> axis, radian_t<T> angle);
+	quaternion_t(direction_t<T> axis, radian_t<T> angle);
 	template <typename U, U NumeratorT, U DenominatorT>
-	quaternion_t(normalized<vector3_t<T>> axis,
+	quaternion_t(direction_t<T> axis,
 	             static_pi_fraction_t<U, NumeratorT, DenominatorT> angle);
 
 	template <typename U>
@@ -1975,7 +2081,7 @@ template <typename T>
 struct plane_t
 {
 	vector3_t<T> origin;
-	normalized<vector3_t<T>> normal;
+	direction_t<T> normal;
 
 	template <typename U>
 	explicit operator plane_t<U>() const
@@ -1987,11 +2093,11 @@ struct plane_t
 	T evaluate(vector3_t<T> point) const;
 	vector3_t<T> project3d(vector3_t<T> point) const;
 	vector2_t<T> project2d(vector3_t<T> point,
-	                       normalized<vector3_t<T>> plane_t_tangent) const;
+	                       direction_t<T> plane_t_tangent) const;
 	vector3_t<T> unproject(vector2_t<T> point,
-	                       normalized<vector3_t<T>> plane_t_tangent) const;
+	                       direction_t<T> plane_t_tangent) const;
 
-	normalized<vector3_t<T>> computeTangent(T e = T(epsilon)) const;
+	direction_t<T> computeTangent(T e = T(epsilon)) const;
 };
 #pragma endregion
 
@@ -2009,7 +2115,7 @@ template <typename T>
 struct ray3d_t
 {
 	vector3_t<T> origin;
-	normalized<vector3_t<T>> direction;
+	direction_t<T> direction;
 };
 #pragma endregion
 
@@ -2358,7 +2464,8 @@ constexpr radian_t<T>::radian_t(T f) : angle(f)
 {
 }
 template <typename T>
-constexpr radian_t<T>::radian_t(degree_t<T> d) : angle(d.angle * T(deg_to_rad))
+constexpr radian_t<T>::radian_t(degree_t<T> d)
+    : angle(static_cast<T>(d) * T(deg_to_rad))
 {
 }
 
@@ -2433,27 +2540,27 @@ radian_t<T>& radian_t<T>::operator=(degree_t<T> d)
 template <typename T>
 radian_t<T> operator+(radian_t<T> r1, radian_t<T> r2)
 {
-	return radian_t<T>{r1.angle + r2.angle};
+	return radian_t<T>{static_cast<T>(r1) + static_cast<T>(r2)};
 }
 template <typename T>
 radian_t<T> operator-(radian_t<T> r1, radian_t<T> r2)
 {
-	return radian_t<T>{r1.angle - r2.angle};
+	return radian_t<T>{static_cast<T>(r1) - static_cast<T>(r2)};
 }
 template <typename T>
 radian_t<T> operator*(radian_t<T> r, T f)
 {
-	return radian_t<T>{r.angle * f};
+	return radian_t<T>{static_cast<T>(r) * f};
 }
 template <typename T>
 radian_t<T> operator*(T f, radian_t<T> r)
 {
-	return radian_t<T>{f * r.angle};
+	return radian_t<T>{f * static_cast<T>(r)};
 }
 template <typename T>
 radian_t<T> operator/(radian_t<T> r, T f)
 {
-	return radian_t<T>{r.angle / f};
+	return radian_t<T>{static_cast<T>(r) / f};
 }
 template <typename T>
 bool operator<(radian_t<T> lhs, radian_t<T> rhs)
@@ -2489,62 +2596,62 @@ bool operator<=(radian_t<T> lhs, radian_t<T> rhs)
 template <typename T>
 T sin(radian_t<T> r)
 {
-	return std::sin(r.angle);
+	return std::sin(static_cast<T>(r));
 }
 template <typename T>
 T cos(radian_t<T> r)
 {
-	return std::cos(r.angle);
+	return std::cos(static_cast<T>(r));
 }
 template <typename T>
 T tan(radian_t<T> r)
 {
-	return std::tan(r.angle);
+	return std::tan(static_cast<T>(r));
 }
 template <typename T>
 T asin(radian_t<T> r)
 {
-	return std::asin(r.angle);
+	return std::asin(static_cast<T>(r));
 }
 template <typename T>
 T acos(radian_t<T> r)
 {
-	return std::acos(r.angle);
+	return std::acos(static_cast<T>(r));
 }
 template <typename T>
 T atan(radian_t<T> r)
 {
-	return std::atan(r.angle);
+	return std::atan(static_cast<T>(r));
 }
 template <typename T>
 T sinh(radian_t<T> r)
 {
-	return std::sinh(r.angle);
+	return std::sinh(static_cast<T>(r));
 }
 template <typename T>
 T cosh(radian_t<T> r)
 {
-	return std::cosh(r.angle);
+	return std::cosh(static_cast<T>(r));
 }
 template <typename T>
 T tanh(radian_t<T> r)
 {
-	return std::tanh(r.angle);
+	return std::tanh(static_cast<T>(r));
 }
 template <typename T>
 T asinh(radian_t<T> r)
 {
-	return std::asinh(r.angle);
+	return std::asinh(static_cast<T>(r));
 }
 template <typename T>
 T acosh(radian_t<T> r)
 {
-	return std::acosh(r.angle);
+	return std::acosh(static_cast<T>(r));
 }
 template <typename T>
 T atanh(radian_t<T> r)
 {
-	return std::atanh(r.angle);
+	return std::atanh(static_cast<T>(r));
 }
 #pragma endregion
 
@@ -2554,7 +2661,8 @@ constexpr degree_t<T>::degree_t(T f) : angle(f)
 {
 }
 template <typename T>
-constexpr degree_t<T>::degree_t(radian_t<T> r) : angle(r.angle * T(rad_to_deg))
+constexpr degree_t<T>::degree_t(radian_t<T> r)
+    : angle(static_cast<T>(r) * T(rad_to_deg))
 {
 }
 
@@ -2616,33 +2724,33 @@ degree_t<T>& degree_t<T>::operator/=(degree_t d)
 template <typename T>
 degree_t<T> degree_t<T>::operator-() const
 {
-	return radian_t(-angle);
+	return degree_t(-angle);
 }
 
 template <typename T>
 degree_t<T> operator+(degree_t<T> d1, degree_t<T> d2)
 {
-	return degree_t<T>{d1.angle + d2.angle};
+	return degree_t<T>{static_cast<T>(d1) + static_cast<T>(d2)};
 }
 template <typename T>
 degree_t<T> operator-(degree_t<T> d1, degree_t<T> d2)
 {
-	return degree_t<T>{d1.angle - d2.angle};
+	return degree_t<T>{static_cast<T>(d1) - static_cast<T>(d2)};
 }
 template <typename T>
 degree_t<T> operator*(degree_t<T> d, T f)
 {
-	return degree_t<T>{d.angle * f};
+	return degree_t<T>{static_cast<T>(d) * f};
 }
 template <typename T>
 degree_t<T> operator*(T f, degree_t<T> d)
 {
-	return degree_t<T>{f * d.angle};
+	return degree_t<T>{f * static_cast<T>(d)};
 }
 template <typename T>
 degree_t<T> operator/(degree_t<T> d, T f)
 {
-	return degree_t<T>{d.angle / f};
+	return degree_t<T>{static_cast<T>(d) / f};
 }
 template <typename T>
 bool operator<(degree_t<T> lhs, degree_t<T> rhs)
@@ -3070,7 +3178,7 @@ vector3_t<T> element_wise_max(vector3_t<T> v0, vector3_t<T> v1)
 template <typename T>
 radian_t<T> angle_around_axis(vector3_t<T> v0,
                               vector3_t<T> v1,
-                              normalized<vector3_t<T>> axis)
+                              direction_t<T> axis)
 {
 	vector3_t<T> c = cross(v0, v1);
 	T angle = atan2f(norm(c), dot(v0, v1));
@@ -3431,6 +3539,11 @@ matrix3_t<T>::matrix3_t(T e00,
 {
 }
 template <typename T>
+matrix3_t<T>::matrix3_t(matrix2_t<T> m)
+    : matrix3_t(m.m00, m.m10, T(0), m.m10, m.m11, T(0), T(0), T(0), T(1))
+{
+}
+template <typename T>
 matrix3_t<T>::matrix3_t(const std::array<T, 9>& a)
     : matrix3_t(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8])
 {
@@ -3460,6 +3573,48 @@ matrix3_t<T> matrix3_t<T>::columns(vector3_t<T> column0,
 {
 	return {column0.x, column1.x, column2.x, column0.y, column1.y,
 	        column2.y, column0.z, column1.z, column2.z};
+}
+template <typename T>
+matrix3_t<T> matrix3_t<T>::rotation(direction_t<T> axis,
+                                    T sinAngle,
+                                    T cosAngle)
+{
+	const T l{axis->x};
+	const T m{axis->y};
+	const T n{axis->z};
+	const T s{sinAngle};
+	const T c{cosAngle};
+	const T d{T(1) - cosAngle};
+	const T ls{l * s};
+	const T ms{m * s};
+	const T ns{n * s};
+	const T ld{l * d};
+	const T md{m * d};
+	const T nd{n * d};
+	return {
+	    (l * ld) + c,  (m * ld) - ns, (n * ld) + ms,  //
+	    (l * md) + ns, (m * md) + c,  (n * md) - ls,  //
+	    (l * nd) - ms, (m * nd) + ls, (n * nd) + c,   //
+	};
+}
+template <typename T>
+matrix3_t<T> matrix3_t<T>::rotation(direction_t<T> axis, radian_t<T> angle)
+{
+	return matrix3_t<T>::rotation(axis, sin(angle), cos(angle));
+}
+template <typename T>
+matrix3_t<T> matrix3_t<T>::rotation(direction_t<T> axis,
+                                    normalized<complex_t<T>> angle)
+{
+	return matrix3_t<T>::rotation(axis, sin(angle), cos(angle));
+}
+template <typename T>
+template <typename U, U NumeratorT, U DenominatorT>
+matrix3_t<T> matrix3_t<T>::rotation(
+    direction_t<T> axis,
+    static_pi_fraction_t<U, NumeratorT, DenominatorT> angle)
+{
+	return matrix3_t<T>::rotation(axis, sin<T>(angle), cos<T>(angle));
 }
 template <typename T>
 matrix3_t<T> matrix3_t<T>::rotation(euler_angles_t<T> r)
@@ -3500,73 +3655,101 @@ matrix3_t<T> matrix3_t<T>::rotation(quaternion_t<T> q)
 	};
 }
 template <typename T>
+matrix3_t<T> matrix3_t<T>::rotation_around_x(T sinAngle, T cosAngle)
+{
+	return {
+	    T(1), T(0),     T(0),       //
+	    T(0), cosAngle, -sinAngle,  //
+	    T(0), sinAngle, cosAngle    //
+	};
+}
+template <typename T>
+matrix3_t<T> matrix3_t<T>::rotation_around_y(T sinAngle, T cosAngle)
+{
+	return {
+	    cosAngle,  T(0), sinAngle,  //
+	    T(0),      T(1), T(0),      //
+	    -sinAngle, T(0), cosAngle   //
+	};
+}
+template <typename T>
+matrix3_t<T> matrix3_t<T>::rotation_around_z(T sinAngle, T cosAngle)
+{
+	return {
+	    cosAngle, -sinAngle, T(0),  //
+	    sinAngle, cosAngle,  T(0),  //
+	    T(0),     T(0),      T(1)   //
+	};
+}
+template <typename T>
 matrix3_t<T> matrix3_t<T>::rotation_around_x(radian_t<T> angle)
 {
-	T c = cos(angle);
-	T s = sin(angle);
-	return {T(1), T(0), T(0), T(0), c, s, T(0), -s, c};
+	return rotation_around_x(sin(angle), cos(angle));
 }
 template <typename T>
 matrix3_t<T> matrix3_t<T>::rotation_around_y(radian_t<T> angle)
 {
-	T c = cos(angle);
-	T s = sin(angle);
-	return {c, T(0), s, T(0), T(1), T(0), -s, T(0), c};
+	return rotation_around_y(sin(angle), cos(angle));
 }
 template <typename T>
 matrix3_t<T> matrix3_t<T>::rotation_around_z(radian_t<T> angle)
 {
-	T c = cos(angle);
-	T s = sin(angle);
-	return {c, -s, T(0), s, c, T(0), T(0), T(0), T(1)};
+	return rotation_around_z(sin(angle), cos(angle));
 }
 template <typename T>
 matrix3_t<T> matrix3_t<T>::rotation_around_x(normalized<complex_t<T>> angle)
 {
-	T c = angle->r;
-	T s = angle->i;
-	return {T(1), T(0), T(0), T(0), c, s, T(0), -s, c};
+	return rotation_around_x(angle->i, angle->r);
 }
 template <typename T>
 matrix3_t<T> matrix3_t<T>::rotation_around_y(normalized<complex_t<T>> angle)
 {
-	T c = angle->r;
-	T s = angle->i;
-	return {c, T(0), s, T(0), T(1), T(0), -s, T(0), c};
+	return rotation_around_y(angle->i, angle->r);
 }
 template <typename T>
 matrix3_t<T> matrix3_t<T>::rotation_around_z(normalized<complex_t<T>> angle)
 {
-	T c = angle->r;
-	T s = angle->i;
-	return {c, -s, T(0), s, c, T(0), T(0), T(0), T(1)};
+	return rotation_around_z(angle->i, angle->r);
 }
 template <typename T>
 template <typename U, U NumeratorT, U DenominatorT>
 matrix3_t<T> matrix3_t<T>::rotation_around_x(
     static_pi_fraction_t<U, NumeratorT, DenominatorT> angle)
 {
-	T c = cos<T>(angle);
-	T s = sin<T>(angle);
-	return {T(1), T(0), T(0), T(0), c, s, T(0), -s, c};
+	return rotation_around_x(sin<T>(angle), cos<T>(angle));
 }
 template <typename T>
 template <typename U, U NumeratorT, U DenominatorT>
 matrix3_t<T> matrix3_t<T>::rotation_around_y(
     static_pi_fraction_t<U, NumeratorT, DenominatorT> angle)
 {
-	T c = cos<T>(angle);
-	T s = sin<T>(angle);
-	return {c, T(0), s, T(0), T(1), T(0), -s, T(0), c};
+	return rotation_around_y(sin<T>(angle), cos<T>(angle));
 }
 template <typename T>
 template <typename U, U NumeratorT, U DenominatorT>
 matrix3_t<T> matrix3_t<T>::rotation_around_z(
     static_pi_fraction_t<U, NumeratorT, DenominatorT> angle)
 {
-	T c = cos<T>(angle);
-	T s = sin<T>(angle);
-	return {c, -s, T(0), s, c, T(0), T(0), T(0), T(1)};
+	return rotation_around_z(sin<T>(angle), cos<T>(angle));
+}
+template <typename T>
+matrix3_t<T> matrix3_t<T>::scale(vector3_t<T> s)
+{
+	return scale(s.x, s.y, s.z);
+}
+template <typename T>
+matrix3_t<T> matrix3_t<T>::scale(T x, T y, T z)
+{
+	return {
+	    x,    T(0), T(0),  //
+	    T(0), y,    T(0),  //
+	    T(0), T(0), z,     //
+	};
+}
+template <typename T>
+matrix3_t<T> matrix3_t<T>::scale(T s)
+{
+	return scale(s, s, s);
 }
 template <typename T>
 matrix3_t<T>& matrix3_t<T>::inverse()
@@ -3605,13 +3788,19 @@ matrix3_t<T> matrix3_t<T>::get_inversed() const
 template <typename T>
 matrix3_t<T>& matrix3_t<T>::transpose()
 {
-	*this = get_transposed();
+	std::swap(m01, m10);
+	std::swap(m02, m20);
+	std::swap(m12, m21);
 	return *this;
 }
 template <typename T>
 matrix3_t<T> matrix3_t<T>::get_transposed() const
 {
-	return {m00, m10, m20, m01, m11, m21, m02, m12, m22};
+	return {
+	    m00, m01, m02,  //
+	    m10, m11, m12,  //
+	    m20, m21, m22   //
+	};
 }
 
 template <typename T>
@@ -3634,8 +3823,11 @@ bool matrix3_t<T>::is_orthogonal() const
 template <typename T>
 matrix3_t<T> matrix3_t<T>::operator*(T f) const
 {
-	return {m00 * f, m10 * f, m20 * f, m01 * f, m11 * f,
-	        m21 * f, m02 * f, m12 * f, m22 * f};
+	return {
+	    m00 * f, m10 * f, m20 * f,  //
+	    m01 * f, m11 * f, m21 * f,  //
+	    m02 * f, m12 * f, m22 * f   //
+	};
 }
 template <typename T>
 vector3_t<T> matrix3_t<T>::operator*(vector3_t<T> v) const
@@ -3658,41 +3850,6 @@ matrix3_t<T> matrix3_t<T>::operator*(const matrix3_t<T>& m) const
 	        m02 * m.m00 + m12 * m.m01 + m22 * m.m02,
 	        m02 * m.m10 + m12 * m.m11 + m22 * m.m12,
 	        m02 * m.m20 + m12 * m.m21 + m22 * m.m22};
-}
-
-template <typename T>
-matrix3_t<T> inverse(matrix3_t<T> m)
-{
-	if (m.is_orthogonal())
-	{
-		return transpose(m);
-	}
-
-	T det = m.determinant();
-	T recM00 = m.m00;
-	T recM10 = m.m10;
-	T recM20 = m.m20;
-	T recM01 = m.m01;
-	T recM11 = m.m11;
-	T recM02 = m.m02;
-	m.m00 = (recM11 * m.m22 - m.m21 * m.m12) / det;
-	m.m10 = (m.m12 * recM20 - recM10 * m.m22) / det;
-	m.m20 = (recM10 * m.m12 - recM20 * recM11) / det;
-	m.m01 = (recM02 * m.m21 - recM01 * m.m22) / det;
-	m.m11 = (recM00 * m.m22 - recM20 * recM02) / det;
-	m.m21 = (recM01 * recM20 - recM00 * m.m21) / det;
-	m.m02 = (recM01 * m.m12 - recM11 * recM02) / det;
-	m.m12 = (recM02 * recM10 - recM00 * m.m12) / det;
-	m.m22 = (recM00 * recM11 - recM10 * recM01) / det;
-	return m;
-}
-template <typename T>
-matrix3_t<T> transpose(matrix3_t<T> m)
-{
-	std::swap(m.m01, m.m10);
-	std::swap(m.m02, m.m20);
-	std::swap(m.m12, m.m21);
-	return m;
 }
 #pragma endregion
 
@@ -3758,12 +3915,12 @@ matrix4_t<T>::matrix4_t(const matrix3_t<T>& m)
                 m.m10,
                 m.m20,
                 T(0),
-                m.m10,
+                m.m01,
                 m.m11,
                 m.m21,
                 T(0),
-                m.m20,
-                m.m21,
+                m.m02,
+                m.m12,
                 m.m22,
                 T(0),
                 T(0),
@@ -3843,6 +4000,25 @@ matrix4_t<T> matrix4_t<T>::columns(vector4_t<T> column0,
 	        column0.w, column1.w, column2.w, column3.w};
 }
 template <typename T>
+matrix4_t<T> matrix4_t<T>::rotation(direction_t<T> axis, radian_t<T> angle)
+{
+	return matrix4_t<T>(matrix3_t<T>::rotation(axis, angle));
+}
+template <typename T>
+matrix4_t<T> matrix4_t<T>::rotation(direction_t<T> axis,
+                                    normalized<complex_t<T>> angle)
+{
+	return matrix4_t<T>(matrix3_t<T>::rotation(axis, angle));
+}
+template <typename T>
+template <typename U, U NumeratorT, U DenominatorT>
+matrix4_t<T> matrix4_t<T>::rotation(
+    direction_t<T> axis,
+    static_pi_fraction_t<U, NumeratorT, DenominatorT> angle)
+{
+	return matrix4_t<T>(matrix3_t<T>::rotation(axis, angle));
+}
+template <typename T>
 matrix4_t<T> matrix4_t<T>::rotation(euler_angles_t<T> r)
 {
 	return matrix4_t<T>(matrix3_t<T>::rotation(r));
@@ -3866,27 +4042,26 @@ matrix4_t<T> matrix4_t<T>::translation(T x, T y, T z)
 template <typename T>
 matrix4_t<T> matrix4_t<T>::scale(vector3_t<T> s)
 {
-	return scale(s.x, s.y, s.z);
+	return matrix4_t<T>(matrix3_t<T>::scale(s));
 }
 template <typename T>
 matrix4_t<T> matrix4_t<T>::scale(T x, T y, T z)
 {
-	return {x,    T(0), T(0), T(0), T(0), y,    T(0), T(0),
-	        T(0), T(0), z,    T(0), T(0), T(0), T(0), T(1)};
+	return matrix4_t<T>(matrix3_t<T>::scale(x, y, z));
 }
 template <typename T>
 matrix4_t<T> matrix4_t<T>::scale(T s)
 {
-	return scale(s, s, s);
+	return matrix4_t<T>(matrix3_t<T>::scale(s));
 }
 template <typename T>
 matrix4_t<T> matrix4_t<T>::look_at(vector3_t<T> from,
                                    vector3_t<T> to,
-                                   normalized<vector3_t<T>> up)
+                                   direction_t<T> up)
 {
-	normalized<vector3_t<T>> forward = (from - to);
-	normalized<vector3_t<T>> right = cross(up, forward);
-	normalized<vector3_t<T>> true_up = cross(forward, right);
+	direction_t<T> forward = (from - to);
+	direction_t<T> right = cross(up, forward);
+	direction_t<T> true_up = cross(forward, right);
 
 	return {right->x, true_up->x, forward->x, from->x,
 	        right->y, true_up->y, forward->y, from->y,
@@ -4501,7 +4676,7 @@ matrix4_t<T> operator*(const perspective_t<T>& p,
 
 #pragma region definition quaternion_t
 template <typename T>
-quaternion_t<T>::quaternion_t(normalized<vector3_t<T>> axis, radian_t<T> angle)
+quaternion_t<T>::quaternion_t(direction_t<T> axis, radian_t<T> angle)
 {
 	vector3_t<T> tmpAxis = *axis * sin(angle / 2.0f);
 	*this = {tmpAxis.x, tmpAxis.y, tmpAxis.z, cos(angle / 2.0f)};
@@ -4509,7 +4684,7 @@ quaternion_t<T>::quaternion_t(normalized<vector3_t<T>> axis, radian_t<T> angle)
 template <typename T>
 template <typename U, U NumeratorT, U DenominatorT>
 quaternion_t<T>::quaternion_t(
-    normalized<vector3_t<T>> axis,
+    direction_t<T> axis,
     static_pi_fraction_t<U, NumeratorT, DenominatorT> angle)
 {
 	vector3_t<T> tmpAxis =
@@ -4984,12 +5159,11 @@ vector3_t<T> plane_t<T>::project3d(vector3_t<T> point) const
 	return point - *normal * distance;
 }
 template <typename T>
-vector2_t<T> plane_t<T>::project2d(
-    vector3_t<T> point,
-    normalized<vector3_t<T>> plane_t_tangent) const
+vector2_t<T> plane_t<T>::project2d(vector3_t<T> point,
+                                   direction_t<T> plane_t_tangent) const
 {
-	normalized<vector3_t<T>> bitangent = cross(normal, plane_t_tangent);
-	normalized<vector3_t<T>> tangent = cross(bitangent, normal);
+	direction_t<T> bitangent = cross(normal, plane_t_tangent);
+	direction_t<T> tangent = cross(bitangent, normal);
 
 	matrix3_t<T> TBN{matrix3_t<T>::rows(*tangent, *bitangent, *normal)};
 
@@ -4998,12 +5172,11 @@ vector2_t<T> plane_t<T>::project2d(
 	return (TBN * plane_t_space_point).xy();
 }
 template <typename T>
-vector3_t<T> plane_t<T>::unproject(
-    vector2_t<T> point,
-    normalized<vector3_t<T>> plane_t_tangent) const
+vector3_t<T> plane_t<T>::unproject(vector2_t<T> point,
+                                   direction_t<T> plane_t_tangent) const
 {
-	normalized<vector3_t<T>> bitangent = cross(normal, plane_t_tangent);
-	normalized<vector3_t<T>> tangent = cross(bitangent, normal);
+	direction_t<T> bitangent = cross(normal, plane_t_tangent);
+	direction_t<T> tangent = cross(bitangent, normal);
 
 	matrix3_t<T> invTBN{
 	    matrix3_t<T>::rows(*tangent, *bitangent, *normal).get_inversed()};
@@ -5013,13 +5186,13 @@ vector3_t<T> plane_t<T>::unproject(
 	return (invTBN * plane_t_space_point) + origin;
 }
 template <typename T>
-normalized<vector3_t<T>> plane_t<T>::computeTangent(T e) const
+direction_t<T> plane_t<T>::computeTangent(T e) const
 {
 	vector3_t<T> tangent =
 	    project3d(vector3_t{T(1), T(0), T(0)} + origin) - origin;
 	if (norm_squared(tangent) < e)
 		tangent = project3d(vector3_t{T(0), T(1), T(0)} + origin) - origin;
-	return normalized<vector3_t<T>>(tangent);
+	return direction_t<T>(tangent);
 }
 
 template <typename T>
@@ -5313,12 +5486,12 @@ quaternion_t<T> unscaled_transform3d_t<T>::operator*(quaternion_t<T> q) const
 template <typename T>
 std::ostream& operator<<(std::ostream& o, const radian_t<T>& a)
 {
-	return o << "radian_t(" << a.angle << ")";
+	return o << "radian_t(" << static_cast<T>(a) << ")";
 }
 template <typename T>
 std::ostream& operator<<(std::ostream& o, const degree_t<T>& a)
 {
-	return o << "degree_t(" << a.angle << ")";
+	return o << "degree_t(" << static_cast<T>(a) << ")";
 }
 template <typename T>
 std::ostream& operator<<(std::ostream& o, const pi_fraction_t<T>& f)
@@ -5616,6 +5789,8 @@ using unscaled_transform2d = unscaled_transform2d_t<float>;
 using unscaled_transform2dd = unscaled_transform2d_t<double>;
 using unscaled_transform3d = unscaled_transform3d_t<float>;
 using unscaled_transform3dd = unscaled_transform3d_t<double>;
+using direction = direction_t<float>;
+using directiond = direction_t<double>;
 }  // namespace cdm
 
 #endif  // CDM_MATHS_HPP

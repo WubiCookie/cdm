@@ -1,84 +1,10 @@
-#include <catch2/catch.hpp>
-#include <cdm_maths.hpp>
+#include <common.hpp>
 
-#include <array>
-#include <iostream>
-
-using namespace cdm;
-
-#define REQUIRE_MATRICES_EQUAL(m1, m2)                   \
-	REQUIRE(m1.column(0).row(0) == m2.column(0).row(0)); \
-	REQUIRE(m1.column(0).row(1) == m2.column(0).row(1)); \
-	REQUIRE(m1.column(0).row(2) == m2.column(0).row(2)); \
-	REQUIRE(m1.column(0).row(3) == m2.column(0).row(3)); \
-	REQUIRE(m1.column(1).row(0) == m2.column(1).row(0)); \
-	REQUIRE(m1.column(1).row(1) == m2.column(1).row(1)); \
-	REQUIRE(m1.column(1).row(2) == m2.column(1).row(2)); \
-	REQUIRE(m1.column(1).row(3) == m2.column(1).row(3)); \
-	REQUIRE(m1.column(2).row(0) == m2.column(2).row(0)); \
-	REQUIRE(m1.column(2).row(1) == m2.column(2).row(1)); \
-	REQUIRE(m1.column(2).row(2) == m2.column(2).row(2)); \
-	REQUIRE(m1.column(2).row(3) == m2.column(2).row(3)); \
-	REQUIRE(m1.column(3).row(0) == m2.column(3).row(0)); \
-	REQUIRE(m1.column(3).row(1) == m2.column(3).row(1)); \
-	REQUIRE(m1.column(3).row(2) == m2.column(3).row(2)); \
-	REQUIRE(m1.column(3).row(3) == m2.column(3).row(3));
-
-#define REQUIRE_MATRICES_EQUAL_APPROX(m1, m2)                    \
-	REQUIRE(m1.column(0).row(0) == Approx(m2.column(0).row(0))); \
-	REQUIRE(m1.column(0).row(1) == Approx(m2.column(0).row(1))); \
-	REQUIRE(m1.column(0).row(2) == Approx(m2.column(0).row(2))); \
-	REQUIRE(m1.column(0).row(3) == Approx(m2.column(0).row(3))); \
-	REQUIRE(m1.column(1).row(0) == Approx(m2.column(1).row(0))); \
-	REQUIRE(m1.column(1).row(1) == Approx(m2.column(1).row(1))); \
-	REQUIRE(m1.column(1).row(2) == Approx(m2.column(1).row(2))); \
-	REQUIRE(m1.column(1).row(3) == Approx(m2.column(1).row(3))); \
-	REQUIRE(m1.column(2).row(0) == Approx(m2.column(2).row(0))); \
-	REQUIRE(m1.column(2).row(1) == Approx(m2.column(2).row(1))); \
-	REQUIRE(m1.column(2).row(2) == Approx(m2.column(2).row(2))); \
-	REQUIRE(m1.column(2).row(3) == Approx(m2.column(2).row(3))); \
-	REQUIRE(m1.column(3).row(0) == Approx(m2.column(3).row(0))); \
-	REQUIRE(m1.column(3).row(1) == Approx(m2.column(3).row(1))); \
-	REQUIRE(m1.column(3).row(2) == Approx(m2.column(3).row(2))); \
-	REQUIRE(m1.column(3).row(3) == Approx(m2.column(3).row(3)));
-
-#define REQUIRE_MATRICES_EQUAL_APPROX_MARGIN(m1, m2, MARGIN) \
-	REQUIRE(m1.column(0).row(0) ==                           \
-	        Approx(m2.column(0).row(0)).margin(MARGIN));     \
-	REQUIRE(m1.column(0).row(1) ==                           \
-	        Approx(m2.column(0).row(1)).margin(MARGIN));     \
-	REQUIRE(m1.column(0).row(2) ==                           \
-	        Approx(m2.column(0).row(2)).margin(MARGIN));     \
-	REQUIRE(m1.column(0).row(3) ==                           \
-	        Approx(m2.column(0).row(3)).margin(MARGIN));     \
-	REQUIRE(m1.column(1).row(0) ==                           \
-	        Approx(m2.column(1).row(0)).margin(MARGIN));     \
-	REQUIRE(m1.column(1).row(1) ==                           \
-	        Approx(m2.column(1).row(1)).margin(MARGIN));     \
-	REQUIRE(m1.column(1).row(2) ==                           \
-	        Approx(m2.column(1).row(2)).margin(MARGIN));     \
-	REQUIRE(m1.column(1).row(3) ==                           \
-	        Approx(m2.column(1).row(3)).margin(MARGIN));     \
-	REQUIRE(m1.column(2).row(0) ==                           \
-	        Approx(m2.column(2).row(0)).margin(MARGIN));     \
-	REQUIRE(m1.column(2).row(1) ==                           \
-	        Approx(m2.column(2).row(1)).margin(MARGIN));     \
-	REQUIRE(m1.column(2).row(2) ==                           \
-	        Approx(m2.column(2).row(2)).margin(MARGIN));     \
-	REQUIRE(m1.column(2).row(3) ==                           \
-	        Approx(m2.column(2).row(3)).margin(MARGIN));     \
-	REQUIRE(m1.column(3).row(0) ==                           \
-	        Approx(m2.column(3).row(0)).margin(MARGIN));     \
-	REQUIRE(m1.column(3).row(1) ==                           \
-	        Approx(m2.column(3).row(1)).margin(MARGIN));     \
-	REQUIRE(m1.column(3).row(2) ==                           \
-	        Approx(m2.column(3).row(2)).margin(MARGIN));     \
-	REQUIRE(m1.column(3).row(3) == Approx(m2.column(3).row(3)).margin(MARGIN));
-
-TEST_CASE("matrix4::constructor", "[working][unittest]")
+TEST_CASE("matrix4::matrix4(std::array<float, 16>)", "[working][unittest]")
 {
-	std::array<float, 16> a{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-	                        0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+	const std::array<float, 16> a{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+	                              0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+	                              0.0f, 0.0f, 0.0f, 0.0f};
 
 	matrix4 m1 = matrix4(a);
 
@@ -99,7 +25,7 @@ TEST_CASE("matrix4::constructor", "[working][unittest]")
 	REQUIRE(m1.column(3).row(2) == 0.0f);
 	REQUIRE(m1.column(3).row(3) == 0.0f);
 
-	std::array<float, 16> b{
+	const std::array<float, 16> b{
 	    //
 	    1.0f,         2.5f,     0.1f,        35.9f,           //
 	    112.0f,       51.0f,    -660.5f,     232323.23f,      //
@@ -125,6 +51,43 @@ TEST_CASE("matrix4::constructor", "[working][unittest]")
 	REQUIRE(m2.column(3).row(1) == 232323.23f);
 	REQUIRE(m2.column(3).row(2) == 999999999.999f);
 	REQUIRE(m2.column(3).row(3) == 111100.0f);
+}
+
+TEST_CASE("matrix4::matrix4(matrix3)", "[working][unittest]")
+{
+	const std::array<float, 9> a{1.0f, 2.0f, 3.0f, 4.0f, 5.0f,
+	                             6.0f, 7.0f, 8.0f, 9.0f};
+
+	const matrix3 m1(a);
+
+	REQUIRE(m1.column(0).row(0) == 1.0f);
+	REQUIRE(m1.column(1).row(0) == 2.0f);
+	REQUIRE(m1.column(2).row(0) == 3.0f);
+	REQUIRE(m1.column(0).row(1) == 4.0f);
+	REQUIRE(m1.column(1).row(1) == 5.0f);
+	REQUIRE(m1.column(2).row(1) == 6.0f);
+	REQUIRE(m1.column(0).row(2) == 7.0f);
+	REQUIRE(m1.column(1).row(2) == 8.0f);
+	REQUIRE(m1.column(2).row(2) == 9.0f);
+
+	const matrix4 m2(m1);
+
+	CHECK(m2.column(0).row(0) == m1.column(0).row(0));
+	CHECK(m2.column(1).row(0) == m1.column(1).row(0));
+	CHECK(m2.column(2).row(0) == m1.column(2).row(0));
+	CHECK(m2.column(3).row(0) == 0.0f);
+	CHECK(m2.column(0).row(1) == m1.column(0).row(1));
+	CHECK(m2.column(1).row(1) == m1.column(1).row(1));
+	CHECK(m2.column(2).row(1) == m1.column(2).row(1));
+	CHECK(m2.column(3).row(1) == 0.0f);
+	CHECK(m2.column(0).row(2) == m1.column(0).row(2));
+	CHECK(m2.column(1).row(2) == m1.column(1).row(2));
+	CHECK(m2.column(2).row(2) == m1.column(2).row(2));
+	CHECK(m2.column(3).row(2) == 0.0f);
+	CHECK(m2.column(0).row(3) == 0.0f);
+	CHECK(m2.column(1).row(3) == 0.0f);
+	CHECK(m2.column(2).row(3) == 0.0f);
+	CHECK(m2.column(3).row(3) == 1.0f);
 }
 
 TEST_CASE("matrix4::zero()", "[working][unittest]")
@@ -186,8 +149,7 @@ TEST_CASE("matrix4::operator==(const matrix4&)", "[working][unittest]")
 
 	REQUIRE(m1 == m2);
 
-	std::array<float, 16> a{
-	    //
+	const std::array<float, 16> a{
 	    1.0f,         2.5f,     0.1f,        35.9f,           //
 	    112.0f,       51.0f,    -660.5f,     232323.23f,      //
 	    -89453.6654f, 3.14159f, -3.23123f,   999999999.999f,  //
@@ -238,7 +200,7 @@ TEST_CASE("matrix4::operator==(const matrix4&)", "[working][unittest]")
 	m2.column(3).row(3) = 16.0f;
 
 	REQUIRE(m1 == m2);
-	REQUIRE_MATRICES_EQUAL(m1, m2);
+	REQUIRE_THAT(m1, Matrix4Matcher(m2, 0.0));
 }
 
 TEST_CASE("matrix4::to_array() and matrix4::matrix4(array)",
@@ -256,7 +218,7 @@ TEST_CASE("matrix4::to_array() and matrix4::matrix4(array)",
 	REQUIRE(m1 == m2);
 	REQUIRE(m1.to_array() == m2.to_array());
 
-	std::array<float, 16> a{
+	const std::array<float, 16> a{
 	    1.0f,         2.5f,     0.1f,        35.9f,           //
 	    112.0f,       51.0f,    -660.5f,     232323.23f,      //
 	    -89453.6654f, 3.14159f, -3.23123f,   999999999.999f,  //
@@ -279,27 +241,27 @@ TEST_CASE("matrix4::to_array() and matrix4::matrix4(array)",
 
 TEST_CASE("matrix4::rotation(euler_angles)", "[working][unittest]")
 {
-	euler_angles r{radian(float(pi / 2.0)), 0_rad, 0_rad};
+	const euler_angles r{radian(float(pi / 2.0)), 0_rad, 0_rad};
 
-	matrix4 m2 = matrix4::rotation(r);
-	matrix4 m4 = matrix4(matrix3::rotation(r));
-	std::array<float, 16> a = m2.to_array();
-	std::array<float, 16> g = m4.to_array();
+	const matrix4 m2 = matrix4::rotation(r);
+	const matrix4 m4 = matrix4(matrix3::rotation(r));
+	const std::array<float, 16> a = m2.to_array();
+	const std::array<float, 16> g = m4.to_array();
 
 	CHECK(a == g);
 
-	matrix3 RX =
+	const matrix3 RX =
 	    matrix3(std::array<float, 9>{1.0f, 0.0f, 0.0f, 0.0f, cos(r.x),
 	                                 sin(r.x), 0.0f, -sin(r.x), cos(r.x)});
-	matrix3 RY =
+	const matrix3 RY =
 	    matrix3(std::array<float, 9>{cos(r.y), 0.0f, -sin(r.y), 0.0f, 1.0f,
 	                                 0.0f, sin(r.y), 0.0f, cos(r.y)});
-	matrix3 RZ =
+	const matrix3 RZ =
 	    matrix3(std::array<float, 9>{cos(r.z), sin(r.z), 0.0f, -sin(r.z),
 	                                 cos(r.z), 0.0f, 0.0f, 0.0f, 1.0f});
-	matrix3 m5 = RY * RX * RZ;
-	matrix4 m6 = matrix4(m5);
-	std::array<float, 16> m = m6.to_array();
+	const matrix3 m5 = RY * RX * RZ;
+	const matrix4 m6 = matrix4(m5);
+	const std::array<float, 16> m = m6.to_array();
 	for (size_t i = 0; i < a.size(); i++)
 		REQUIRE(a[i] == Approx(m[i]).epsilon(0.1));
 }
@@ -309,11 +271,10 @@ TEST_CASE("matrix4::rotation(quaternion)", "[working][unittest]")
 	quaternion q{1.0f, 2.0f, 3.0f, 4.0f};
 	q.normalize();
 
-	matrix4 m2 = matrix4::rotation(q);
-	matrix3 m3;
-	matrix4 m4 = matrix4(m3.rotation(q));
-	std::array<float, 16> a = m2.to_array();
-	std::array<float, 16> g = m4.to_array();
+	const matrix4 m2 = matrix4::rotation(q);
+	const matrix4 m4 = matrix4(matrix3::rotation(q));
+	const std::array<float, 16> a = m2.to_array();
+	const std::array<float, 16> g = m4.to_array();
 	CHECK(a == g);
 }
 
@@ -457,110 +418,171 @@ TEST_CASE("matrix4::scale(float)", "[working][unittest]")
 
 TEST_CASE("matrix4::rotation_around_x(radian)", "[working][unittest]")
 {
-	const vector4 v0{0.0f, 0.0f, 1.0f, 0.0f};
+	using ::Catch::Matchers::WithinAbs;
+
+	const direction axis = direction::already_normalized({1.0f, 0.0f, 0.0f});
+
+	const vector4 v0{0.0f, 1.0f, 0.0f, 0.0f};
+	const vector4 vE{0.0f, 0.0f, 1.0f, 0.0f};
 
 	{
-		radian rotation{0_rad};
-		matrix4 m = matrix4::rotation_around_x(rotation);
-		vector4 v1 = m * v0;
-		CHECK(v1 == v1);
-	}
-
-	const auto almost_0 = Approx(0.0f).margin(1.0e-7);
-
-	{
-		radian rotation{90_deg};
-		//matrix4 m = matrix4::rotation_around_x(rotation);
-		matrix4 m = matrix4::rotation(quaternion{ vector3{1.0f, 0.0f, 0.0f}, static_pi_fraction<1,2>{} });
-		vector4 v1 = m * v0;
-		CHECK(std::abs(v1.x) == almost_0);
-		CHECK(v1.y == Approx(1.0f).margin(1.0e-7));
-		CHECK(std::abs(v1.z) == almost_0);
-		CHECK(std::abs(v1.w) == almost_0);
+		const radian rotation{0_rad};
+		const matrix4 m = matrix4::rotation_around_x(rotation);
+		const vector4 v1 = m * v0;
+		CHECK(v1 == v0);
 	}
 
 	{
-		radian rotation{pi};
-		matrix4 m = matrix4::rotation_around_x(rotation);
-		vector4 v1 = m * v0;
-		CHECK(v1.x == Approx(-v0.x).margin(1.0e-7));
-		CHECK(v1.y == Approx(-v0.y).margin(1.0e-7));
-		CHECK(v1.z == Approx(-v0.z).margin(1.0e-7));
-		CHECK(v1.w == Approx(-v0.w).margin(1.0e-7));
+		const radian rotation{90_deg};
+		const matrix4 m = matrix4::rotation_around_x(rotation);
+		const vector4 v1 = m * v0;
+		CHECK_THAT(v1, Vector4Matcher(vE, 1.0e-6));
+
+		const matrix4 m2 =
+		    matrix4::rotation(quaternion{axis, static_pi_fraction<1, 2>{}});
+		const vector4 v2 = m2 * v0;
+		CHECK_THAT(v2, Vector4Matcher(vE, 1.0e-6));
+
+		CHECK_THAT(m, Matrix4Matcher(m2, 1.0e-6));
+
+		const matrix4 m3 = matrix4::rotation(axis, rotation);
+		const vector4 v3 = m3 * v0;
+		CHECK_THAT(v3, Vector4Matcher(vE, 1.0e-6));
+
+		CHECK_THAT(m2, Matrix4Matcher(m3, 1.0e-6));
+
+		const matrix4 m4 = matrix4::rotation(axis, static_pi_fraction<1, 2>{});
+		const vector4 v4 = m4 * v0;
+		CHECK_THAT(v4, Vector4Matcher(vE, 1.0e-6));
+
+		CHECK_THAT(m3, Matrix4Matcher(m4, 1.0e-6));
+	}
+
+	{
+		const radian rotation{15_deg};
+		const matrix4 m = matrix4::rotation_around_x(rotation);
+		const matrix4 m2 = matrix4::rotation(quaternion{axis, rotation});
+		CHECK_THAT(m, Matrix4Matcher(m2, 1.0e-6));
+	}
+
+	{
+		const radian rotation{45_deg};
+		const matrix4 m = matrix4::rotation_around_x(rotation);
+		const matrix4 m2 = matrix4::rotation(quaternion{axis, rotation});
+		CHECK_THAT(m, Matrix4Matcher(m2, 1.0e-6));
+	}
+
+	{
+		const radian rotation{90_deg};
+		const matrix4 m = matrix4::rotation_around_x(rotation);
+		const matrix4 m2 = matrix4::rotation(quaternion{axis, rotation});
+		CHECK_THAT(m, Matrix4Matcher(m2, 1.0e-6));
+	}
+
+	{
+		const radian rotation{180_deg};
+		const matrix4 m = matrix4::rotation_around_x(rotation);
+		const matrix4 m2 = matrix4::rotation(quaternion{axis, rotation});
+		CHECK_THAT(m, Matrix4Matcher(m2, 1.0e-6));
+	}
+
+	{
+		const radian rotation{270_deg};
+		const matrix4 m = matrix4::rotation_around_x(rotation);
+		const matrix4 m2 = matrix4::rotation(quaternion{axis, rotation});
+		CHECK_THAT(m, Matrix4Matcher(m2, 1.0e-6));
+	}
+
+	{
+		const radian rotation{360_deg};
+		const matrix4 m = matrix4::rotation_around_x(rotation);
+		const matrix4 m2 = matrix4::rotation(quaternion{axis, rotation});
+		CHECK_THAT(m, Matrix4Matcher(m2, 1.0e-6));
+	}
+
+	{
+		const radian rotation{pi};
+		const matrix4 m = matrix4::rotation_around_x(rotation);
+
+		const vector4 v1 = m * v0;
+		CHECK_THAT(v1, Vector4Matcher(-v0, 1.0e-6));
 	}
 }
 
 TEST_CASE("matrix4::rotation_around_y(radian)", "[working][unittest]")
 {
-	const vector4 v0{1.0f, 0.0f, 0.0f, 0.0f};
+	using ::Catch::Matchers::WithinAbs;
+
+	const vector4 v0{0.0f, 0.0f, 1.0f, 0.0f};
+	const vector4 vE{1.0f, 0.0f, 0.0f, 0.0f};
 
 	{
 		radian rotation{0_rad};
 		matrix4 m = matrix4::rotation_around_y(rotation);
 		vector4 v1 = m * v0;
-		CHECK(v1 == v1);
+		CHECK(v1 == v0);
 	}
 
-	const auto almost_0 = Approx(0.0f).margin(1.0e-7);
+	const auto almost_0 = Approx(0.0f).margin(1.0e-6);
 
 	{
 		radian rotation{90_deg};
 		matrix4 m = matrix4::rotation_around_y(rotation);
 		vector4 v1 = m * v0;
-		CHECK(std::abs(v1.x) == almost_0);
-		CHECK(std::abs(v1.y) == almost_0);
-		CHECK(v1.z == Approx(1.0f).margin(1.0e-7));
-		CHECK(std::abs(v1.w) == almost_0);
+		CHECK_THAT(v1, Vector4Matcher(vE, 1.0e-6));
+
+		matrix4 m2 = matrix4::rotation(
+		    quaternion{vector3{0.0f, 1.0f, 0.0f}, static_pi_fraction<1, 2>{}});
+		CHECK_THAT(m, Matrix4Matcher(m2, 1.0e-6));
 	}
 
 	{
 		radian rotation{pi};
 		matrix4 m = matrix4::rotation_around_y(rotation);
 		vector4 v1 = m * v0;
-		CHECK(v1.x == Approx(-v0.x).margin(1.0e-7));
-		CHECK(v1.y == Approx(-v0.y).margin(1.0e-7));
-		CHECK(v1.z == Approx(-v0.z).margin(1.0e-7));
-		CHECK(v1.w == Approx(-v0.w).margin(1.0e-7));
+		CHECK_THAT(v1, Vector4Matcher(-v0, 1.0e-6));
 	}
 }
 
 TEST_CASE("matrix4::rotation_around_z(radian)", "[working][unittest]")
 {
-	const vector4 v0{0.0f, 1.0f, 0.0f, 0.0f};
+	using ::Catch::Matchers::WithinAbs;
+
+	const vector4 v0{1.0f, 0.0f, 0.0f, 0.0f};
+	const vector4 vE{0.0f, 1.0f, 0.0f, 0.0f};
 
 	{
-		radian rotation{0_rad};
-		matrix4 m = matrix4::rotation_around_z(rotation);
-		vector4 v1 = m * v0;
-		CHECK(v1 == v1);
+		const radian rotation{0_rad};
+		const matrix4 m = matrix4::rotation_around_z(rotation);
+		const vector4 v1 = m * v0;
+		CHECK(v1 == v0);
 	}
 
-	const auto almost_0 = Approx(0.0f).margin(1.0e-7);
+	{
+		const radian rotation{90_deg};
+		const matrix4 m = matrix4::rotation_around_z(rotation);
+		const vector4 v1 = m * v0;
+		CHECK_THAT(v1, Vector4Matcher(vE, 1.0e-6));
+
+		const matrix4 m2 = matrix4::rotation(
+		    quaternion{vector3{0.0f, 0.0f, 1.0f}, static_pi_fraction<1, 2>{}});
+		const vector4 v2 = m2 * v0;
+		CHECK_THAT(v2, Vector4Matcher(vE, 1.0e-6));
+
+		CHECK_THAT(m, Matrix4Matcher(m2, 1.0e-6));
+	}
 
 	{
-		radian rotation{90_deg};
-		matrix4 m = matrix4::rotation_around_z(rotation);
-		vector4 v1 = m * v0;
-		CHECK(v1.x == Approx(1.0f).margin(1.0e-7));
-		CHECK(std::abs(v1.y) == almost_0);
-		CHECK(std::abs(v1.z) == almost_0);
-		CHECK(std::abs(v1.w) == almost_0);
-	}
-	
-	{
-		radian rotation{pi};
-		matrix4 m = matrix4::rotation_around_z(rotation);
-		vector4 v1 = m * v0;
-		CHECK(v1.x == Approx(-v0.x).margin(1.0e-7));
-		CHECK(v1.y == Approx(-v0.y).margin(1.0e-7));
-		CHECK(v1.z == Approx(-v0.z).margin(1.0e-7));
-		CHECK(v1.w == Approx(-v0.w).margin(1.0e-7));
+		const radian rotation{pi};
+		const matrix4 m = matrix4::rotation_around_z(rotation);
+		const vector4 v1 = m * v0;
+		CHECK_THAT(v1, Vector4Matcher(-v0, 1.0e-6));
 	}
 }
 
 TEST_CASE("matrix4::rotation_around_z(complex)", "[working][unittest]")
 {
-	const vector4 v0{0.0f, 1.0f, 0.0f, 0.0f};
+	const vector4 v0{1.0f, 0.0f, 0.0f, 0.0f};
 
 	{
 		complex rotation{0_rad};
@@ -569,27 +591,30 @@ TEST_CASE("matrix4::rotation_around_z(complex)", "[working][unittest]")
 		CHECK(v1 == v1);
 	}
 
-	const auto almost_0 = Approx(0.0f).margin(1.0e-7);
+	const auto almost_0 = Approx(0.0f).margin(1.0e-6);
 
 	{
 		complex rotation{90_deg};
-		//matrix4 m = matrix4::rotation_around_z(rotation);
-		matrix4 m = matrix4::rotation(quaternion{ vector3{0.0f, 0.0f, 1.0f}, static_pi_fraction<1,2>{} });
+		matrix4 m = matrix4::rotation_around_z(rotation);
 		vector4 v1 = m * v0;
-		CHECK(v1.x == Approx(1.0f).margin(1.0e-7));
-		CHECK(std::abs(v1.y) == almost_0);
+		CHECK(std::abs(v1.x) == almost_0);
+		CHECK(v1.y == Approx(1.0f).margin(1.0e-6));
 		CHECK(std::abs(v1.z) == almost_0);
 		CHECK(std::abs(v1.w) == almost_0);
+
+		matrix4 m2 = matrix4::rotation(
+		    quaternion{vector3{0.0f, 0.0f, 1.0f}, static_pi_fraction<1, 2>{}});
+		REQUIRE_THAT(m, Matrix4Matcher(m2, 1.0e-6));
 	}
-	
+
 	{
 		complex rotation{1_pi};
 		matrix4 m = matrix4::rotation_around_z(rotation);
 		vector4 v1 = m * v0;
-		CHECK(v1.x == Approx(-v0.x).margin(1.0e-7));
-		CHECK(v1.y == Approx(-v0.y).margin(1.0e-7));
-		CHECK(v1.z == Approx(-v0.z).margin(1.0e-7));
-		CHECK(v1.w == Approx(-v0.w).margin(1.0e-7));
+		CHECK(v1.x == Approx(-v0.x).margin(1.0e-6));
+		CHECK(v1.y == Approx(-v0.y).margin(1.0e-6));
+		CHECK(v1.z == Approx(-v0.z).margin(1.0e-6));
+		CHECK(v1.w == Approx(-v0.w).margin(1.0e-6));
 	}
 }
 
@@ -674,7 +699,7 @@ TEST_CASE("matrix4::columns(vector4, vector4, vector4, vector4)",
 TEST_CASE("matrix4::is_orthogonal()", "[working][unittest]")
 {
 	CHECK(false == matrix4::zero().is_orthogonal());
-	matrix4 m2 = matrix4(
+	const matrix4 m2 = matrix4(
 	    std::array<float, 16>{1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
 	                          0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f});
 	CHECK(true == m2.is_orthogonal());
@@ -683,7 +708,7 @@ TEST_CASE("matrix4::is_orthogonal()", "[working][unittest]")
 TEST_CASE("matrix4::is_homogenous()", "[working][unittest]")
 {
 	CHECK(false == matrix4::zero().is_homogenous());
-	matrix4 m2 = matrix4(
+	const matrix4 m2 = matrix4(
 	    std::array<float, 16>{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
 	                          0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f});
 	CHECK(true == m2.is_homogenous());
@@ -696,7 +721,7 @@ TEST_CASE("matrix4::inverse()", "[working][unittest]")
 
 	// translation
 	{
-		vector3 translation{1.0f, 513.0f, -984.5f};
+		const vector3 translation{1.0f, 513.0f, -984.5f};
 
 		m1 = matrix4::translation(translation);
 		m1.inverse();
@@ -707,77 +732,69 @@ TEST_CASE("matrix4::inverse()", "[working][unittest]")
 
 	// scale
 	{
-		vector3 scale{4589.0f, 132.015f, 0.00125f};
-		vector3 invScale{1.0f / scale.x, 1.0f / scale.y, 1.0f / scale.z};
+		const vector3 scale{4589.0f, 132.015f, 0.00125f};
+		const vector3 invScale{1.0f / scale.x, 1.0f / scale.y, 1.0f / scale.z};
 
 		m1 = matrix4::scale(scale);
 		m1.inverse();
 		m2 = matrix4::scale(invScale);
 
-		REQUIRE_MATRICES_EQUAL_APPROX(m1, m2);
+		CHECK_THAT(m1, Matrix4Matcher(m2, 1.0e-6));
 	}
 
 	const radian rotation = 90_deg;
 
 	// rotation around x
 	{
-		m1 = matrix4::rotation_around_x(rotation);
-		m1.inverse();
-		m2 = m1;
-
 		const vector4 p0{1.f, 2.0f, 3.0f, 1.0f};
-		vector4 p1 = m1 * p0;
-		vector4 p2 = m1 * p1;
 
-		CHECK(p0.x == Approx(p2.x));
-		CHECK(p0.y == Approx(p2.y));
-		CHECK(p0.z == Approx(p2.z));
+		m1 = matrix4::rotation_around_x(rotation);
+		const vector4 p1 = m1 * p0;
+		m1.inverse();
+		const vector4 p2 = m1 * p1;
+
+		CHECK_THAT(p0, Vector4Matcher(p2, 1.0e-6));
 	}
 
 	// rotation around y
 	{
-		m1 = matrix4::rotation_around_y(rotation);
-		m1.inverse();
-		m2 = m1;
-
 		const vector4 p0{1.f, 2.0f, 3.0f, 1.0f};
-		vector4 p1 = m1 * p0;
-		vector4 p2 = m1 * p1;
 
-		CHECK(p0.x == Approx(p2.x));
-		CHECK(p0.y == Approx(p2.y));
-		CHECK(p0.z == Approx(p2.z));
+		m1 = matrix4::rotation_around_y(rotation);
+		const vector4 p1 = m1 * p0;
+		m1.inverse();
+		const vector4 p2 = m1 * p1;
+
+		CHECK_THAT(p0, Vector4Matcher(p2, 1.0e-6));
 	}
 
 	// rotation around z
 	{
-		m1 = matrix4::rotation_around_z(rotation);
-		m1.inverse();
-		m2 = m1;
-
 		const vector4 p0{1.f, 2.0f, 3.0f, 1.0f};
-		vector4 p1 = m1 * p0;
-		vector4 p2 = m1 * p1;
 
-		CHECK(p0.x == Approx(p2.x));
-		CHECK(p0.y == Approx(p2.y));
-		CHECK(p0.z == Approx(p2.z));
+		m1 = matrix4::rotation_around_z(rotation);
+		const vector4 p1 = m1 * p0;
+		m1.inverse();
+		const vector4 p2 = m1 * p1;
+
+		CHECK_THAT(p0, Vector4Matcher(p2, 1.0e-6));
 	}
 }
 
 TEST_CASE("matrix4::get_inversed()", "[working][unittest]")
 {
-	std::array<float, 16> a{1.0f, 4.0f, 2.0f, 3.0f, 8.0f, 10.0f, 2.0f, 6.0f,
-	                        1.0f, 7.0f, 2.0f, 2.0f, 2.0f, 2.0f,  2.0f, 2.0f};
-	std::array<float, 16> b{-0.4f, 0.1f,   -0.0f,  0.3f,   -0.08f, 0.02f,
-	                        0.2f,  -0.14f, -0.28f, -0.18f, 0.2f,   0.76f,
-	                        0.76f, 0.06f,  -0.4f,  -0.42f};
+	const std::array<float, 16> a{1.0f, 4.0f, 2.0f, 3.0f, 8.0f, 10.0f,
+	                              2.0f, 6.0f, 1.0f, 7.0f, 2.0f, 2.0f,
+	                              2.0f, 2.0f, 2.0f, 2.0f};
+	const std::array<float, 16> b{-0.4f, 0.1f,   -0.0f,  0.3f,   -0.08f, 0.02f,
+	                              0.2f,  -0.14f, -0.28f, -0.18f, 0.2f,   0.76f,
+	                              0.76f, 0.06f,  -0.4f,  -0.42f};
 
 	matrix4 m1{a};
-	matrix4 m2{m1.get_inversed()};
-	matrix4 m3{b};
+	const matrix4 m2{m1.get_inversed()};
+	const matrix4 m3{b};
 
-	REQUIRE_MATRICES_EQUAL_APPROX(m2, m3);
+	REQUIRE_THAT(m2, Matrix4Matcher(m3, 1.0e-6));
 
 	m1.inverse();
 	REQUIRE(m1 == m2);
@@ -854,10 +871,10 @@ TEST_CASE("matrix4::get_transposed()", "[working][unittest]")
 
 TEST_CASE("matrix4::determinant()", "[working][unittest]")
 {
-	matrix4 m2 = matrix4(
+	const matrix4 m2 = matrix4(
 	    std::array<float, 16>{1.0f, 4.0f, 2.0f, 3.0f, 8.0f, 10.0f, 2.0f, 6.0f,
 	                          1.0f, 7.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f});
-	float d = m2.determinant();
+	const float d = m2.determinant();
 	CHECK(d == -100);
 }
 

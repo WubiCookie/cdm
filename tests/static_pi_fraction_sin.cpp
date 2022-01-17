@@ -27,9 +27,8 @@ using namespace cdm;
 		      Approx(std::sin(T(pi * NUMERATOR) / T(DENOMINATOR)))    \
 		          .margin(1.0e-6));                                   \
 	}
-#define FRACTION_TEST_CASE(NUMERATOR, DENOMINATOR)         \
-	FRACTION_TEST_CASE_TYPE(float, NUMERATOR, DENOMINATOR) \
-	FRACTION_TEST_CASE_TYPE(double, NUMERATOR, DENOMINATOR)
+#define FRACTION_TEST_CASE(NUMERATOR, DENOMINATOR) \
+	FRACTION_TEST_CASE_TYPE(float, NUMERATOR, DENOMINATOR)
 
 #define INSTANCIATE_TEST_CASES \
 	FRACTION_TEST_CASE(0, 1)   \

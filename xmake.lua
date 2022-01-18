@@ -5,7 +5,7 @@ set_arch("x64")
 
 target("testCdm")
 	set_kind("binary")
-	set_languages("c++17")
+	set_languages("c++20")
 	add_files("tests/*.cpp")
 	add_headerfiles("*.h*")
 	add_packages("catch2")

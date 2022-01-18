@@ -3,30 +3,29 @@
 
 #include <array>
 #include <iostream>
-#include <limits>
 
 using namespace cdm;
 
-#define FRACTION_TEST_CASE_TYPE(T, NUMERATOR, DENOMINATOR)          \
-	TEST_CASE("tan(static_pi_fraction) " #T " (PI " #NUMERATOR      \
-	          "/" #DENOMINATOR ")",                                 \
-	          "[working][unittest]")                                \
-	{                                                               \
-		static_pi_fraction<NUMERATOR, DENOMINATOR> f;               \
-		radian_t<T> r0 = f;                                         \
-		radian_t<T> r1{(pi * T(NUMERATOR)) / T(DENOMINATOR)};       \
-		degree_t<T> d0 = f;                                         \
-		degree_t<T> d1{r0};                                         \
-		degree_t<T> d2{r1};                                         \
-		auto stdtan = std::tan(T(pi * NUMERATOR) / T(DENOMINATOR)); \
-		auto cdmtan = cdm::tan<T>(f);                               \
-                                                                    \
-		CHECK(cdmtan == Approx(cdm::tan(r0)).margin(1.0e-6));       \
-		CHECK(cdmtan == Approx(cdm::tan(r1)).margin(1.0e-6));       \
-		CHECK(cdmtan == Approx(cdm::tan(d0)).margin(1.0e-6));       \
-		CHECK(cdmtan == Approx(cdm::tan(d1)).margin(1.0e-6));       \
-		CHECK(cdmtan == Approx(cdm::tan(d2)).margin(1.0e-6));       \
-		CHECK(cdmtan == Approx(stdtan).margin(1.0e-6));             \
+#define FRACTION_TEST_CASE_TYPE(T, NUMERATOR, DENOMINATOR)            \
+	TEST_CASE("tan(static_pi_fraction) " #T " (PI " #NUMERATOR        \
+	          "/" #DENOMINATOR ")",                                   \
+	          "[working][unittest][static_pi_fraction]")              \
+	{                                                                 \
+		static_pi_fraction<NUMERATOR, DENOMINATOR> f;                 \
+		radian_t<T> r0 = f;                                           \
+		radian_t<T> r1{(pi * T(NUMERATOR)) / T(DENOMINATOR)};         \
+		degree_t<T> d0 = f;                                           \
+		degree_t<T> d1{r0};                                           \
+		degree_t<T> d2{r1};                                           \
+                                                                      \
+		CHECK(cdm::tan<T>(f) == Approx(cdm::tan(r0)).margin(1.0e-6)); \
+		CHECK(cdm::tan<T>(f) == Approx(cdm::tan(r1)).margin(1.0e-6)); \
+		CHECK(cdm::tan<T>(f) == Approx(cdm::tan(d0)).margin(1.0e-6)); \
+		CHECK(cdm::tan<T>(f) == Approx(cdm::tan(d1)).margin(1.0e-6)); \
+		CHECK(cdm::tan<T>(f) == Approx(cdm::tan(d2)).margin(1.0e-6)); \
+		CHECK(cdm::tan<T>(f) ==                                       \
+		      Approx(std::tan(T(pi * NUMERATOR) / T(DENOMINATOR)))    \
+		          .margin(1.0e-6));                                   \
 	}
 #define FRACTION_TEST_CASE(NUMERATOR, DENOMINATOR) \
 	FRACTION_TEST_CASE_TYPE(float, NUMERATOR, DENOMINATOR)

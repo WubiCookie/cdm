@@ -9,7 +9,7 @@ using namespace cdm;
 #define FRACTION_TEST_CASE_TYPE(T, NUMERATOR, DENOMINATOR)            \
 	TEST_CASE("cos(static_pi_fraction) " #T " (PI " #NUMERATOR        \
 	          "/" #DENOMINATOR ")",                                   \
-	          "[working][unittest]")                                  \
+	          "[working][unittest][static_pi_fraction]")              \
 	{                                                                 \
 		static_pi_fraction<NUMERATOR, DENOMINATOR> f;                 \
 		radian_t<T> r0 = f;                                           \

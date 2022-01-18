@@ -220,13 +220,9 @@ public:
 
 	explicit operator T() const;
 
-	radian_t& operator+=(T f);
 	radian_t& operator+=(radian_t r);
-	radian_t& operator-=(T f);
 	radian_t& operator-=(radian_t r);
-	radian_t& operator*=(T f);
 	radian_t& operator*=(radian_t r);
-	radian_t& operator/=(T f);
 	radian_t& operator/=(radian_t r);
 
 	radian_t operator-() const;
@@ -240,11 +236,20 @@ radian_t<T> operator+(radian_t<T>, radian_t<T>);
 template <typename T>
 radian_t<T> operator-(radian_t<T>, radian_t<T>);
 template <typename T>
-radian_t<T> operator*(radian_t<T>, T);
-template <typename T>
 radian_t<T> operator*(T, radian_t<T>);
 template <typename T>
+radian_t<T> operator*(radian_t<T>, T);
+template <typename T>
 radian_t<T> operator/(radian_t<T>, T);
+template <typename T>
+radian_t<T>& operator+=(radian_t<T>&, T);
+template <typename T>
+radian_t<T>& operator-=(radian_t<T>&, T);
+template <typename T>
+radian_t<T>& operator*=(radian_t<T>&, T);
+template <typename T>
+radian_t<T>& operator/=(radian_t<T>&, T);
+
 template <typename T>
 bool operator<(radian_t<T>, radian_t<T>);
 template <typename T>
@@ -259,29 +264,29 @@ template <typename T>
 bool operator<=(radian_t<T>, radian_t<T>);
 
 template <typename T>
-T sin(radian_t<T> r);
+T sin(radian_t<T>);
 template <typename T>
-T cos(radian_t<T> r);
+T cos(radian_t<T>);
 template <typename T>
-T tan(radian_t<T> r);
+T tan(radian_t<T>);
 template <typename T>
-T asin(radian_t<T> r);
+T asin(radian_t<T>);
 template <typename T>
-T acos(radian_t<T> r);
+T acos(radian_t<T>);
 template <typename T>
-T atan(radian_t<T> r);
+T atan(radian_t<T>);
 template <typename T>
-T sinh(radian_t<T> r);
+T sinh(radian_t<T>);
 template <typename T>
-T cosh(radian_t<T> r);
+T cosh(radian_t<T>);
 template <typename T>
-T tanh(radian_t<T> r);
+T tanh(radian_t<T>);
 template <typename T>
-T asinh(radian_t<T> r);
+T asinh(radian_t<T>);
 template <typename T>
-T acosh(radian_t<T> r);
+T acosh(radian_t<T>);
 template <typename T>
-T atanh(radian_t<T> r);
+T atanh(radian_t<T>);
 #pragma endregion
 
 #pragma region declaration degree_t
@@ -300,13 +305,9 @@ public:
 
 	explicit operator T() const;
 
-	degree_t& operator+=(T f);
 	degree_t& operator+=(degree_t d);
-	degree_t& operator-=(T f);
 	degree_t& operator-=(degree_t d);
-	degree_t& operator*=(T f);
 	degree_t& operator*=(degree_t d);
-	degree_t& operator/=(T f);
 	degree_t& operator/=(degree_t d);
 
 	degree_t operator-() const;
@@ -320,11 +321,20 @@ degree_t<T> operator+(degree_t<T>, degree_t<T>);
 template <typename T>
 degree_t<T> operator-(degree_t<T>, degree_t<T>);
 template <typename T>
-degree_t<T> operator*(degree_t<T>, T);
-template <typename T>
 degree_t<T> operator*(T, degree_t<T>);
 template <typename T>
+degree_t<T> operator*(degree_t<T>, T);
+template <typename T>
 degree_t<T> operator/(degree_t<T>, T);
+template <typename T>
+degree_t<T>& operator+=(degree_t<T>&, T);
+template <typename T>
+degree_t<T>& operator-=(degree_t<T>&, T);
+template <typename T>
+degree_t<T>& operator*=(degree_t<T>&, T);
+template <typename T>
+degree_t<T>& operator/=(degree_t<T>&, T);
+
 template <typename T>
 bool operator<(degree_t<T>, degree_t<T>);
 template <typename T>
@@ -339,29 +349,29 @@ template <typename T>
 bool operator<=(degree_t<T>, degree_t<T>);
 
 template <typename T>
-T sin(degree_t<T> d);
+T sin(degree_t<T>);
 template <typename T>
-T cos(degree_t<T> d);
+T cos(degree_t<T>);
 template <typename T>
-T tan(degree_t<T> d);
+T tan(degree_t<T>);
 template <typename T>
-T asin(degree_t<T> d);
+T asin(degree_t<T>);
 template <typename T>
-T acos(degree_t<T> d);
+T acos(degree_t<T>);
 template <typename T>
-T atan(degree_t<T> d);
+T atan(degree_t<T>);
 template <typename T>
-T sinh(degree_t<T> d);
+T sinh(degree_t<T>);
 template <typename T>
-T cosh(degree_t<T> d);
+T cosh(degree_t<T>);
 template <typename T>
-T tanh(degree_t<T> d);
+T tanh(degree_t<T>);
 template <typename T>
-T asinh(degree_t<T> d);
+T asinh(degree_t<T>);
 template <typename T>
-T acosh(degree_t<T> d);
+T acosh(degree_t<T>);
 template <typename T>
-T atanh(degree_t<T> d);
+T atanh(degree_t<T>);
 #pragma endregion
 
 #pragma region declaration pi_fraction_t
@@ -993,13 +1003,9 @@ struct vector2_t
 
 	vector2_t operator+(vector2_t v) const;
 	vector2_t operator-(vector2_t v) const;
-	vector2_t operator*(T f) const;
-	vector2_t operator/(T f) const;
 
 	vector2_t& operator+=(vector2_t v);
 	vector2_t& operator-=(vector2_t v);
-	vector2_t& operator*=(T f);
-	vector2_t& operator/=(T f);
 
 	vector2_t operator-() const;
 
@@ -1009,6 +1015,14 @@ struct vector2_t
 
 template <typename T>
 vector2_t<T> operator*(T f, vector2_t<T> v);
+template <typename T>
+vector2_t<T> operator*(vector2_t<T> v, T f);
+template <typename T>
+vector2_t<T> operator/(vector2_t<T> v, T f);
+template <typename T>
+vector2_t<T>& operator*=(vector2_t<T>& v, T f);
+template <typename T>
+vector2_t<T>& operator/=(vector2_t<T>& v, T f);
 
 template <typename T>
 T dot(vector2_t<T> lhs, vector2_t<T> rhs);
@@ -1096,13 +1110,9 @@ struct vector3_t
 
 	vector3_t operator+(vector3_t v) const;
 	vector3_t operator-(vector3_t v) const;
-	vector3_t operator*(T f) const;
-	vector3_t operator/(T f) const;
 
 	vector3_t& operator+=(vector3_t v);
 	vector3_t& operator-=(vector3_t v);
-	vector3_t& operator*=(T f);
-	vector3_t& operator/=(T f);
 
 	vector3_t operator-() const;
 
@@ -1112,6 +1122,14 @@ struct vector3_t
 
 template <typename T>
 vector3_t<T> operator*(T f, vector3_t<T> v);
+template <typename T>
+vector3_t<T> operator*(vector3_t<T> v, T f);
+template <typename T>
+vector3_t<T> operator/(vector3_t<T> v, T f);
+template <typename T>
+vector3_t<T>& operator*=(vector3_t<T>& v, T f);
+template <typename T>
+vector3_t<T>& operator/=(vector3_t<T>& v, T f);
 
 template <typename T>
 T norm(vector3_t<T> v);
@@ -1159,7 +1177,7 @@ struct vector4_t
 	vector4_t(T x_, T y_, T z_, T w_) : x{x_}, y{y_}, z{z_}, w{w_} {}
 	vector4_t(vector2_t<T> v, T z_, T w_) : vector4_t(v.x, v.y, z_, w_) {}
 	vector4_t(vector3_t<T> v, T w_) : vector4_t(v.x, v.y, v.z, w_) {}
-	vector4_t(std::array<T, 4>&) : vector4_t(a[0], a[1], a[2], a[3]) {}
+	vector4_t(std::array<T, 4>& a) : vector4_t(a[0], a[1], a[2], a[3]) {}
 
 	template <typename U>
 	explicit operator vector4_t<U>() const
@@ -1182,13 +1200,9 @@ struct vector4_t
 
 	vector4_t operator+(vector4_t v) const;
 	vector4_t operator-(vector4_t v) const;
-	vector4_t operator*(T f) const;
-	vector4_t operator/(T f) const;
 
 	vector4_t& operator+=(vector4_t v);
 	vector4_t& operator-=(vector4_t v);
-	vector4_t& operator*=(T f);
-	vector4_t& operator/=(T f);
 
 	vector4_t operator-() const;
 
@@ -1197,7 +1211,15 @@ struct vector4_t
 };
 
 template <typename T>
-T dot(vector4_t<T> lhs, vector4_t<T> rhs);
+vector4_t<T> operator*(T f, vector4_t<T> v);
+template <typename T>
+vector4_t<T> operator*(vector4_t<T> v, T f);
+template <typename T>
+vector4_t<T> operator/(vector4_t<T> v, T f);
+template <typename T>
+vector4_t<T>& operator*=(vector4_t<T>& v, T f);
+template <typename T>
+vector4_t<T>& operator/=(vector4_t<T>& v, T f);
 
 template <typename T>
 T norm(vector4_t<T> v);
@@ -1237,7 +1259,11 @@ public:
 	normalized() = default;
 	normalized(const normalized&) = default;
 	normalized(normalized&&) = default;
-	normalized(const T& t);
+	explicit normalized(const T& t);
+	template <typename... Args>
+	explicit normalized(Args... args) : normalized{T{args...}}
+	{
+	}
 
 	static normalized already_normalized(const T& t);
 	static normalized already_normalized(T&& t) noexcept;
@@ -1537,27 +1563,27 @@ public:
 	template <bool IsConstT>
 	struct column_proxy : proxy<IsConstT>
 	{
-		using proxy::proxy;
+		using proxy<IsConstT>::proxy;
 		constexpr proxy<IsConstT>::Type& row(int i)
 		{
-			return proxy::vector(i);
+			return proxy<IsConstT>::vector(i);
 		}
 		constexpr const proxy<IsConstT>::Type& row(int i) const
 		{
-			return proxy::vector(i);
+			return proxy<IsConstT>::vector(i);
 		}
 	};
 	template <bool IsConstT>
 	struct row_proxy : proxy<IsConstT>
 	{
-		using proxy::proxy;
+		using proxy<IsConstT>::proxy;
 		constexpr proxy<IsConstT>::Type& column(int i)
 		{
-			return proxy::vector(i);
+			return proxy<IsConstT>::vector(i);
 		}
 		constexpr const proxy<IsConstT>::Type& column(int i) const
 		{
-			return proxy::vector(i);
+			return proxy<IsConstT>::vector(i);
 		}
 	};
 
@@ -1804,27 +1830,27 @@ public:
 	template <bool IsConstT>
 	struct column_proxy : proxy<IsConstT>
 	{
-		using proxy::proxy;
+		using proxy<IsConstT>::proxy;
 		constexpr proxy<IsConstT>::Type& row(int i)
 		{
-			return proxy::vector(i);
+			return proxy<IsConstT>::vector(i);
 		}
 		constexpr const proxy<IsConstT>::Type& row(int i) const
 		{
-			return proxy::vector(i);
+			return proxy<IsConstT>::vector(i);
 		}
 	};
 	template <bool IsConstT>
 	struct row_proxy : proxy<IsConstT>
 	{
-		using proxy::proxy;
+		using proxy<IsConstT>::proxy;
 		constexpr proxy<IsConstT>::Type& column(int i)
 		{
-			return proxy::vector(i);
+			return proxy<IsConstT>::vector(i);
 		}
 		constexpr const proxy<IsConstT>::Type& column(int i) const
 		{
-			return proxy::vector(i);
+			return proxy<IsConstT>::vector(i);
 		}
 	};
 
@@ -2476,21 +2502,9 @@ radian_t<T>::operator T() const
 }
 
 template <typename T>
-radian_t<T>& radian_t<T>::operator+=(T f)
-{
-	angle += f;
-	return *this;
-}
-template <typename T>
 radian_t<T>& radian_t<T>::operator+=(radian_t<T> r)
 {
 	angle += r.angle;
-	return *this;
-}
-template <typename T>
-radian_t<T>& radian_t<T>::operator-=(T f)
-{
-	angle -= f;
 	return *this;
 }
 template <typename T>
@@ -2500,21 +2514,9 @@ radian_t<T>& radian_t<T>::operator-=(radian_t<T> r)
 	return *this;
 }
 template <typename T>
-radian_t<T>& radian_t<T>::operator*=(T f)
-{
-	angle *= f;
-	return *this;
-}
-template <typename T>
 radian_t<T>& radian_t<T>::operator*=(radian_t<T> r)
 {
 	angle *= r.angle;
-	return *this;
-}
-template <typename T>
-radian_t<T>& radian_t<T>::operator/=(T f)
-{
-	angle /= f;
 	return *this;
 }
 template <typename T>
@@ -2548,12 +2550,12 @@ radian_t<T> operator-(radian_t<T> r1, radian_t<T> r2)
 	return radian_t<T>{static_cast<T>(r1) - static_cast<T>(r2)};
 }
 template <typename T>
-radian_t<T> operator*(radian_t<T> r, T f)
+radian_t<T> operator*(T f, radian_t<T> r)
 {
 	return radian_t<T>{static_cast<T>(r) * f};
 }
 template <typename T>
-radian_t<T> operator*(T f, radian_t<T> r)
+radian_t<T> operator*(radian_t<T> r, T f)
 {
 	return radian_t<T>{f * static_cast<T>(r)};
 }
@@ -2562,6 +2564,31 @@ radian_t<T> operator/(radian_t<T> r, T f)
 {
 	return radian_t<T>{static_cast<T>(r) / f};
 }
+template <typename T>
+radian_t<T>& operator+=(radian_t<T>& r, T f)
+{
+	r = r + f;
+	return r;
+}
+template <typename T>
+radian_t<T>& operator-=(radian_t<T>& r, T f)
+{
+	r = r - f;
+	return r;
+}
+template <typename T>
+radian_t<T>& operator*=(radian_t<T>& r, T f)
+{
+	r = r * f;
+	return r;
+}
+template <typename T>
+radian_t<T>& operator/=(radian_t<T>& r, T f)
+{
+	r = r / f;
+	return r;
+}
+
 template <typename T>
 bool operator<(radian_t<T> lhs, radian_t<T> rhs)
 {
@@ -2673,21 +2700,9 @@ degree_t<T>::operator T() const
 }
 
 template <typename T>
-degree_t<T>& degree_t<T>::operator+=(T f)
-{
-	angle += f;
-	return *this;
-}
-template <typename T>
 degree_t<T>& degree_t<T>::operator+=(degree_t d)
 {
 	angle += d.angle;
-	return *this;
-}
-template <typename T>
-degree_t<T>& degree_t<T>::operator-=(T f)
-{
-	angle -= f;
 	return *this;
 }
 template <typename T>
@@ -2697,21 +2712,9 @@ degree_t<T>& degree_t<T>::operator-=(degree_t d)
 	return *this;
 }
 template <typename T>
-degree_t<T>& degree_t<T>::operator*=(T f)
-{
-	angle *= f;
-	return *this;
-}
-template <typename T>
 degree_t<T>& degree_t<T>::operator*=(degree_t d)
 {
 	angle *= d.angle;
-	return *this;
-}
-template <typename T>
-degree_t<T>& degree_t<T>::operator/=(T f)
-{
-	angle /= f;
 	return *this;
 }
 template <typename T>
@@ -2738,12 +2741,12 @@ degree_t<T> operator-(degree_t<T> d1, degree_t<T> d2)
 	return degree_t<T>{static_cast<T>(d1) - static_cast<T>(d2)};
 }
 template <typename T>
-degree_t<T> operator*(degree_t<T> d, T f)
+degree_t<T> operator*(T f, degree_t<T> d)
 {
 	return degree_t<T>{static_cast<T>(d) * f};
 }
 template <typename T>
-degree_t<T> operator*(T f, degree_t<T> d)
+degree_t<T> operator*(degree_t<T> d, T f)
 {
 	return degree_t<T>{f * static_cast<T>(d)};
 }
@@ -2752,6 +2755,31 @@ degree_t<T> operator/(degree_t<T> d, T f)
 {
 	return degree_t<T>{static_cast<T>(d) / f};
 }
+template <typename T>
+degree_t<T>& operator+=(degree_t<T>& d, T f)
+{
+	d = d + f;
+	return d;
+}
+template <typename T>
+degree_t<T>& operator-=(degree_t<T>& d, T f)
+{
+	d = d - f;
+	return d;
+}
+template <typename T>
+degree_t<T>& operator*=(degree_t<T>& d, T f)
+{
+	d = d * f;
+	return d;
+}
+template <typename T>
+degree_t<T>& operator/=(degree_t<T>& d, T f)
+{
+	d = d / f;
+	return d;
+}
+
 template <typename T>
 bool operator<(degree_t<T> lhs, degree_t<T> rhs)
 {
@@ -2856,16 +2884,6 @@ vector2_t<T> vector2_t<T>::operator-(vector2_t<T> v) const
 {
 	return {x - v.x, y - v.y};
 }
-template <typename T>
-vector2_t<T> vector2_t<T>::operator*(T f) const
-{
-	return {x * f, y * f};
-}
-template <typename T>
-vector2_t<T> vector2_t<T>::operator/(T f) const
-{
-	return {x / f, y / f};
-}
 
 template <typename T>
 vector2_t<T>& vector2_t<T>::operator+=(vector2_t<T> v)
@@ -2877,18 +2895,6 @@ template <typename T>
 vector2_t<T>& vector2_t<T>::operator-=(vector2_t<T> v)
 {
 	*this = *this - v;
-	return *this;
-}
-template <typename T>
-vector2_t<T>& vector2_t<T>::operator*=(T f)
-{
-	*this = *this * f;
-	return *this;
-}
-template <typename T>
-vector2_t<T>& vector2_t<T>::operator/=(T f)
-{
-	*this = *this / f;
 	return *this;
 }
 
@@ -2913,6 +2919,28 @@ template <typename T>
 vector2_t<T> operator*(T f, vector2_t<T> v)
 {
 	return v * f;
+}
+template <typename T>
+vector2_t<T> operator*(vector2_t<T> v, T f)
+{
+	return {v.x * f, v.y * f};
+}
+template <typename T>
+vector2_t<T> operator/(vector2_t<T> v, T f)
+{
+	return {v.x / f, v.y / f};
+}
+template <typename T>
+vector2_t<T>& operator*=(vector2_t<T>& v, T f)
+{
+	v = v * f;
+	return v;
+}
+template <typename T>
+vector2_t<T>& operator/=(vector2_t<T>& v, T f)
+{
+	v = v / f;
+	return v;
 }
 
 template <typename T>
@@ -3028,16 +3056,6 @@ vector3_t<T> vector3_t<T>::operator-(vector3_t<T> v) const
 {
 	return {x - v.x, y - v.y, z - v.z};
 }
-template <typename T>
-vector3_t<T> vector3_t<T>::operator*(T f) const
-{
-	return {x * f, y * f, z * f};
-}
-template <typename T>
-vector3_t<T> vector3_t<T>::operator/(T f) const
-{
-	return {x / f, y / f, z / f};
-}
 
 template <typename T>
 vector3_t<T>& vector3_t<T>::operator+=(vector3_t<T> v)
@@ -3049,18 +3067,6 @@ template <typename T>
 vector3_t<T>& vector3_t<T>::operator-=(vector3_t<T> v)
 {
 	*this = *this - v;
-	return *this;
-}
-template <typename T>
-vector3_t<T>& vector3_t<T>::operator*=(T f)
-{
-	*this = *this * f;
-	return *this;
-}
-template <typename T>
-vector3_t<T>& vector3_t<T>::operator/=(T f)
-{
-	*this = *this / f;
 	return *this;
 }
 
@@ -3086,6 +3092,28 @@ vector3_t<T> operator*(T f, vector3_t<T> v)
 {
 	return v * f;
 }
+template <typename T>
+vector3_t<T> operator*(vector3_t<T> v, T f)
+{
+	return {v.x * f, v.y * f, v.z * f};
+}
+template <typename T>
+vector3_t<T> operator/(vector3_t<T> v, T f)
+{
+	return {v.x / f, v.y / f, v.z / f};
+}
+template <typename T>
+vector3_t<T>& operator*=(vector3_t<T>& v, T f)
+{
+	v = v * f;
+	return v;
+}
+template <typename T>
+vector3_t<T>& operator/=(vector3_t<T>& v, T f)
+{
+	v = v / f;
+	return v;
+}
 
 template <typename T>
 T norm(vector3_t<T> v)
@@ -3100,7 +3128,7 @@ T norm_squared(vector3_t<T> v)
 template <typename T>
 vector3_t<T> normalize(vector3_t<T> v)
 {
-	T n = norm(v);
+	const T n = norm(v);
 	v.x /= n;
 	v.y /= n;
 	v.z /= n;
@@ -3154,6 +3182,9 @@ template <typename T>
 radian_t<T> angle_between(vector3_t<T> v1, vector3_t<T> v2)
 {
 	T divisor = std::sqrt(norm_squared(v1) * norm_squared(v2));
+	if (divisor == T(0))
+		return radian_t<T>{T(0)};
+
 	T alpha = dot(v1, v2) / divisor;
 	return radian_t<T>(std::acosf(cdm::clamp(alpha, T(-1), T(1))));
 }
@@ -3168,13 +3199,13 @@ vector3_t<T> element_wise_min(vector3_t<T> v0, vector3_t<T> v1)
 {
 	return {v0.x < v1.x ? v0.x : v1.x, v0.y < v1.y ? v0.y : v1.y,
 	        v0.z < v1.z ? v0.z : v1.z};
-};
+}
 template <typename T>
 vector3_t<T> element_wise_max(vector3_t<T> v0, vector3_t<T> v1)
 {
 	return {v0.x > v1.x ? v0.x : v1.x, v0.y > v1.y ? v0.y : v1.y,
 	        v0.z > v1.z ? v0.z : v1.z};
-};
+}
 template <typename T>
 radian_t<T> angle_around_axis(vector3_t<T> v0,
                               vector3_t<T> v1,
@@ -3208,16 +3239,6 @@ vector4_t<T> vector4_t<T>::operator-(vector4_t<T> v) const
 {
 	return {x - v.x, y - v.y, z - v.z, w - v.w};
 }
-template <typename T>
-vector4_t<T> vector4_t<T>::operator*(T f) const
-{
-	return {x * f, y * f, z * f, w * f};
-}
-template <typename T>
-vector4_t<T> vector4_t<T>::operator/(T f) const
-{
-	return {x / f, y / f, z / f, w / f};
-}
 
 template <typename T>
 vector4_t<T>& vector4_t<T>::operator+=(vector4_t<T> v)
@@ -3229,18 +3250,6 @@ template <typename T>
 vector4_t<T>& vector4_t<T>::operator-=(vector4_t<T> v)
 {
 	*this = *this - v;
-	return *this;
-}
-template <typename T>
-vector4_t<T>& vector4_t<T>::operator*=(T f)
-{
-	*this = *this * f;
-	return *this;
-}
-template <typename T>
-vector4_t<T>& vector4_t<T>::operator/=(T f)
-{
-	*this = *this / f;
 	return *this;
 }
 
@@ -3262,6 +3271,34 @@ bool vector4_t<T>::operator!=(vector4_t<T> v) const
 }
 
 template <typename T>
+vector4_t<T> operator*(T f, vector4_t<T> v)
+{
+	return v * f;
+}
+template <typename T>
+vector4_t<T> operator*(vector4_t<T> v, T f)
+{
+	return {v.x * f, v.y * f, v.z * f, v.w * f};
+}
+template <typename T>
+vector4_t<T> operator/(vector4_t<T> v, T f)
+{
+	return {v.x / f, v.y / f, v.z / f, v.w / f};
+}
+template <typename T>
+vector4_t<T>& operator*=(vector4_t<T>& v, T f)
+{
+	v = v * f;
+	return v;
+}
+template <typename T>
+vector4_t<T>& operator/=(vector4_t<T>& v, T f)
+{
+	v = v / f;
+	return v;
+}
+
+template <typename T>
 T norm(vector4_t<T> v)
 {
 	return std::sqrt(norm_squared(v));
@@ -3274,7 +3311,7 @@ T norm_squared(vector4_t<T> v)
 template <typename T>
 vector4_t<T> normalize(vector4_t<T> v)
 {
-	T n = norm(v);
+	const T n = norm(v);
 	v.x /= n;
 	v.y /= n;
 	v.z /= n;
@@ -3288,15 +3325,6 @@ vector4_t<T> clamp(vector4_t<T> v, vector4_t<T> min, vector4_t<T> max)
 	v.y = cdm::clamp(v.y, min.y, max.y);
 	v.z = cdm::clamp(v.z, min.z, max.z);
 	v.w = cdm::clamp(v.w, min.w, max.w);
-	return v;
-}
-template <typename T>
-vector4_t<T> negate(vector4_t<T> v)
-{
-	v.x = -v.x;
-	v.y = -v.y;
-	v.z = -v.z;
-	v.w = -v.w;
 	return v;
 }
 template <typename T>
@@ -3338,14 +3366,22 @@ bool nearly_equal(vector4_t<T> v1, vector4_t<T> v2, T e)
 template <typename T>
 vector4_t<T> element_wise_min(vector4_t<T> v0, vector4_t<T> v1)
 {
-	return {v0.x < v1.x ? v0.x : v1.x, v0.y < v1.y ? v0.y : v1.y,
-	        v0.z < v1.z ? v0.z : v1.z, v0.w < v1.w ? v0.w : v1.w};
+	return {
+	    v0.x < v1.x ? v0.x : v1.x,  //
+	    v0.y < v1.y ? v0.y : v1.y,  //
+	    v0.z < v1.z ? v0.z : v1.z,  //
+	    v0.w < v1.w ? v0.w : v1.w   //
+	};
 };
 template <typename T>
 vector4_t<T> element_wise_max(vector4_t<T> v0, vector4_t<T> v1)
 {
-	return {v0.x > v1.x ? v0.x : v1.x, v0.y > v1.y ? v0.y : v1.y,
-	        v0.z > v1.z ? v0.z : v1.z, v0.w > v1.w ? v0.w : v1.w};
+	return {
+	    v0.x > v1.x ? v0.x : v1.x,  //
+	    v0.y > v1.y ? v0.y : v1.y,  //
+	    v0.z > v1.z ? v0.z : v1.z,  //
+	    v0.w > v1.w ? v0.w : v1.w   //
+	};
 };
 #pragma endregion
 
@@ -3759,22 +3795,23 @@ matrix3_t<T>& matrix3_t<T>::inverse()
 		return transpose();
 	}
 
-	T det = determinant();
-	T recM00 = m00;
-	T recM10 = m10;
-	T recM20 = m20;
-	T recM01 = m01;
-	T recM11 = m11;
-	T recM02 = m02;
-	m00 = (recM11 * m22 - m21 * m12) / det;
-	m10 = (m12 * recM20 - recM10 * m22) / det;
-	m20 = (recM10 * m12 - recM20 * recM11) / det;
-	m01 = (recM02 * m21 - recM01 * m22) / det;
-	m11 = (recM00 * m22 - recM20 * recM02) / det;
-	m21 = (recM01 * recM20 - recM00 * m21) / det;
-	m02 = (recM01 * m12 - recM11 * recM02) / det;
-	m12 = (recM02 * recM10 - recM00 * m12) / det;
-	m22 = (recM00 * recM11 - recM10 * recM01) / det;
+	const T det = determinant();
+	const T invDet = T(1) / det;
+	const T recM00 = m00;
+	const T recM10 = m10;
+	const T recM20 = m20;
+	const T recM01 = m01;
+	const T recM11 = m11;
+	const T recM02 = m02;
+	m00 = (recM11 * m22 - m21 * m12) * invDet;
+	m10 = (m12 * recM20 - recM10 * m22) * invDet;
+	m20 = (recM10 * m12 - recM20 * recM11) * invDet;
+	m01 = (recM02 * m21 - recM01 * m22) * invDet;
+	m11 = (recM00 * m22 - recM20 * recM02) * invDet;
+	m21 = (recM01 * recM20 - recM00 * m21) * invDet;
+	m02 = (recM01 * m12 - recM11 * recM02) * invDet;
+	m12 = (recM02 * recM10 - recM00 * m12) * invDet;
+	m22 = (recM00 * recM11 - recM10 * recM01) * invDet;
 
 	return *this;
 }
@@ -3986,8 +4023,12 @@ matrix4_t<T> matrix4_t<T>::rows(vector4_t<T> row0,
                                 vector4_t<T> row2,
                                 vector4_t<T> row3)
 {
-	return {row0.x, row0.y, row0.z, row0.w, row1.x, row1.y, row1.z, row1.w,
-	        row2.x, row2.y, row2.z, row2.w, row3.x, row3.y, row3.z, row3.w};
+	return {
+	    row0.x, row0.y, row0.z, row0.w,  //
+	    row1.x, row1.y, row1.z, row1.w,  //
+	    row2.x, row2.y, row2.z, row2.w,  //
+	    row3.x, row3.y, row3.z, row3.w   //
+	};
 }
 template <typename T>
 matrix4_t<T> matrix4_t<T>::columns(vector4_t<T> column0,
@@ -3995,9 +4036,12 @@ matrix4_t<T> matrix4_t<T>::columns(vector4_t<T> column0,
                                    vector4_t<T> column2,
                                    vector4_t<T> column3)
 {
-	return {column0.x, column1.x, column2.x, column3.x, column0.y, column1.y,
-	        column2.y, column3.y, column0.z, column1.z, column2.z, column3.z,
-	        column0.w, column1.w, column2.w, column3.w};
+	return {
+	    column0.x, column1.x, column2.x, column3.x,  //
+	    column0.y, column1.y, column2.y, column3.y,  //
+	    column0.z, column1.z, column2.z, column3.z,  //
+	    column0.w, column1.w, column2.w, column3.w   //
+	};
 }
 template <typename T>
 matrix4_t<T> matrix4_t<T>::rotation(direction_t<T> axis, radian_t<T> angle)
@@ -4031,8 +4075,12 @@ matrix4_t<T> matrix4_t<T>::rotation(quaternion_t<T> q)
 template <typename T>
 matrix4_t<T> matrix4_t<T>::translation(vector3_t<T> t)
 {
-	return {T(1), T(0), T(0), t.x, T(0), T(1), T(0), t.y,
-	        T(0), T(0), T(1), t.z, T(0), T(0), T(0), T(1)};
+	return {
+	    T(1), T(0), T(0), t.x,  //
+	    T(0), T(1), T(0), t.y,  //
+	    T(0), T(0), T(1), t.z,  //
+	    T(0), T(0), T(0), T(1)  //
+	};
 }
 template <typename T>
 matrix4_t<T> matrix4_t<T>::translation(T x, T y, T z)
@@ -4169,38 +4217,50 @@ T matrix4_t<T>::determinant() const
 		       m20 * m11 * m02 - m21 * m12 * m00 - m22 * m10 * m01;
 	}
 
-	T det1 = m11 * (m22 * m33 - m32 * m23) - m21 * (m12 * m33 - m32 * m13) +
-	         m31 * (m12 * m23 - m22 * m13);
-	T det2 = m01 * (m22 * m33 - m32 * m23) - m21 * (m02 * m33 - m32 * m03) +
-	         m31 * (m02 * m23 - m22 * m03);
-	T det3 = m01 * (m12 * m33 - m32 * m13) - m11 * (m02 * m33 - m32 * m03) +
-	         m31 * (m02 * m13 - m12 * m03);
-	T det4 = m01 * (m12 * m23 - m22 * m13) - m11 * (m02 * m23 - m22 * m03) +
-	         m21 * (m02 * m13 - m12 * m03);
+	const T det1 = m11 * (m22 * m33 - m32 * m23) -
+	               m21 * (m12 * m33 - m32 * m13) +
+	               m31 * (m12 * m23 - m22 * m13);
+	const T det2 = m01 * (m22 * m33 - m32 * m23) -
+	               m21 * (m02 * m33 - m32 * m03) +
+	               m31 * (m02 * m23 - m22 * m03);
+	const T det3 = m01 * (m12 * m33 - m32 * m13) -
+	               m11 * (m02 * m33 - m32 * m03) +
+	               m31 * (m02 * m13 - m12 * m03);
+	const T det4 = m01 * (m12 * m23 - m22 * m13) -
+	               m11 * (m02 * m23 - m22 * m03) +
+	               m21 * (m02 * m13 - m12 * m03);
 	return m00 * det1 - m10 * det2 + m20 * det3 - m30 * det4;
 }
 
 template <typename T>
 matrix4_t<T> matrix4_t<T>::operator*(T f) const
 {
-	return {m00 * f, m10 * f, m20 * f, m30 * f, m00 * f, m10 * f,
-	        m20 * f, m30 * f, m00 * f, m10 * f, m20 * f, m30 * f,
-	        m00 * f, m10 * f, m20 * f, m30 * f};
+	return {
+	    m00 * f, m10 * f, m20 * f, m30 * f,  //
+	    m00 * f, m10 * f, m20 * f, m30 * f,  //
+	    m00 * f, m10 * f, m20 * f, m30 * f,  //
+	    m00 * f, m10 * f, m20 * f, m30 * f   //
+	};
 }
 template <typename T>
 matrix4_t<T> matrix4_t<T>::operator/(T f) const
 {
-	return {m00 / f, m10 / f, m20 / f, m30 / f, m00 / f, m10 / f,
-	        m20 / f, m30 / f, m00 / f, m10 / f, m20 / f, m30 / f,
-	        m00 / f, m10 / f, m20 / f, m30 / f};
+	return {
+	    m00 / f, m10 / f, m20 / f, m30 / f,  //
+	    m00 / f, m10 / f, m20 / f, m30 / f,  //
+	    m00 / f, m10 / f, m20 / f, m30 / f,  //
+	    m00 / f, m10 / f, m20 / f, m30 / f   //
+	};
 }
 template <typename T>
 vector4_t<T> matrix4_t<T>::operator*(vector4_t<T> v) const
 {
-	return {m00 * v.x + m10 * v.y + m20 * v.z + m30 * v.w,
-	        m01 * v.x + m11 * v.y + m21 * v.z + m31 * v.w,
-	        m02 * v.x + m12 * v.y + m22 * v.z + m32 * v.w,
-	        m03 * v.x + m13 * v.y + m23 * v.z + m33 * v.w};
+	return {
+	    m00 * v.x + m10 * v.y + m20 * v.z + m30 * v.w,  //
+	    m01 * v.x + m11 * v.y + m21 * v.z + m31 * v.w,  //
+	    m02 * v.x + m12 * v.y + m22 * v.z + m32 * v.w,  //
+	    m03 * v.x + m13 * v.y + m23 * v.z + m33 * v.w   //
+	};
 }
 template <typename T>
 matrix4_t<T> matrix4_t<T>::operator*(const matrix4_t<T>& m) const
@@ -4234,14 +4294,14 @@ matrix4_t<T>& matrix4_t<T>::inverse()
 		return transpose();
 	}
 
-	T det = determinant();
-	T invDet = T(1) / det;
-	T recM00 = m00;
-	T recM10 = m10;
-	T recM20 = m20;
-	T recM01 = m01;
-	T recM11 = m11;
-	T recM02 = m02;
+	const T det = determinant();
+	const T invDet = T(1) / det;
+	const T recM00 = m00;
+	const T recM10 = m10;
+	const T recM20 = m20;
+	const T recM01 = m01;
+	const T recM11 = m11;
+	const T recM02 = m02;
 
 	if (is_homogenous())
 	{
@@ -4257,13 +4317,13 @@ matrix4_t<T>& matrix4_t<T>::inverse()
 		return *this;
 	}
 
-	T recM30 = m30;
-	T recM21 = m21;
-	T recM31 = m31;
-	T recM12 = m12;
-	T recM22 = m22;
-	T recM03 = m03;
-	T recM13 = m13;
+	const T recM30 = m30;
+	const T recM21 = m21;
+	const T recM31 = m31;
+	const T recM12 = m12;
+	const T recM22 = m22;
+	const T recM03 = m03;
+	const T recM13 = m13;
 
 	m00 = invDet * (recM11 * recM22 * m33 - recM11 * m23 * m32 -
 	                recM21 * recM12 * m33 + recM21 * recM13 * m32 +
@@ -4365,14 +4425,14 @@ matrix4_t<T> inverse(matrix4_t<T> m)
 		return transpose(m);
 	}
 
-	T det = m.determinant();
-	T invDet = T(1) / det;
-	T recM00 = m.m00;
-	T recM10 = m.m10;
-	T recM20 = m.m20;
-	T recM01 = m.m01;
-	T recM11 = m.m11;
-	T recM02 = m.m02;
+	const T det = m.determinant();
+	const T invDet = T(1) / det;
+	const T recM00 = m.m00;
+	const T recM10 = m.m10;
+	const T recM20 = m.m20;
+	const T recM01 = m.m01;
+	const T recM11 = m.m11;
+	const T recM02 = m.m02;
 
 	if (m.is_homogenous())
 	{
@@ -4388,13 +4448,13 @@ matrix4_t<T> inverse(matrix4_t<T> m)
 		return m;
 	}
 
-	T recM30 = m.m30;
-	T recM21 = m.m21;
-	T recM31 = m.m31;
-	T recM12 = m.m12;
-	T recM22 = m.m22;
-	T recM03 = m.m03;
-	T recM13 = m.m13;
+	const T recM30 = m.m30;
+	const T recM21 = m.m21;
+	const T recM31 = m.m31;
+	const T recM12 = m.m12;
+	const T recM22 = m.m22;
+	const T recM03 = m.m03;
+	const T recM13 = m.m13;
 
 	m.m00 = invDet * (recM11 * recM22 * m.m33 - recM11 * m.m23 * m.m32 -
 	                  recM21 * recM12 * m.m33 + recM21 * recM13 * m.m32 +
@@ -4554,10 +4614,10 @@ matrix4_t<T> perspective_t<T>::to_matrix4() const
 template <typename T>
 matrix4_t<T> operator*(const matrix4_t<T>& m, const perspective_t<T>& p)
 {
-	T a = p.m_invRatio * p.m_invTanHalfFovy;
-	T b = -p.m_invTanHalfFovy;
-	T c = p.m_far / (p.m_near - p.m_far);
-	T d = -(p.m_far * p.m_near) / (p.m_far - p.m_near);
+	const T a = p.m_invRatio * p.m_invTanHalfFovy;
+	const T b = -p.m_invTanHalfFovy;
+	const T c = p.m_far / (p.m_near - p.m_far);
+	const T d = -(p.m_far * p.m_near) / (p.m_far - p.m_near);
 	return {a * m.m00, b * m.m10, c * m.m20 - m.m30, d * m.m20,
 
 	        a * m.m01, b * m.m11, c * m.m21 - m.m31, d * m.m21,
@@ -4569,10 +4629,10 @@ matrix4_t<T> operator*(const matrix4_t<T>& m, const perspective_t<T>& p)
 template <typename T>
 matrix4_t<T> operator*(const perspective_t<T>& p, const matrix4_t<T>& m)
 {
-	T a = p.m_invRatio * p.m_invTanHalfFovy;
-	T b = -p.m_invTanHalfFovy;
-	T c = p.m_far / (p.m_near - p.m_far);
-	T d = -(p.m_far * p.m_near) / (p.m_far - p.m_near);
+	const T a = p.m_invRatio * p.m_invTanHalfFovy;
+	const T b = -p.m_invTanHalfFovy;
+	const T c = p.m_far / (p.m_near - p.m_far);
+	const T d = -(p.m_far * p.m_near) / (p.m_far - p.m_near);
 	return {m.m00 * a,
 	        m.m10 * a,
 	        m.m20 * a,
@@ -4598,19 +4658,19 @@ template <typename T>
 matrix4_t<T> operator*(const unscaled_transform3d_t<T>& t,
                        const perspective_t<T>& p)
 {
-	T a = p.m_invRatio * p.m_invTanHalfFovy;
-	T b = -p.m_invTanHalfFovy;
-	T c = p.m_far / (p.m_near - p.m_far);
-	T d = -(p.m_far * p.m_near) / (p.m_far - p.m_near);
-	T xx = t.rotation.x * t.rotation.x;
-	T yy = t.rotation.y * t.rotation.y;
-	T zz = t.rotation.z * t.rotation.z;
-	T wx = t.rotation.w * t.rotation.x;
-	T wy = t.rotation.w * t.rotation.y;
-	T wz = t.rotation.w * t.rotation.z;
-	T xy = t.rotation.x * t.rotation.y;
-	T xz = t.rotation.x * t.rotation.z;
-	T yz = t.rotation.y * t.rotation.z;
+	const T a = p.m_invRatio * p.m_invTanHalfFovy;
+	const T b = -p.m_invTanHalfFovy;
+	const T c = p.m_far / (p.m_near - p.m_far);
+	const T d = -(p.m_far * p.m_near) / (p.m_far - p.m_near);
+	const T xx = t.rotation.x * t.rotation.x;
+	const T yy = t.rotation.y * t.rotation.y;
+	const T zz = t.rotation.z * t.rotation.z;
+	const T wx = t.rotation.w * t.rotation.x;
+	const T wy = t.rotation.w * t.rotation.y;
+	const T wz = t.rotation.w * t.rotation.z;
+	const T xy = t.rotation.x * t.rotation.y;
+	const T xz = t.rotation.x * t.rotation.z;
+	const T yz = t.rotation.y * t.rotation.z;
 	return {a * (T(1) - T(2) * (yy + zz)),
 	        b * (T(2) * (xy - wz)),
 	        c * (T(2) * (xz + wy)) - t.position.x,
@@ -4635,19 +4695,19 @@ template <typename T>
 matrix4_t<T> operator*(const perspective_t<T>& p,
                        const unscaled_transform3d_t<T>& t)
 {
-	T a = p.m_invRatio * p.m_invTanHalfFovy;
-	T b = -p.m_invTanHalfFovy;
-	T c = p.m_far / (p.m_near - p.m_far);
-	T d = -(p.m_far * p.m_near) / (p.m_far - p.m_near);
-	T xx = t.rotation.x * t.rotation.x;
-	T yy = t.rotation.y * t.rotation.y;
-	T zz = t.rotation.z * t.rotation.z;
-	T wx = t.rotation.w * t.rotation.x;
-	T wy = t.rotation.w * t.rotation.y;
-	T wz = t.rotation.w * t.rotation.z;
-	T xy = t.rotation.x * t.rotation.y;
-	T xz = t.rotation.x * t.rotation.z;
-	T yz = t.rotation.y * t.rotation.z;
+	const T a = p.m_invRatio * p.m_invTanHalfFovy;
+	const T b = -p.m_invTanHalfFovy;
+	const T c = p.m_far / (p.m_near - p.m_far);
+	const T d = -(p.m_far * p.m_near) / (p.m_far - p.m_near);
+	const T xx = t.rotation.x * t.rotation.x;
+	const T yy = t.rotation.y * t.rotation.y;
+	const T zz = t.rotation.z * t.rotation.z;
+	const T wx = t.rotation.w * t.rotation.x;
+	const T wy = t.rotation.w * t.rotation.y;
+	const T wz = t.rotation.w * t.rotation.z;
+	const T xy = t.rotation.x * t.rotation.y;
+	const T xz = t.rotation.x * t.rotation.z;
+	const T yz = t.rotation.y * t.rotation.z;
 
 	matrix4_t<T> res;
 	res.row(0).column(0) = (T(1) - T(2) * (yy + zz)) * a;
@@ -4720,7 +4780,7 @@ T quaternion_t<T>::norm_squared() const
 template <typename T>
 quaternion_t<T>& quaternion_t<T>::inverse()
 {
-	T n = norm();
+	const T n = norm();
 	if (nearly_equal(n, T(1)))
 		return conjugate();
 
@@ -4802,12 +4862,17 @@ quaternion_t<T> quaternion_t<T>::operator-(quaternion_t<T> q) const
 template <typename T>
 vector3_t<T> quaternion_t<T>::operator*(vector3_t<T> v) const
 {
-	vector3_t<T> qvec{x, y, z};
-	vector3_t<T> uv{cross(qvec, v)};
-	vector3_t<T> uuv{cross(qvec, uv)};
-	uv = uv * (T(2) * w);
-	uuv = uuv * T(2);
+	const vector3_t<T> qvec{vector3_t<T>{x, y, z}};
+	const vector3_t<T> uv{vector3_t<T>{cross(qvec, v)} * (T(2) * w)};
+	const vector3_t<T> uuv{vector3_t<T>{cross(qvec, uv)} * T(2)};
 	return v + uv + uuv;
+
+	// vector3_t<T> qvec{x, y, z};
+	// vector3_t<T> uv{cross(qvec, v)};
+	// vector3_t<T> uuv{cross(qvec, uv)};
+	// uv = uv * (T(2) * w);
+	// uuv = uuv * T(2);
+	// return v + uv + uuv;
 }
 template <typename T>
 quaternion_t<T> quaternion_t<T>::operator*(quaternion_t<T> q) const
@@ -4881,12 +4946,17 @@ bool quaternion_t<T>::operator!=(quaternion_t<T> q) const
 template <typename T>
 vector3_t<T> operator*(const normalized<quaternion_t<T>>& q, vector3_t<T> v)
 {
-	vector3_t<T> qvec = {q->x, q->y, q->z};
-	vector3_t<T> uv = cross(qvec, v);
-	vector3_t<T> uuv = cross(qvec, uv);
-	uv = uv * (T(2) * q->w);
-	uuv = uuv * T(2);
+	const vector3_t<T> qvec{vector3_t<T>{{q->x, q->y, q->z}}};
+	const vector3_t<T> uv{vector3_t<T>{cross(qvec, v)} * (T(2) * q->w)};
+	const vector3_t<T> uuv{vector3_t<T>{cross(qvec, uv)} * *T(2)};
 	return v + uv + uuv;
+
+	// vector3_t<T> qvec = {q->x, q->y, q->z};
+	// vector3_t<T> uv = cross(qvec, v);
+	// vector3_t<T> uuv = cross(qvec, uv);
+	// uv = uv * (T(2) * q->w);
+	// uuv = uuv * T(2);
+	// return v + uv + uuv;
 }
 
 template <typename T>
@@ -5259,8 +5329,11 @@ aabb_t<T> aabb_t<T>::operator+(aabb_t<T> rhs) const
 template <typename T>
 bool collides(aabb_t<T> b, ray3d_t<T> r)
 {
-	vector3_t<T> inv{T(1) / r.direction->x, T(1) / r.direction->y,
-	                 T(1) / r.direction->z};
+	const vector3_t<T> inv{
+	    T(1) / r.direction->x,  //
+	    T(1) / r.direction->y,  //
+	    T(1) / r.direction->z   //
+	};
 
 	T t1 = (b.min.x - r.origin.x) * inv.x;
 	T t2 = (b.max.x - r.origin.x) * inv.x;
@@ -5416,7 +5489,7 @@ unscaled_transform2d_t<T> unscaled_transform2d_t<T>::operator*(
     unscaled_transform2d_t<T> t) const
 {
 	unscaled_transform2d_t<T> res;
-	matrix2_t r = matrix2_t<T>::rotation(rotation);
+	matrix2_t<T> r = matrix2_t<T>::rotation(rotation);
 	res.position = r * t.position + position;
 	res.rotation = rotation + t.rotation;
 	return res;

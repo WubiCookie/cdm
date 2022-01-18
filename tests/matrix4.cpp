@@ -1,6 +1,7 @@
 #include <common.hpp>
 
-TEST_CASE("matrix4::matrix4(std::array<float, 16>)", "[working][unittest]")
+TEST_CASE("matrix4::matrix4(std::array<float, 16>)",
+          "[working][unittest][matrix4]")
 {
 	const std::array<float, 16> a{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
 	                              0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
@@ -53,7 +54,7 @@ TEST_CASE("matrix4::matrix4(std::array<float, 16>)", "[working][unittest]")
 	REQUIRE(m2.column(3).row(3) == 111100.0f);
 }
 
-TEST_CASE("matrix4::matrix4(matrix3)", "[working][unittest]")
+TEST_CASE("matrix4::matrix4(matrix3)", "[working][unittest][matrix4]")
 {
 	const std::array<float, 9> a{1.0f, 2.0f, 3.0f, 4.0f, 5.0f,
 	                             6.0f, 7.0f, 8.0f, 9.0f};
@@ -90,7 +91,7 @@ TEST_CASE("matrix4::matrix4(matrix3)", "[working][unittest]")
 	CHECK(m2.column(3).row(3) == 1.0f);
 }
 
-TEST_CASE("matrix4::zero()", "[working][unittest]")
+TEST_CASE("matrix4::zero()", "[working][unittest][matrix4]")
 {
 	matrix4 m = matrix4::zero();
 	REQUIRE(m.column(0).row(0) == 0.0f);
@@ -111,7 +112,7 @@ TEST_CASE("matrix4::zero()", "[working][unittest]")
 	REQUIRE(m.column(3).row(3) == 0.0f);
 }
 
-TEST_CASE("matrix4::identity()", "[working][unittest]")
+TEST_CASE("matrix4::identity()", "[working][unittest][matrix4]")
 {
 	matrix4 m = matrix4::identity();
 
@@ -137,7 +138,8 @@ TEST_CASE("matrix4::identity()", "[working][unittest]")
 	REQUIRE(m.column(3).row(2) == 0.0f);
 }
 
-TEST_CASE("matrix4::operator==(const matrix4&)", "[working][unittest]")
+TEST_CASE("matrix4::operator==(const matrix4&)",
+          "[working][unittest][matrix4]")
 {
 	matrix4 m1 = matrix4::zero();
 	matrix4 m2 = matrix4::zero();
@@ -204,7 +206,7 @@ TEST_CASE("matrix4::operator==(const matrix4&)", "[working][unittest]")
 }
 
 TEST_CASE("matrix4::to_array() and matrix4::matrix4(array)",
-          "[working][unittest]")
+          "[working][unittest][matrix4]")
 {
 	matrix4 m1 = matrix4::zero();
 	matrix4 m2 = matrix4::zero();
@@ -239,7 +241,7 @@ TEST_CASE("matrix4::to_array() and matrix4::matrix4(array)",
 	REQUIRE_FALSE(m1.to_array() == m2.to_array());
 }
 
-TEST_CASE("matrix4::rotation(euler_angles)", "[working][unittest]")
+TEST_CASE("matrix4::rotation(euler_angles)", "[working][unittest][matrix4]")
 {
 	const euler_angles r{radian(float(pi / 2.0)), 0_rad, 0_rad};
 
@@ -266,7 +268,7 @@ TEST_CASE("matrix4::rotation(euler_angles)", "[working][unittest]")
 		REQUIRE(a[i] == Approx(m[i]).epsilon(0.1));
 }
 
-TEST_CASE("matrix4::rotation(quaternion)", "[working][unittest]")
+TEST_CASE("matrix4::rotation(quaternion)", "[working][unittest][matrix4]")
 {
 	quaternion q{1.0f, 2.0f, 3.0f, 4.0f};
 	q.normalize();
@@ -278,7 +280,7 @@ TEST_CASE("matrix4::rotation(quaternion)", "[working][unittest]")
 	CHECK(a == g);
 }
 
-TEST_CASE("matrix4::translation(vector3)", "[working][unittest]")
+TEST_CASE("matrix4::translation(vector3)", "[working][unittest][matrix4]")
 {
 	vector3 t{1.0f, 2.0f, 3.0f};
 	matrix4 m = matrix4::translation(t);
@@ -304,7 +306,8 @@ TEST_CASE("matrix4::translation(vector3)", "[working][unittest]")
 	REQUIRE(m.column(3).row(3) == 1.0f);
 }
 
-TEST_CASE("matrix4::translation(float, float, float)", "[working][unittest]")
+TEST_CASE("matrix4::translation(float, float, float)",
+          "[working][unittest][matrix4]")
 {
 	float x{0.02f};
 	float y{0.01f};
@@ -333,7 +336,7 @@ TEST_CASE("matrix4::translation(float, float, float)", "[working][unittest]")
 	REQUIRE(m.column(3).row(3) == 1.0f);
 }
 
-TEST_CASE("matrix4::scale(vector3)", "[working][unittest]")
+TEST_CASE("matrix4::scale(vector3)", "[working][unittest][matrix4]")
 {
 	vector3 s{0.5f, 0.4f, 0.3f};
 	matrix4 m = matrix4::scale(s);
@@ -360,7 +363,8 @@ TEST_CASE("matrix4::scale(vector3)", "[working][unittest]")
 	REQUIRE(m.column(3).row(2) == 0.0f);
 }
 
-TEST_CASE("matrix4::scale(float, float, float)", "[working][unittest]")
+TEST_CASE("matrix4::scale(float, float, float)",
+          "[working][unittest][matrix4]")
 {
 	float x{0.5f};
 	float y{0.4f};
@@ -389,7 +393,7 @@ TEST_CASE("matrix4::scale(float, float, float)", "[working][unittest]")
 	REQUIRE(m.column(3).row(2) == 0.0f);
 }
 
-TEST_CASE("matrix4::scale(float)", "[working][unittest]")
+TEST_CASE("matrix4::scale(float)", "[working][unittest][matrix4]")
 {
 	float s{0.5f};
 	matrix4 m = matrix4::scale(s);
@@ -416,7 +420,7 @@ TEST_CASE("matrix4::scale(float)", "[working][unittest]")
 	REQUIRE(m.column(3).row(2) == 0.0f);
 }
 
-TEST_CASE("matrix4::rotation_around_x(radian)", "[working][unittest]")
+TEST_CASE("matrix4::rotation_around_x(radian)", "[working][unittest][matrix4]")
 {
 	using ::Catch::Matchers::WithinAbs;
 
@@ -509,7 +513,7 @@ TEST_CASE("matrix4::rotation_around_x(radian)", "[working][unittest]")
 	}
 }
 
-TEST_CASE("matrix4::rotation_around_y(radian)", "[working][unittest]")
+TEST_CASE("matrix4::rotation_around_y(radian)", "[working][unittest][matrix4]")
 {
 	using ::Catch::Matchers::WithinAbs;
 
@@ -517,7 +521,7 @@ TEST_CASE("matrix4::rotation_around_y(radian)", "[working][unittest]")
 	const vector4 vE{1.0f, 0.0f, 0.0f, 0.0f};
 
 	{
-		radian rotation{0_rad};
+		normalized<complex> rotation{0_rad};
 		matrix4 m = matrix4::rotation_around_y(rotation);
 		vector4 v1 = m * v0;
 		CHECK(v1 == v0);
@@ -526,13 +530,13 @@ TEST_CASE("matrix4::rotation_around_y(radian)", "[working][unittest]")
 	const auto almost_0 = Approx(0.0f).margin(1.0e-6);
 
 	{
-		radian rotation{90_deg};
+		normalized<complex> rotation{90_deg};
 		matrix4 m = matrix4::rotation_around_y(rotation);
 		vector4 v1 = m * v0;
 		CHECK_THAT(v1, Vector4Matcher(vE, 1.0e-6));
 
-		matrix4 m2 = matrix4::rotation(
-		    quaternion{vector3{0.0f, 1.0f, 0.0f}, static_pi_fraction<1, 2>{}});
+		matrix4 m2 = matrix4::rotation(quaternion{direction{0.0f, 1.0f, 0.0f},
+		                                          static_pi_fraction<1, 2>{}});
 		CHECK_THAT(m, Matrix4Matcher(m2, 1.0e-6));
 	}
 
@@ -544,7 +548,7 @@ TEST_CASE("matrix4::rotation_around_y(radian)", "[working][unittest]")
 	}
 }
 
-TEST_CASE("matrix4::rotation_around_z(radian)", "[working][unittest]")
+TEST_CASE("matrix4::rotation_around_z(radian)", "[working][unittest][matrix4]")
 {
 	using ::Catch::Matchers::WithinAbs;
 
@@ -564,8 +568,8 @@ TEST_CASE("matrix4::rotation_around_z(radian)", "[working][unittest]")
 		const vector4 v1 = m * v0;
 		CHECK_THAT(v1, Vector4Matcher(vE, 1.0e-6));
 
-		const matrix4 m2 = matrix4::rotation(
-		    quaternion{vector3{0.0f, 0.0f, 1.0f}, static_pi_fraction<1, 2>{}});
+		const matrix4 m2 = matrix4::rotation(quaternion{
+		    direction{0.0f, 0.0f, 1.0f}, static_pi_fraction<1, 2>{}});
 		const vector4 v2 = m2 * v0;
 		CHECK_THAT(v2, Vector4Matcher(vE, 1.0e-6));
 
@@ -580,12 +584,13 @@ TEST_CASE("matrix4::rotation_around_z(radian)", "[working][unittest]")
 	}
 }
 
-TEST_CASE("matrix4::rotation_around_z(complex)", "[working][unittest]")
+TEST_CASE("matrix4::rotation_around_z(complex)",
+          "[working][unittest][matrix4]")
 {
 	const vector4 v0{1.0f, 0.0f, 0.0f, 0.0f};
 
 	{
-		complex rotation{0_rad};
+		normalized<complex> rotation{0_rad};
 		matrix4 m = matrix4::rotation_around_z(rotation);
 		vector4 v1 = m * v0;
 		CHECK(v1 == v1);
@@ -594,7 +599,7 @@ TEST_CASE("matrix4::rotation_around_z(complex)", "[working][unittest]")
 	const auto almost_0 = Approx(0.0f).margin(1.0e-6);
 
 	{
-		complex rotation{90_deg};
+		normalized<complex> rotation{90_deg};
 		matrix4 m = matrix4::rotation_around_z(rotation);
 		vector4 v1 = m * v0;
 		CHECK(std::abs(v1.x) == almost_0);
@@ -602,13 +607,13 @@ TEST_CASE("matrix4::rotation_around_z(complex)", "[working][unittest]")
 		CHECK(std::abs(v1.z) == almost_0);
 		CHECK(std::abs(v1.w) == almost_0);
 
-		matrix4 m2 = matrix4::rotation(
-		    quaternion{vector3{0.0f, 0.0f, 1.0f}, static_pi_fraction<1, 2>{}});
+		matrix4 m2 = matrix4::rotation(quaternion{direction{0.0f, 0.0f, 1.0f},
+		                                          static_pi_fraction<1, 2>{}});
 		REQUIRE_THAT(m, Matrix4Matcher(m2, 1.0e-6));
 	}
 
 	{
-		complex rotation{1_pi};
+		normalized<complex> rotation{1_pi};
 		matrix4 m = matrix4::rotation_around_z(rotation);
 		vector4 v1 = m * v0;
 		CHECK(v1.x == Approx(-v0.x).margin(1.0e-6));
@@ -619,7 +624,7 @@ TEST_CASE("matrix4::rotation_around_z(complex)", "[working][unittest]")
 }
 
 TEST_CASE("matrix4::rows(vector4, vector4, vector4, vector4)",
-          "[working][unittest]")
+          "[working][unittest][matrix4]")
 {
 	matrix4 m = matrix4::rows(
 	    {1.0f, 2.0f, 3.0f, 4.0f}, {5.0f, 6.0f, 7.0f, 8.0f},
@@ -642,7 +647,7 @@ TEST_CASE("matrix4::rows(vector4, vector4, vector4, vector4)",
 	REQUIRE(m.row(3).column(3) == 16.0f);
 }
 
-TEST_CASE("matrix4::row(int)", "[working][unittest]")
+TEST_CASE("matrix4::row(int)", "[working][unittest][matrix4]")
 {
 	vector4 v0{1.0f, 2.0f, 3.0f, 4.0f};
 	vector4 v1{5.0f, 6.0f, 7.0f, 8.0f};
@@ -657,7 +662,7 @@ TEST_CASE("matrix4::row(int)", "[working][unittest]")
 	REQUIRE(v3 == m.row(3));
 }
 
-TEST_CASE("matrix4::column(int)", "[working][unittest]")
+TEST_CASE("matrix4::column(int)", "[working][unittest][matrix4]")
 {
 	vector4 v0{1.0f, 2.0f, 3.0f, 4.0f};
 	vector4 v1{5.0f, 6.0f, 7.0f, 8.0f};
@@ -673,7 +678,7 @@ TEST_CASE("matrix4::column(int)", "[working][unittest]")
 }
 
 TEST_CASE("matrix4::columns(vector4, vector4, vector4, vector4)",
-          "[working][unittest]")
+          "[working][unittest][matrix4]")
 {
 	matrix4 m = matrix4::columns(
 	    {1.0f, 2.0f, 3.0f, 4.0f}, {5.0f, 6.0f, 7.0f, 8.0f},
@@ -696,7 +701,7 @@ TEST_CASE("matrix4::columns(vector4, vector4, vector4, vector4)",
 	REQUIRE(m.column(3).row(3) == 16.0f);
 }
 
-TEST_CASE("matrix4::is_orthogonal()", "[working][unittest]")
+TEST_CASE("matrix4::is_orthogonal()", "[working][unittest][matrix4]")
 {
 	CHECK(false == matrix4::zero().is_orthogonal());
 	const matrix4 m2 = matrix4(
@@ -705,7 +710,7 @@ TEST_CASE("matrix4::is_orthogonal()", "[working][unittest]")
 	CHECK(true == m2.is_orthogonal());
 }
 
-TEST_CASE("matrix4::is_homogenous()", "[working][unittest]")
+TEST_CASE("matrix4::is_homogenous()", "[working][unittest][matrix4]")
 {
 	CHECK(false == matrix4::zero().is_homogenous());
 	const matrix4 m2 = matrix4(
@@ -714,7 +719,7 @@ TEST_CASE("matrix4::is_homogenous()", "[working][unittest]")
 	CHECK(true == m2.is_homogenous());
 }
 
-TEST_CASE("matrix4::inverse()", "[working][unittest]")
+TEST_CASE("matrix4::inverse()", "[working][unittest][matrix4]")
 {
 	matrix4 m1;
 	matrix4 m2;
@@ -781,7 +786,7 @@ TEST_CASE("matrix4::inverse()", "[working][unittest]")
 	}
 }
 
-TEST_CASE("matrix4::get_inversed()", "[working][unittest]")
+TEST_CASE("matrix4::get_inversed()", "[working][unittest][matrix4]")
 {
 	const std::array<float, 16> a{1.0f, 4.0f, 2.0f, 3.0f, 8.0f, 10.0f,
 	                              2.0f, 6.0f, 1.0f, 7.0f, 2.0f, 2.0f,
@@ -800,7 +805,7 @@ TEST_CASE("matrix4::get_inversed()", "[working][unittest]")
 	REQUIRE(m1 == m2);
 }
 
-TEST_CASE("matrix4::transpose()", "[working][unittest]")
+TEST_CASE("matrix4::transpose()", "[working][unittest][matrix4]")
 {
 	matrix4 m1;
 
@@ -842,7 +847,7 @@ TEST_CASE("matrix4::transpose()", "[working][unittest]")
 	REQUIRE(m2.row(3).column(3) == 16.0f);
 }
 
-TEST_CASE("matrix4::get_transposed()", "[working][unittest]")
+TEST_CASE("matrix4::get_transposed()", "[working][unittest][matrix4]")
 {
 	matrix4 m1;
 
@@ -869,7 +874,7 @@ TEST_CASE("matrix4::get_transposed()", "[working][unittest]")
 	CHECK(m1.get_transposed() == m2);
 }
 
-TEST_CASE("matrix4::determinant()", "[working][unittest]")
+TEST_CASE("matrix4::determinant()", "[working][unittest][matrix4]")
 {
 	const matrix4 m2 = matrix4(
 	    std::array<float, 16>{1.0f, 4.0f, 2.0f, 3.0f, 8.0f, 10.0f, 2.0f, 6.0f,
@@ -878,7 +883,7 @@ TEST_CASE("matrix4::determinant()", "[working][unittest]")
 	CHECK(d == -100);
 }
 
-TEST_CASE("matrix4::operator*(const matrix4&)", "[working][unittest]")
+TEST_CASE("matrix4::operator*(const matrix4&)", "[working][unittest][matrix4]")
 {
 	matrix4 m1;
 
@@ -940,7 +945,7 @@ TEST_CASE("matrix4::operator*(const matrix4&)", "[working][unittest]")
 	REQUIRE(m2.column(3).row(3) == 1.0f);
 }
 
-TEST_CASE("matrix4::operator*(vector4)", "[working][unittest]")
+TEST_CASE("matrix4::operator*(vector4)", "[working][unittest][matrix4]")
 {
 	const vector4 v0{1.0f, 2.0f, 3.0f, 1.0f};
 

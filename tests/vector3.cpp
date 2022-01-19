@@ -1,6 +1,6 @@
 #include <common.hpp>
 
-TEST_CASE("vector3::vector3(std::array<float, 2>)",
+TEST_CASE("vector3::vector3(std::array<float, 3>)",
           "[working][unittest][vector3]")
 {
 	const std::array<float, 3> a{0, 0, 0};
@@ -244,9 +244,9 @@ TEST_CASE("vector3::operator/(float)", "[working][unittest][vector3]")
 		const vector3 v1{3.0f, -11.0f, 555.545f};
 		const vector3 v2 = v1 / 5.0f;
 
-		CHECK(v2.x == v1.x * (1.0f / 5.0f));
-		CHECK(v2.y == v1.y * (1.0f / 5.0f));
-		CHECK(v2.z == v1.z * (1.0f / 5.0f));
+		CHECK(v2.x == v1.x / 5.0f);
+		CHECK(v2.y == v1.y / 5.0f);
+		CHECK(v2.z == v1.z / 5.0f);
 	}
 }
 
@@ -353,9 +353,9 @@ TEST_CASE("vector3::operator/=(float)", "[working][unittest][vector3]")
 		vector3 v1{3.0f, -11.0f, 555.545f};
 		v1 /= 5.0f;
 
-		CHECK(v1.x == 3.0f * (1.0f / 5.0f));
-		CHECK(v1.y == -11.0f * (1.0f / 5.0f));
-		CHECK(v1.z == 555.545f * (1.0f / 5.0f));
+		CHECK(v1.x == 3.0f / 5.0f);
+		CHECK(v1.y == -11.0f / 5.0f);
+		CHECK(v1.z == 555.545f / 5.0f);
 	}
 }
 

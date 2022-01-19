@@ -172,4 +172,39 @@ private:
 	double m_margin;
 };
 
+struct PerspectiveMatcher : Catch::Matchers::Impl::MatcherBase<perspective>
+{
+	PerspectiveMatcher(perspective target, double margin)
+	    : m_target{target}, m_margin{margin}
+	{
+		CATCH_ENFORCE(margin >= 0,
+		              "Invalid margin: " << margin << '.'
+		                                 << " Margin has to be non-negative.");
+	}
+	bool match(const perspective& matchee) const override
+	{
+		bool valid = true;
+		auto validate = [&](float a, float b)
+		{
+			valid &= a + m_margin >= b && b + m_margin >= a;
+		};
+
+		validate(float(matchee.get_angle()), float(m_target.get_angle()));
+		validate(matchee.get_far(), m_target.get_far());
+		validate(matchee.get_near(), m_target.get_near());
+		validate(matchee.get_ratio(), m_target.get_ratio());
+
+		return valid;
+	}
+	std::string describe() const override
+	{
+		return "\nis within " + ::Catch::Detail::stringify(m_margin) +
+		       " of\n" + ::Catch::Detail::stringify(m_target.to_matrix4());
+	}
+
+private:
+	perspective m_target;
+	double m_margin;
+};
+
 #endif  // CDM_TESTS_COMMON_HPP

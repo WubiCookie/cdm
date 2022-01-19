@@ -1177,7 +1177,7 @@ struct vector4_t
 	vector4_t(T x_, T y_, T z_, T w_) : x{x_}, y{y_}, z{z_}, w{w_} {}
 	vector4_t(vector2_t<T> v, T z_, T w_) : vector4_t(v.x, v.y, z_, w_) {}
 	vector4_t(vector3_t<T> v, T w_) : vector4_t(v.x, v.y, v.z, w_) {}
-	vector4_t(std::array<T, 4>& a) : vector4_t(a[0], a[1], a[2], a[3]) {}
+	vector4_t(std::array<T, 4> a) : vector4_t(a[0], a[1], a[2], a[3]) {}
 
 	template <typename U>
 	explicit operator vector4_t<U>() const
@@ -1197,6 +1197,38 @@ struct vector4_t
 
 	vector2_t<T> xy() const;
 	vector3_t<T> xyz() const;
+
+	T norm() const { return std::sqrt(norm_squared()); }
+	T norm_squared() const { return x * x + y * y + z * z + w * w; }
+	vector4_t& normalize()
+	{
+		T n = norm();
+		x /= n;
+		y /= n;
+		z /= n;
+		w /= n;
+		return *this;
+	}
+	vector4_t get_normalized() const
+	{
+		vector4_t res{*this};
+		res.normalize();
+		return res;
+	}
+	vector4_t& clamp(vector4_t min, vector4_t max)
+	{
+		x = cdm::clamp(x, min.x, max.x);
+		y = cdm::clamp(y, min.y, max.y);
+		z = cdm::clamp(z, min.z, max.z);
+		w = cdm::clamp(w, min.w, max.w);
+		return *this;
+	}
+	vector4_t get_clamped(vector4_t min, vector4_t max) const
+	{
+		vector4_t res{*this};
+		res.clamp(min, max);
+		return res;
+	}
 
 	vector4_t operator+(vector4_t v) const;
 	vector4_t operator-(vector4_t v) const;
@@ -1904,6 +1936,23 @@ public:
 		       m30 == m.m30 && m31 == m.m31 && m32 == m.m32 && m33 == m.m33;
 	}
 };
+
+template <typename T>
+matrix4_t<T> operator*(const transform3d_t<T>& t, const matrix4_t<T>& m);
+template <typename T>
+matrix4_t<T> operator*(const matrix4_t<T>& m, const transform3d_t<T>& t);
+template <typename T>
+matrix4_t<T> operator*(const uniform_transform3d_t<T>& t,
+                       const matrix4_t<T>& m);
+template <typename T>
+matrix4_t<T> operator*(const matrix4_t<T>& m,
+                       const uniform_transform3d_t<T>& t);
+template <typename T>
+matrix4_t<T> operator*(const unscaled_transform3d_t<T>& t,
+                       const matrix4_t<T>& m);
+template <typename T>
+matrix4_t<T> operator*(const matrix4_t<T>& m,
+                       const unscaled_transform3d_t<T>& t);
 #pragma endregion
 
 #pragma region declaration perspective_t
@@ -1920,10 +1969,22 @@ private:
 
 public:
 	perspective_t(radian_t<T> angle, T ratio, T near, T far);
+	template <typename U, U NumeratorT, U DenominatorT>
+	perspective_t(static_pi_fraction_t<U, NumeratorT, DenominatorT> angle,
+	              T ratio,
+	              T near,
+	              T far);
 
 	void set(radian_t<T> angle, T ratio, T near, T far);
+	template <typename U, U NumeratorT, U DenominatorT>
+	void set(static_pi_fraction_t<U, NumeratorT, DenominatorT> angle,
+	         T ratio,
+	         T near,
+	         T far);
 
 	void set_angle(radian_t<T> angle);
+	template <typename U, U NumeratorT, U DenominatorT>
+	void set_angle(static_pi_fraction_t<U, NumeratorT, DenominatorT> angle);
 	radian_t<T> get_angle() const;
 
 	void set_ratio(T ratio);
@@ -1936,6 +1997,7 @@ public:
 	T get_far() const;
 
 	matrix4_t<T> to_matrix4() const;
+	matrix4_t<T> to_inverse_matrix4() const;
 
 	template <typename U>
 	friend matrix4_t<U> operator*(const matrix4_t<U>& m,
@@ -1943,7 +2005,9 @@ public:
 	template <typename U>
 	friend matrix4_t<U> operator*(const perspective_t<U>& p,
 	                              const matrix4_t<U>& m);
-
+	template <typename U>
+	friend vector4_t<U> operator*(const perspective_t<U>& p,
+	                              const vector4_t<U>& v);
 	template <typename U>
 	friend matrix4_t<U> operator*(const unscaled_transform3d_t<U>& t,
 	                              const perspective_t<U>& p);
@@ -1969,6 +2033,7 @@ struct quaternion_t
 
 	quaternion_t() = default;
 	quaternion_t(T x_, T y_, T z_, T w_) : x{x_}, y{y_}, z{z_}, w{w_} {}
+	quaternion_t(std::array<T, 4> a) : quaternion_t{a[0], a[1], a[2], a[3]} {}
 	quaternion_t(direction_t<T> axis, radian_t<T> angle);
 	template <typename U, U NumeratorT, U DenominatorT>
 	quaternion_t(direction_t<T> axis,
@@ -1980,6 +2045,8 @@ struct quaternion_t
 		return quaternion_t<U>{static_cast<U>(x), static_cast<U>(y),
 		                       static_cast<U>(z), static_cast<U>(w)};
 	}
+
+	operator std::array<T, 4>() const { return {x, y, z, w}; }
 
 	template <typename U = T>
 	std::array<U, 4> to_array() const
@@ -2006,9 +2073,11 @@ struct quaternion_t
 
 	quaternion_t operator+(quaternion_t q) const;
 	quaternion_t operator-(quaternion_t q) const;
-	quaternion_t operator*(
-	    quaternion_t q) const;  // TODO: implement operator* for normalized<>
-	                            // if result is normalized too
+
+	// TODO: implement operator* for normalized<>
+	// if result is normalized too
+	quaternion_t operator*(quaternion_t q) const;
+
 	vector3_t<T> operator*(vector3_t<T> v) const;
 	quaternion_t operator*(T f) const;
 	quaternion_t operator/(T f) const;
@@ -2260,13 +2329,7 @@ struct transform3d_t
 	quaternion_t<T> rotation;
 	vector3_t<T> scale;
 
-	matrix4_t<T> to_matrix4() const
-	{
-		matrix4_t<T> Tr{matrix4_t<T>::translation(position)};
-		matrix4_t<T> R{matrix4_t<T>::rotation(rotation)};
-		matrix4_t<T> S{matrix4_t<T>::scale(scale)};
-		return Tr * S * R;
-	}
+	matrix4_t<T> to_matrix4() const;
 
 	transform3d_t operator*(const transform3d_t& t) const;
 	vector3_t<T> operator*(vector3_t<T> v) const;
@@ -2295,13 +2358,7 @@ struct uniform_transform3d_t
 	quaternion_t<T> rotation;
 	T scale;
 
-	matrix4_t<T> to_matrix4() const
-	{
-		matrix4_t<T> Tr{matrix4_t<T>::translation(position)};
-		matrix4_t<T> R{matrix4_t<T>::rotation(rotation)};
-		matrix4_t<T> S{matrix4_t<T>::scale(scale)};
-		return Tr * S * R;
-	}
+	matrix4_t<T> to_matrix4() const;
 
 	uniform_transform3d_t operator*(const uniform_transform3d_t& t) const;
 	vector3_t<T> operator*(vector3_t<T> v) const;
@@ -2332,25 +2389,10 @@ struct unscaled_transform3d_t
 	unscaled_transform3d_t& translate_relative(vector3_t<T> t);
 	unscaled_transform3d_t& rotate(quaternion_t<T> r);
 
-	unscaled_transform3d_t& inverse()
-	{
-		rotation.inverse();
-		position = rotation * -position;
-		return *this;
-	}
-	unscaled_transform3d_t get_inversed() const
-	{
-		unscaled_transform3d_t res = *this;
-		res.inverse();
-		return res;
-	}
+	unscaled_transform3d_t& inverse();
+	unscaled_transform3d_t get_inversed() const;
 
-	matrix4_t<T> to_matrix4() const
-	{
-		matrix4_t<T> Tr{matrix4_t<T>::translation(position)};
-		matrix4_t<T> R{matrix4_t<T>::rotation(rotation)};
-		return Tr * R;
-	}
+	matrix4_t<T> to_matrix4() const;
 
 	unscaled_transform3d_t operator*(const unscaled_transform3d_t& t) const;
 	vector3_t<T> operator*(vector3_t<T> v) const;
@@ -3301,30 +3343,23 @@ vector4_t<T>& operator/=(vector4_t<T>& v, T f)
 template <typename T>
 T norm(vector4_t<T> v)
 {
-	return std::sqrt(norm_squared(v));
+	return v.norm();
 }
 template <typename T>
 T norm_squared(vector4_t<T> v)
 {
-	return v.x * v.x + v.y * v.y + v.z * v.z + v.w * v.w;
+	return v.norm_squared();
 }
 template <typename T>
 vector4_t<T> normalize(vector4_t<T> v)
 {
-	const T n = norm(v);
-	v.x /= n;
-	v.y /= n;
-	v.z /= n;
-	v.w /= n;
+	v.normalize();
 	return v;
 }
 template <typename T>
 vector4_t<T> clamp(vector4_t<T> v, vector4_t<T> min, vector4_t<T> max)
 {
-	v.x = cdm::clamp(v.x, min.x, max.x);
-	v.y = cdm::clamp(v.y, min.y, max.y);
-	v.z = cdm::clamp(v.z, min.z, max.z);
-	v.w = cdm::clamp(v.w, min.w, max.w);
+	v.clamp(min, max);
 	return v;
 }
 template <typename T>
@@ -3340,7 +3375,7 @@ vector4_t<T> lerp(vector4_t<T> begin, vector4_t<T> end, T percent)
 template <typename T>
 vector4_t<T> nlerp(vector4_t<T> begin, vector4_t<T> end, T percent)
 {
-	return normalized(lerp(begin, end, percent));
+	return normalize(lerp(begin, end, percent));
 }
 template <typename T>
 T distance_between(vector4_t<T> v1, vector4_t<T> v2)
@@ -3355,7 +3390,7 @@ T distance_squared_between(vector4_t<T> v1, vector4_t<T> v2)
 template <typename T>
 vector4_t<T> from_to(vector4_t<T> from, vector4_t<T> to)
 {
-	return {to.x - from.x, to.y - from.y, to.z - from.z, to.w - from.w};
+	return to - from;
 }
 template <typename T>
 bool nearly_equal(vector4_t<T> v1, vector4_t<T> v2, T e)
@@ -4203,9 +4238,12 @@ bool matrix4_t<T>::is_orthogonal() const
 template <typename T>
 bool matrix4_t<T>::is_homogenous() const
 {
-	return nearly_equal(m03, T(0)) && nearly_equal(m13, T(0)) &&
-	       nearly_equal(m23, T(0)) && nearly_equal(m30, T(0)) &&
-	       nearly_equal(m31, T(0)) && nearly_equal(m32, T(0)) &&
+	return nearly_equal(m03, T(0)) &&  //
+	       nearly_equal(m13, T(0)) &&  //
+	       nearly_equal(m23, T(0)) &&  //
+	       nearly_equal(m30, T(0)) &&  //
+	       nearly_equal(m31, T(0)) &&  //
+	       nearly_equal(m32, T(0)) &&  //
 	       nearly_equal(m33, T(1));
 }
 template <typename T>
@@ -4418,120 +4456,38 @@ matrix4_t<T> matrix4_t<T>::get_transposed() const
 }
 
 template <typename T>
-matrix4_t<T> inverse(matrix4_t<T> m)
+matrix4_t<T> operator*(const transform3d_t<T>& t, const matrix4_t<T>& m)
 {
-	if (m.is_orthogonal())
-	{
-		return transpose(m);
-	}
-
-	const T det = m.determinant();
-	const T invDet = T(1) / det;
-	const T recM00 = m.m00;
-	const T recM10 = m.m10;
-	const T recM20 = m.m20;
-	const T recM01 = m.m01;
-	const T recM11 = m.m11;
-	const T recM02 = m.m02;
-
-	if (m.is_homogenous())
-	{
-		m.m00 = invDet * (recM11 * m.m22 - m.m21 * m.m12);
-		m.m10 = invDet * (m.m12 * recM20 - recM10 * m.m22);
-		m.m20 = invDet * (recM10 * m.m21 - recM20 * recM11);
-		m.m01 = invDet * (recM02 * m.m21 - recM01 * m.m22);
-		m.m11 = invDet * (recM00 * m.m22 - recM20 * recM02);
-		m.m21 = invDet * (recM01 * recM20 - recM00 * m.m21);
-		m.m02 = invDet * (recM01 * m.m12 - recM11 * recM02);
-		m.m12 = invDet * (recM02 * recM10 - recM00 * m.m12);
-		m.m22 = invDet * (recM00 * recM11 - recM10 * recM01);
-		return m;
-	}
-
-	const T recM30 = m.m30;
-	const T recM21 = m.m21;
-	const T recM31 = m.m31;
-	const T recM12 = m.m12;
-	const T recM22 = m.m22;
-	const T recM03 = m.m03;
-	const T recM13 = m.m13;
-
-	m.m00 = invDet * (recM11 * recM22 * m.m33 - recM11 * m.m23 * m.m32 -
-	                  recM21 * recM12 * m.m33 + recM21 * recM13 * m.m32 +
-	                  recM31 * recM12 * m.m23 - recM31 * recM13 * recM22);
-
-	m.m10 = invDet * (-recM10 * recM22 * m.m33 + recM10 * m.m23 * m.m32 +
-	                  recM20 * recM12 * m.m33 - recM20 * recM13 * m.m32 -
-	                  recM30 * recM12 * m.m23 + recM30 * recM13 * recM22);
-
-	m.m20 = invDet * (recM10 * recM21 * m.m33 - recM10 * m.m23 * recM31 -
-	                  recM20 * recM11 * m.m33 + recM20 * recM13 * recM31 +
-	                  recM30 * recM11 * m.m23 - recM30 * recM13 * recM21);
-
-	m.m30 = invDet * (-recM10 * recM21 * m.m32 + recM10 * recM22 * recM31 +
-	                  recM20 * recM11 * m.m32 - recM20 * recM12 * recM31 -
-	                  recM30 * recM11 * recM22 + recM30 * recM12 * recM21);
-
-	m.m01 = invDet * (-recM01 * recM22 * m.m33 + recM01 * m.m23 * m.m32 +
-	                  recM21 * recM02 * m.m33 - recM21 * recM03 * m.m32 -
-	                  recM31 * recM02 * m.m23 + recM31 * recM03 * recM22);
-
-	m.m11 = invDet * (recM00 * recM22 * m.m33 - recM00 * m.m23 * m.m32 -
-	                  recM20 * recM02 * m.m33 + recM20 * recM03 * m.m32 +
-	                  recM30 * recM02 * m.m23 - recM30 * recM03 * recM22);
-
-	m.m21 = invDet * (-recM00 * recM21 * m.m33 + recM00 * m.m23 * recM31 +
-	                  recM20 * recM01 * m.m33 - recM20 * recM03 * recM31 -
-	                  recM30 * recM01 * m.m23 + recM30 * recM03 * recM21);
-
-	m.m31 = invDet * (recM00 * recM21 * m.m32 - recM00 * recM22 * recM31 -
-	                  recM20 * recM01 * m.m32 + recM20 * recM02 * recM31 +
-	                  recM30 * recM01 * recM22 - recM30 * recM02 * recM21);
-
-	m.m02 = invDet * (recM01 * recM12 * m.m33 - recM01 * recM13 * m.m32 -
-	                  recM11 * recM02 * m.m33 + recM11 * recM03 * m.m32 +
-	                  recM31 * recM02 * recM13 - recM31 * recM03 * recM12);
-
-	m.m12 = invDet * (-recM00 * recM12 * m.m33 + recM00 * recM13 * m.m32 +
-	                  recM10 * recM02 * m.m33 - recM10 * recM03 * m.m32 -
-	                  recM30 * recM02 * recM13 + recM30 * recM03 * recM12);
-
-	m.m22 = invDet * (recM00 * recM11 * m.m33 - recM00 * recM13 * recM31 -
-	                  recM10 * recM01 * m.m33 + recM10 * recM03 * recM31 +
-	                  recM30 * recM01 * recM13 - recM30 * recM03 * recM11);
-
-	m.m32 = invDet * (-recM00 * recM11 * m.m32 + recM00 * recM12 * recM31 +
-	                  recM10 * recM01 * m.m32 - recM10 * recM02 * recM31 -
-	                  recM30 * recM01 * recM12 + recM30 * recM02 * recM11);
-
-	m.m03 = invDet * (-recM01 * recM12 * m.m23 + recM01 * recM13 * recM22 +
-	                  recM11 * recM02 * m.m23 - recM11 * recM03 * recM22 -
-	                  recM21 * recM02 * recM13 + recM21 * recM03 * recM12);
-
-	m.m13 = invDet * (recM00 * recM12 * m.m23 - recM00 * recM13 * recM22 -
-	                  recM10 * recM02 * m.m23 + recM10 * recM03 * recM22 +
-	                  recM20 * recM02 * recM13 - recM20 * recM03 * recM12);
-
-	m.m23 = invDet * (-recM00 * recM11 * m.m23 + recM00 * recM13 * recM21 +
-	                  recM10 * recM01 * m.m23 - recM10 * recM03 * recM21 -
-	                  recM20 * recM01 * recM13 + recM20 * recM03 * recM11);
-
-	m.m33 = invDet * (recM00 * recM11 * recM22 - recM00 * recM12 * recM21 -
-	                  recM10 * recM01 * recM22 + recM10 * recM02 * recM21 +
-	                  recM20 * recM01 * recM12 - recM20 * recM02 * recM11);
-
-	return *this;
+	return t.to_matrix4() * m;
 }
 template <typename T>
-matrix4_t<T> transpose(matrix4_t<T> m)
+matrix4_t<T> operator*(const matrix4_t<T>& m, const transform3d_t<T>& t)
 {
-	std::swap(m.m01, m.m10);
-	std::swap(m.m02, m.m20);
-	std::swap(m.m03, m.m30);
-	std::swap(m.m12, m.m21);
-	std::swap(m.m13, m.m31);
-	std::swap(m.m23, m.m32);
-	return m;
+	return m * t.to_matrix4();
+}
+template <typename T>
+matrix4_t<T> operator*(const uniform_transform3d_t<T>& t,
+                       const matrix4_t<T>& m)
+{
+	return t.to_matrix4() * m;
+}
+template <typename T>
+matrix4_t<T> operator*(const matrix4_t<T>& m,
+                       const uniform_transform3d_t<T>& t)
+{
+	return m * t.to_matrix4();
+}
+template <typename T>
+matrix4_t<T> operator*(const unscaled_transform3d_t<T>& t,
+                       const matrix4_t<T>& m)
+{
+	return t.to_matrix4() * m;
+}
+template <typename T>
+matrix4_t<T> operator*(const matrix4_t<T>& m,
+                       const unscaled_transform3d_t<T>& t)
+{
+	return m * t.to_matrix4();
 }
 #pragma endregion
 
@@ -4547,6 +4503,19 @@ perspective_t<T>::perspective_t(radian_t<T> angle, T ratio, T near, T far)
 {
 }
 template <typename T>
+template <typename U, U NumeratorT, U DenominatorT>
+perspective_t<T>::perspective_t(
+    static_pi_fraction_t<U, NumeratorT, DenominatorT> angle,
+    T ratio,
+    T near,
+    T far)
+    : perspective_t(angle, ratio, near, far),
+      m_invTanHalfFovy{
+          T(1) /
+          tan<T>(static_pi_fraction_t<U, NumeratorT, DenominatorT * U(2)>{})}
+{
+}
+template <typename T>
 void perspective_t<T>::set(radian_t<T> angle, T ratio, T near, T far)
 {
 	m_angle = angle;
@@ -4557,10 +4526,33 @@ void perspective_t<T>::set(radian_t<T> angle, T ratio, T near, T far)
 	m_invTanHalfFovy = T(1) / tan(m_angle / T(2));
 }
 template <typename T>
+template <typename U, U NumeratorT, U DenominatorT>
+void perspective_t<T>::set(
+    static_pi_fraction_t<U, NumeratorT, DenominatorT> angle,
+    T ratio,
+    T near,
+    T far)
+{
+	set(angle, ratio, near, far);
+	m_invTanHalfFovy =
+	    T(1) /
+	    tan<T>(static_pi_fraction_t<U, NumeratorT, DenominatorT * U(2)>{});
+}
+template <typename T>
 void perspective_t<T>::set_angle(radian_t<T> angle)
 {
 	m_angle = angle;
 	m_invTanHalfFovy = T(1) / tan(angle / T(2));
+}
+template <typename T>
+template <typename U, U NumeratorT, U DenominatorT>
+void perspective_t<T>::set_angle(
+    static_pi_fraction_t<U, NumeratorT, DenominatorT> angle)
+{
+	m_angle = angle;
+	m_invTanHalfFovy =
+	    T(1) /
+	    tan<T>(static_pi_fraction_t<U, NumeratorT, DenominatorT * U(2)>{});
 }
 template <typename T>
 radian_t<T> perspective_t<T>::get_angle() const
@@ -4602,11 +4594,40 @@ template <typename T>
 matrix4_t<T> perspective_t<T>::to_matrix4() const
 {
 	matrix4_t<T> res{matrix4_t<T>::zero()};
-	res.column(0).row(0) = m_invRatio * m_invTanHalfFovy;
-	res.column(1).row(1) = -m_invTanHalfFovy;
-	res.column(2).row(2) = m_far / (m_near - m_far);
-	res.column(2).row(3) = -T(1);
-	res.column(3).row(2) = -(m_far * m_near) / (m_far - m_near);
+	const T a = m_invRatio * m_invTanHalfFovy;
+	const T b = -m_invTanHalfFovy;
+	const T c = m_far / (m_near - m_far);
+	const T d = -(m_far * m_near) / (m_far - m_near);
+	res.column(0).row(0) = a;
+	res.column(1).row(1) = b;
+	res.column(2).row(2) = c;
+	res.column(2).row(3) = T(-1);
+	res.column(3).row(2) = d;
+
+	//      0   1   2   3
+	//   +-----------------+
+	// 0 |  a   0   0   0  |
+	// 1 |  0   b   0   0  |
+	// 2 |  0   0   c   d  |
+	// 3 |  0   0  -1   0  |
+	//   +-----------------+
+
+	return res;
+}
+template <typename T>
+matrix4_t<T> perspective_t<T>::to_inverse_matrix4() const
+{
+	matrix4_t<T> res{matrix4_t<T>::zero()};
+	const T a = m_invRatio * m_invTanHalfFovy;
+	const T b = -m_invTanHalfFovy;
+	const T c = m_far / (m_near - m_far);
+	const T d = -(m_far * m_near) / (m_far - m_near);
+
+	res.column(0).row(0) = T(1) / a;
+	res.column(1).row(1) = T(1) / b;
+	res.column(3).row(2) = T(-1);
+	res.column(2).row(3) = T(1) / d;
+	res.column(3).row(3) = c / d;
 
 	return res;
 }
@@ -4618,13 +4639,25 @@ matrix4_t<T> operator*(const matrix4_t<T>& m, const perspective_t<T>& p)
 	const T b = -p.m_invTanHalfFovy;
 	const T c = p.m_far / (p.m_near - p.m_far);
 	const T d = -(p.m_far * p.m_near) / (p.m_far - p.m_near);
-	return {a * m.m00, b * m.m10, c * m.m20 - m.m30, d * m.m20,
 
-	        a * m.m01, b * m.m11, c * m.m21 - m.m31, d * m.m21,
-
-	        a * m.m02, b * m.m12, c * m.m22 - m.m32, d * m.m22,
-
-	        a * m.m03, b * m.m13, c * m.m23 - m.m33, d * m.m23};
+	matrix4_t<T> res;
+	res.column(0).row(0) = a * m.column(0).row(0);
+	res.column(1).row(0) = b * m.column(1).row(0);
+	res.column(2).row(0) = c * m.column(2).row(0) - m.column(3).row(0);
+	res.column(3).row(0) = d * m.column(2).row(0);
+	res.column(0).row(1) = a * m.column(0).row(1);
+	res.column(1).row(1) = b * m.column(1).row(1);
+	res.column(2).row(1) = c * m.column(2).row(1) - m.column(3).row(1);
+	res.column(3).row(1) = d * m.column(2).row(1);
+	res.column(0).row(2) = a * m.column(0).row(2);
+	res.column(1).row(2) = b * m.column(1).row(2);
+	res.column(2).row(2) = c * m.column(2).row(2) - m.column(3).row(2);
+	res.column(3).row(2) = d * m.column(2).row(2);
+	res.column(0).row(3) = a * m.column(0).row(3);
+	res.column(1).row(3) = b * m.column(1).row(3);
+	res.column(2).row(3) = c * m.column(2).row(3) - m.column(3).row(3);
+	res.column(3).row(3) = d * m.column(2).row(3);
+	return res;
 }
 template <typename T>
 matrix4_t<T> operator*(const perspective_t<T>& p, const matrix4_t<T>& m)
@@ -4633,27 +4666,49 @@ matrix4_t<T> operator*(const perspective_t<T>& p, const matrix4_t<T>& m)
 	const T b = -p.m_invTanHalfFovy;
 	const T c = p.m_far / (p.m_near - p.m_far);
 	const T d = -(p.m_far * p.m_near) / (p.m_far - p.m_near);
-	return {m.m00 * a,
-	        m.m10 * a,
-	        m.m20 * a,
-	        m.m30 * a,
 
-	        m.m01 * b,
-	        m.m11 * b,
-	        m.m21 * b,
-	        m.m31 * b,
-
-	        m.m02 * c + m.m03 * d,
-	        m.m12 * c + m.m13 * d,
-	        m.m22 * c + m.m23 * d,
-	        m.m32 * c + m.m33 * d,
-
-	        -m.m02,
-	        -m.m12,
-	        -m.m22,
-	        -m.m32};
+	matrix4_t<T> res;
+	res.column(0).row(0) = m.column(0).row(0) * a;
+	res.column(1).row(0) = m.column(1).row(0) * a;
+	res.column(2).row(0) = m.column(2).row(0) * a;
+	res.column(3).row(0) = m.column(3).row(0) * a;
+	res.column(0).row(1) = m.column(0).row(1) * b;
+	res.column(1).row(1) = m.column(1).row(1) * b;
+	res.column(2).row(1) = m.column(2).row(1) * b;
+	res.column(3).row(1) = m.column(3).row(1) * b;
+	res.column(0).row(2) = m.column(0).row(2) * c + m.column(0).row(3) * d;
+	res.column(1).row(2) = m.column(1).row(2) * c + m.column(1).row(3) * d;
+	res.column(2).row(2) = m.column(2).row(2) * c + m.column(2).row(3) * d;
+	res.column(3).row(2) = m.column(3).row(2) * c + m.column(3).row(3) * d;
+	res.column(0).row(3) = -m.column(0).row(2);
+	res.column(1).row(3) = -m.column(1).row(2);
+	res.column(2).row(3) = -m.column(2).row(2);
+	res.column(3).row(3) = -m.column(3).row(2);
+	return res;
 }
+template <typename T>
+vector4_t<T> operator*(const perspective_t<T>& p, const vector4_t<T>& v)
+{
+	const T a = p.m_invRatio * p.m_invTanHalfFovy;
+	const T b = -p.m_invTanHalfFovy;
+	const T c = p.m_far / (p.m_near - p.m_far);
+	const T d = -(p.m_far * p.m_near) / (p.m_far - p.m_near);
 
+	//                       +---+
+	//                       | x |
+	//                       | y |
+	//                       | z |
+	//                       | w |
+	//      0   1   2   3    +---+
+	//   +-----------------+
+	// 0 |  a   0   0   0  |
+	// 1 |  0   b   0   0  |
+	// 2 |  0   0   c   d  |
+	// 3 |  0   0  -1   0  |
+	//   +-----------------+
+
+	return {a * v.x, b * v.y, c * v.z + d * v.w, -v.z};
+}
 template <typename T>
 matrix4_t<T> operator*(const unscaled_transform3d_t<T>& t,
                        const perspective_t<T>& p)
@@ -4688,7 +4743,7 @@ matrix4_t<T> operator*(const unscaled_transform3d_t<T>& t,
 
 	        T(0),
 	        T(0),
-	        -T(1),
+	        T(-1),
 	        T(0)};
 }
 template <typename T>
@@ -4747,12 +4802,10 @@ quaternion_t<T>::quaternion_t(
     direction_t<T> axis,
     static_pi_fraction_t<U, NumeratorT, DenominatorT> angle)
 {
-	vector3_t<T> tmpAxis =
-	    *axis * sin<T>(static_pi_fraction_t<U, angle.numerator,
-	                                        angle.denominator * U(2)>{});
-	*this = {tmpAxis.x, tmpAxis.y, tmpAxis.z,
-	         cos<T>(static_pi_fraction_t<U, angle.numerator,
-	                                     angle.denominator * U(2)>{})};
+	using HalfAngle = static_pi_fraction_t<U, NumeratorT, DenominatorT * U(2)>;
+
+	vector3_t<T> tmpAxis = *axis * sin<T>(HalfAngle{});
+	*this = {tmpAxis.x, tmpAxis.y, tmpAxis.z, cos<T>(HalfAngle{})};
 }
 
 template <typename T>
@@ -4862,17 +4915,12 @@ quaternion_t<T> quaternion_t<T>::operator-(quaternion_t<T> q) const
 template <typename T>
 vector3_t<T> quaternion_t<T>::operator*(vector3_t<T> v) const
 {
-	const vector3_t<T> qvec{vector3_t<T>{x, y, z}};
-	const vector3_t<T> uv{vector3_t<T>{cross(qvec, v)} * (T(2) * w)};
-	const vector3_t<T> uuv{vector3_t<T>{cross(qvec, uv)} * T(2)};
+	const vector3_t<T> qvec{x, y, z};
+	vector3_t<T> uv{cross(qvec, v)};
+	vector3_t<T> uuv{cross(qvec, uv)};
+	uv = uv * (T(2) * w);
+	uuv = uuv * T(2);
 	return v + uv + uuv;
-
-	// vector3_t<T> qvec{x, y, z};
-	// vector3_t<T> uv{cross(qvec, v)};
-	// vector3_t<T> uuv{cross(qvec, uv)};
-	// uv = uv * (T(2) * w);
-	// uuv = uuv * T(2);
-	// return v + uv + uuv;
 }
 template <typename T>
 quaternion_t<T> quaternion_t<T>::operator*(quaternion_t<T> q) const
@@ -4946,17 +4994,12 @@ bool quaternion_t<T>::operator!=(quaternion_t<T> q) const
 template <typename T>
 vector3_t<T> operator*(const normalized<quaternion_t<T>>& q, vector3_t<T> v)
 {
-	const vector3_t<T> qvec{vector3_t<T>{{q->x, q->y, q->z}}};
-	const vector3_t<T> uv{vector3_t<T>{cross(qvec, v)} * (T(2) * q->w)};
-	const vector3_t<T> uuv{vector3_t<T>{cross(qvec, uv)} * *T(2)};
+	const vector3_t<T> qvec = {q->x, q->y, q->z};
+	vector3_t<T> uv = cross(qvec, v);
+	vector3_t<T> uuv = cross(qvec, uv);
+	uv = uv * (T(2) * q->w);
+	uuv = uuv * T(2);
 	return v + uv + uuv;
-
-	// vector3_t<T> qvec = {q->x, q->y, q->z};
-	// vector3_t<T> uv = cross(qvec, v);
-	// vector3_t<T> uuv = cross(qvec, uv);
-	// uv = uv * (T(2) * q->w);
-	// uuv = uuv * T(2);
-	// return v + uv + uuv;
 }
 
 template <typename T>
@@ -4997,7 +5040,7 @@ quaternion_t<T> slerp(quaternion_t<T> begin, quaternion_t<T> end, T percent)
 		_end = end;
 
 	percent = cdm::clamp(percent, T(0), T(1));
-	d = cdm::clamp(d, -T(1), T(1));
+	d = cdm::clamp(d, T(-1), T(1));
 	T theta = acosf(d) * percent;
 
 	quaternion_t<T> res = begin * d;
@@ -5415,23 +5458,55 @@ vector2_t<T> transform2d_t<T>::operator*(vector2_t<T> v) const
 
 #pragma region definition transform3d_t
 template <typename T>
+matrix4_t<T> transform3d_t<T>::to_matrix4() const
+{
+	matrix4_t<T> res{matrix4_t<T>::rotation(rotation)};
+
+	res.column(0).row(0) = res.column(0).row(0) * scale.x;
+	res.column(0).row(1) = res.column(0).row(1) * scale.y;
+	res.column(0).row(2) = res.column(0).row(2) * scale.z;
+
+	res.column(1).row(0) = res.column(1).row(0) * scale.x;
+	res.column(1).row(1) = res.column(1).row(1) * scale.y;
+	res.column(1).row(2) = res.column(1).row(2) * scale.z;
+
+	res.column(2).row(0) = res.column(2).row(0) * scale.x;
+	res.column(2).row(1) = res.column(2).row(1) * scale.y;
+	res.column(2).row(2) = res.column(2).row(2) * scale.z;
+
+	res.column(3).row(0) = position.x;
+	res.column(3).row(1) = position.y;
+	res.column(3).row(2) = position.z;
+
+	return res;
+}
+template <typename T>
 transform3d_t<T> transform3d_t<T>::operator*(const transform3d_t<T>& t) const
 {
 	transform3d_t<T> res;
-	res.position =
-	    rotation * vector3_t(scale.x * t.position.x, scale.y * t.position.y,
-	                         scale.z * t.position.z) +
-	    position;
+	res.position = rotation *
+	                   vector3_t{
+	                       scale.x * t.position.x,  //
+	                       scale.y * t.position.y,  //
+	                       scale.z * t.position.z,  //
+	                   } +
+	               position;
 	res.rotation = rotation * t.rotation;
-	res.scale = vector3_t(scale.x * t.scale.x, scale.y * t.scale.y,
-	                      scale.z * t.scale.z);
+	res.scale = vector3_t{
+	    scale.x * t.scale.x,  //
+	    scale.y * t.scale.y,  //
+	    scale.z * t.scale.z,  //
+	};
 	return res;
 }
 template <typename T>
 vector3_t<T> transform3d_t<T>::operator*(vector3_t<T> v) const
 {
-	return rotation * vector3_t(scale.x * v.x, scale.y * v.y, scale.z * v.z) +
-	       position;
+	vector3_t<T> res = rotation * v;
+	res.x *= scale.x;
+	res.y *= scale.y;
+	res.z *= scale.z;
+	return res + position;
 }
 template <typename T>
 quaternion_t<T> transform3d_t<T>::operator*(quaternion_t<T> q) const
@@ -5461,6 +5536,29 @@ vector2_t<T> uniform_transform2d_t<T>::operator*(vector2_t<T> v) const
 #pragma endregion
 
 #pragma region definition uniform_transform3d_t
+template <typename T>
+matrix4_t<T> uniform_transform3d_t<T>::to_matrix4() const
+{
+	matrix4_t<T> res{matrix4_t<T>::rotation(rotation)};
+
+	res.column(0).row(0) = res.column(0).row(0) * scale;
+	res.column(0).row(1) = res.column(0).row(1) * scale;
+	res.column(0).row(2) = res.column(0).row(2) * scale;
+
+	res.column(1).row(0) = res.column(1).row(0) * scale;
+	res.column(1).row(1) = res.column(1).row(1) * scale;
+	res.column(1).row(2) = res.column(1).row(2) * scale;
+
+	res.column(2).row(0) = res.column(2).row(0) * scale;
+	res.column(2).row(1) = res.column(2).row(1) * scale;
+	res.column(2).row(2) = res.column(2).row(2) * scale;
+
+	res.column(3).row(0) = position.x;
+	res.column(3).row(1) = position.y;
+	res.column(3).row(2) = position.z;
+
+	return res;
+}
 template <typename T>
 uniform_transform3d_t<T> uniform_transform3d_t<T>::operator*(
     const uniform_transform3d_t<T>& t) const
@@ -5510,7 +5608,6 @@ unscaled_transform3d_t<T>& unscaled_transform3d_t<T>::translate_absolute(
 	position += t;
 	return *this;
 }
-
 template <typename T>
 unscaled_transform3d_t<T>& unscaled_transform3d_t<T>::translate_relative(
     vector3_t<T> t)
@@ -5518,12 +5615,38 @@ unscaled_transform3d_t<T>& unscaled_transform3d_t<T>::translate_relative(
 	position += rotation * t;
 	return *this;
 }
-
 template <typename T>
 unscaled_transform3d_t<T>& unscaled_transform3d_t<T>::rotate(quaternion_t<T> r)
 {
 	rotation = r * rotation;
 	return *this;
+}
+
+template <typename T>
+unscaled_transform3d_t<T>& unscaled_transform3d_t<T>::inverse()
+{
+	rotation.inverse();
+	position = rotation * -position;
+	return *this;
+}
+template <typename T>
+unscaled_transform3d_t<T> unscaled_transform3d_t<T>::get_inversed() const
+{
+	unscaled_transform3d_t<T> res{*this};
+	res.inverse();
+	return res;
+}
+
+template <typename T>
+matrix4_t<T> unscaled_transform3d_t<T>::to_matrix4() const
+{
+	matrix4_t<T> res{matrix4_t<T>::rotation(rotation)};
+
+	res.column(3).row(0) = position.x;
+	res.column(3).row(1) = position.y;
+	res.column(3).row(2) = position.z;
+
+	return res;
 }
 
 template <typename T>

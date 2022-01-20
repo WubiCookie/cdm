@@ -1,5 +1,7 @@
 #include <common.hpp>
 
+INFO_BEGIN(perspective)
+
 TEST_CASE("operator*(perspective, vector4) and perspective::to_matrix",
           "[working][unittest][perspective]")
 {
@@ -67,3 +69,5 @@ TEST_CASE("operator*(matrix4, perspective) and perspective::to_inverse_matrix",
 
 	CHECK(m * p == m * p.to_matrix4());
 }
+
+INFO_END(perspective)

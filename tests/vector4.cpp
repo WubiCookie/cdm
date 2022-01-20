@@ -1,5 +1,7 @@
 #include <common.hpp>
 
+INFO_BEGIN(vector4)
+
 TEST_CASE("vector4::vector4(std::array<float, 4>)",
           "[working][unittest][vector4]")
 {
@@ -378,7 +380,6 @@ TEST_CASE("vector4::operator/=(float)", "[working][unittest][vector4]")
 	{
 		vector4 v1{0, 0, 0, 0};
 		v1 /= 2.0f;
-		int i = 1;
 
 		CHECK(v1.x == 0);
 		CHECK(v1.y == 0);
@@ -400,7 +401,7 @@ TEST_CASE("vector4::operator/=(float)", "[working][unittest][vector4]")
 
 		CHECK(v1.x == 3.0f / 5.0f);
 		CHECK(v1.y == -11.0f / 5.0f);
-		CHECK(v1.z == 555.545f / 5.0f);
+		CHECK(v1.z == Approx(555.545f / 5.0f));
 		CHECK(v1.w == -0.001f / 5.0f);
 	}
 }
@@ -483,19 +484,6 @@ TEST_CASE("dot(vector4, vector4)", "[working][unittest][vector4]")
 	CHECK(dot(vector4{1, 0, 0, 0}, {0.5f, 1, 0, 0}) == 0.5f);
 }
 
-// TEST_CASE("cross(vector4, vector4)", "[working][unittest][vector4]")
-//{
-//	CHECK(cross(vector4{0, 0, 0}, vector4{0, 0, 0}) == vector4{0, 0, 0});
-//
-//	CHECK(cross(vector4{1, 0, 0}, vector4{0, 1, 0}) == vector4{0, 0, 1});
-//	CHECK(cross(vector4{0, 1, 0}, vector4{0, 0, 1}) == vector4{1, 0, 0});
-//	CHECK(cross(vector4{0, 0, 1}, vector4{1, 0, 0}) == vector4{0, 1, 0});
-//
-//	CHECK(cross(vector4{0, 1, 0}, vector4{1, 0, 0}) == vector4{0, 0, -1});
-//	CHECK(cross(vector4{0, 0, 1}, vector4{0, 1, 0}) == vector4{-1, 0, 0});
-//	CHECK(cross(vector4{1, 0, 0}, vector4{0, 0, 1}) == vector4{0, -1, 0});
-//}
-
 TEST_CASE("distance_between(vector4, vector4)", "[working][unittest][vector4]")
 {
 	CHECK(distance_between({0, 0, 0, 0}, vector4{0, 0, 0, 0}) == 0);
@@ -526,43 +514,6 @@ TEST_CASE("distance_squared_between(vector4, vector4)",
 	CHECK(distance_squared_between({2, 0, 0, 0}, vector4{-1, 0, 0, 0}) == 9);
 }
 
-// TEST_CASE("angle_between(vector4, vector4)", "[working][unittest][vector4]")
-//{
-//	CHECK(angle_between({0, 0, 0}, vector4{0, 0, 0}) == 0_rad);
-//	CHECK(angle_between({1, 0, 0}, vector4{0, 0, 0}) == 0_rad);
-//	CHECK(angle_between({0, 0, 0}, vector4{1, 0, 0}) == 0_rad);
-//
-//	CHECK(angle_between({1, 0, 0}, vector4{0, 1, 0}) == radian(90_deg));
-//	CHECK(angle_between({1, 0, 0}, vector4{1, 1, 0}) == radian(45_deg));
-//	CHECK(angle_between({0, 1, 0}, vector4{1, 0, 0}) == radian(90_deg));
-//	CHECK(angle_between({1, 0, 0}, vector4{1, 0, 0}) == radian(0_deg));
-//	CHECK(angle_between({0, 1, 0}, vector4{0, 1, 0}) == radian(0_deg));
-//	CHECK(angle_between({1, 0, 0}, vector4{0, 0.5f, 0}.get_normalized()) ==
-//	      1_pi / 2.0f);
-//	CHECK(angle_between({1, 0, 0}, vector4{-1, 0, 0}) == 1_pi);
-//	CHECK(angle_between({2, 0, 0}, vector4{-1, 0, 0}) == 1_pi);
-//
-//	CHECK(angle_between({1, 0, 0}, vector4{0, 0, 1}) == radian(90_deg));
-//	CHECK(angle_between({1, 0, 0}, vector4{1, 0, 1}) == radian(45_deg));
-//	CHECK(angle_between({0, 0, 1}, vector4{1, 0, 0}) == radian(90_deg));
-//	CHECK(angle_between({1, 0, 0}, vector4{1, 0, 0}) == radian(0_deg));
-//	CHECK(angle_between({0, 0, 1}, vector4{0, 0, 1}) == radian(0_deg));
-//	CHECK(angle_between({1, 0, 0}, vector4{0, 0, 0.5f}.get_normalized()) ==
-//	      1_pi / 2.0f);
-//	CHECK(angle_between({1, 0, 0}, vector4{-1, 0, 0}) == 1_pi);
-//	CHECK(angle_between({2, 0, 0}, vector4{-1, 0, 0}) == 1_pi);
-//
-//	CHECK(angle_between({0, 1, 0}, vector4{0, 0, 1}) == radian(90_deg));
-//	CHECK(angle_between({0, 1, 0}, vector4{0, 1, 1}) == radian(45_deg));
-//	CHECK(angle_between({0, 0, 1}, vector4{0, 1, 0}) == radian(90_deg));
-//	CHECK(angle_between({0, 1, 0}, vector4{0, 1, 0}) == radian(0_deg));
-//	CHECK(angle_between({0, 0, 1}, vector4{0, 0, 1}) == radian(0_deg));
-//	CHECK(angle_between({0, 1, 0}, vector4{0, 0, 0.5f}.get_normalized()) ==
-//	      1_pi / 2.0f);
-//	CHECK(angle_between({0, 1, 0}, vector4{0, -1, 0}) == 1_pi);
-//	CHECK(angle_between({0, 2, 0}, vector4{0, -1, 0}) == 1_pi);
-//}
-
 TEST_CASE("element_wise_min(vector4, vector4)", "[working][unittest][vector4]")
 {
 	CHECK(element_wise_min({-89453.6654f, 3.14159f, 5566656.66656f, -0.001f},
@@ -577,23 +528,4 @@ TEST_CASE("element_wise_max(vector4, vector4)", "[working][unittest][vector4]")
 	      vector4{0, 3.14159f, 5566656.66656f, 0});
 }
 
-// TEST_CASE("angle_around_axis(vector4, vector4, direction)",
-//          "[working][unittest][vector4]")
-//{
-//	CHECK(angle_around_axis(vector4{1, 0, 0}, vector4{0, 1, 0},
-//	                        direction{0.0f, 0.0f, 1.0f}) == radian(90_deg));
-//	CHECK(angle_around_axis(vector4{1, 0, 0}, vector4{0, 1, 0},
-//	                        direction{0.0f, 0.0f, -1.0f}) == radian(-90_deg));
-//	CHECK(angle_around_axis(vector4{0, 1, 0}, vector4{1, 0, 0},
-//	                        direction{0.0f, 0.0f, 1.0f}) == radian(-90_deg));
-//	CHECK(angle_around_axis(vector4{0, 1, 0}, vector4{1, 0, 0},
-//	                        direction{0.0f, 0.0f, -1.0f}) == radian(90_deg));
-//	CHECK(angle_around_axis(vector4{1, 0, 0}, vector4{1, 0, 0},
-//	                        direction{0.0f, 0.0f, 1.0f}) == radian(0_deg));
-//	CHECK(angle_around_axis(vector4{1, 0, 0}, vector4{-1, 0, 0},
-//	                        direction{0.0f, 0.0f, 1.0f}) == radian(180_deg));
-//	CHECK(angle_around_axis(vector4{1, 0, 0}, vector4{0, -1, 0},
-//	                        direction{0.0f, 0.0f, 1.0f}) == radian(-90_deg));
-//	CHECK(angle_around_axis(vector4{1, 0, 0}, vector4{1, 1, 0},
-//	                        direction{0.0f, 0.0f, 1.0f}) == radian(45_deg));
-//}
+INFO_END(vector4)

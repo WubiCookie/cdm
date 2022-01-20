@@ -28,8 +28,10 @@ Written by Charles Seizilles de Mazancourt
 
 #include <algorithm>
 #include <array>
+#include <cassert>
 #include <cmath>
 #include <cstdint>
+#include <iomanip>
 #include <limits>
 #include <ostream>
 #include <utility>
@@ -83,10 +85,6 @@ template <typename T>
 struct euler_angles_t;
 template <typename T>
 struct quaternion_t;
-template <typename T>
-struct cartesian_direction2d_t;
-template <typename T>
-struct polar_direction_t;
 template <typename T>
 struct line_t;
 template <typename T>
@@ -171,6 +169,15 @@ struct complex_t
 	complex_t(complex_t&&) = default;
 	complex_t& operator=(const complex_t&) = default;
 	complex_t& operator=(complex_t&&) = default;
+
+	T norm() const;
+	T norm_squared() const;
+
+	complex_t& normalize();
+	complex_t get_normalized() const;
+
+	complex_t& conjugate();
+	complex_t get_conjugated() const;
 
 	complex_t operator+(complex_t c) const;
 	complex_t operator-(complex_t c) const;
@@ -1338,6 +1345,54 @@ normalized<VecT> cross(normalized<VecT> lhs, normalized<VecT> rhs)
 {
 	return normalized<VecT>::already_normalized(cross(*lhs, *rhs));
 }
+
+template <typename T>
+class normalized<vector3_t<T>>
+{
+	vector3_t<T> vector;
+
+public:
+	normalized() = default;
+	normalized(const normalized&) = default;
+	normalized(normalized&&) = default;
+	explicit normalized(vector3_t<T> t) : vector{t.get_normalized()}
+	{
+		assert(t.norm_squared() != T(0));
+	}
+	normalized(T x, T y, T z) : normalized{vector3_t<T>{x, y, z}} {}
+
+	static normalized already_normalized(vector3_t<T> t)
+	{
+		assert(t.norm_squared() != T(0));
+		normalized res;
+		res.vector = t;
+		return res;
+	}
+	static normalized already_normalized(T x, T y, T z)
+	{
+		return already_normalized({x, y, z});
+	}
+
+	static normalized posX() { return already_normalized(T(1), T(0), T(0)); }
+	static normalized posY() { return already_normalized(T(0), T(1), T(0)); }
+	static normalized posZ() { return already_normalized(T(0), T(0), T(1)); }
+	static normalized negX() { return already_normalized(T(-1), T(0), T(0)); }
+	static normalized negY() { return already_normalized(T(0), T(-1), T(0)); }
+	static normalized negZ() { return already_normalized(T(0), T(0), T(-1)); }
+
+	const vector3_t<T>& operator*() const { return vector; }
+	const vector3_t<T>* operator->() const { return &vector; }
+	operator const vector3_t<T>&() const { return vector; }
+
+	normalized operator-() const { return already_normalized(-vector); }
+
+	bool operator==(const T& v) const { return vector == v.vector; }
+	bool operator!=(const T& v) const { return vector != v.vector; }
+
+	normalized& operator=(const normalized&) = default;
+	normalized& operator=(normalized&&) = default;
+	normalized& operator=(vector3_t<T> t) { vector = t.get_normalized(); }
+};
 #pragma endregion
 
 #pragma region declaration matrix2_t
@@ -1388,28 +1443,31 @@ public:
 	matrix2_t get_transposed() const;
 	T determinant() const;
 
+	template <bool IsConstT>
 	struct proxy
 	{
 	protected:
-		std::reference_wrapper<T> x;
-		std::reference_wrapper<T> y;
+		using Type = std::conditional_t<IsConstT, const T, T>;
 
-		constexpr T& vector(int i)
+		std::reference_wrapper<Type> x;
+		std::reference_wrapper<Type> y;
+
+		constexpr Type& vector(int i)
 		{
-			return std::array<std::reference_wrapper<T>, 2>{x, y}[i];
+			return std::array<std::reference_wrapper<Type>, 2>{x, y}[i];
 		}
-		constexpr const T& vector(int i) const
+		constexpr const Type& vector(int i) const
 		{
-			return std::array<std::reference_wrapper<const T>, 2>{x, y}[i];
+			return std::array<std::reference_wrapper<const Type>, 2>{x, y}[i];
 		}
 
 	public:
-		constexpr proxy(T& e0, T& e1) : x{e0}, y{e1} {}
+		constexpr proxy(Type& e0, Type& e1) : x{e0}, y{e1} {}
 		constexpr proxy(const proxy&) = default;
 		constexpr proxy(proxy&&) = default;
 		constexpr proxy& operator=(const proxy&) = default;
 		constexpr proxy& operator=(proxy&&) = default;
-		constexpr proxy& operator=(vector2_t<T> v)
+		constexpr proxy& operator=(vector4_t<T> v)
 		{
 			x = v.x;
 			y = v.y;
@@ -1418,26 +1476,60 @@ public:
 
 		constexpr operator vector2_t<T>() const { return vector2_t<T>{x, y}; }
 	};
-	struct column_proxy : proxy
+	template <bool IsConstT>
+	struct column_proxy : proxy<IsConstT>
 	{
-		using proxy::proxy;
-		constexpr T& row(int i) { return proxy::vector(i); }
-		constexpr const T& row(int i) const { return proxy::vector(i); }
+		using proxy<IsConstT>::proxy;
+		constexpr proxy<IsConstT>::Type& row(int i)
+		{
+			return proxy<IsConstT>::vector(i);
+		}
+		constexpr const proxy<IsConstT>::Type& row(int i) const
+		{
+			return proxy<IsConstT>::vector(i);
+		}
 	};
-	struct row_proxy : proxy
+	template <bool IsConstT>
+	struct row_proxy : proxy<IsConstT>
 	{
-		using proxy::proxy;
-		constexpr T& column(int i) { return proxy::vector(i); }
-		constexpr const T& column(int i) const { return proxy::vector(i); }
+		using proxy<IsConstT>::proxy;
+		constexpr proxy<IsConstT>::Type& column(int i)
+		{
+			return proxy<IsConstT>::vector(i);
+		}
+		constexpr const proxy<IsConstT>::Type& column(int i) const
+		{
+			return proxy<IsConstT>::vector(i);
+		}
 	};
 
-	constexpr column_proxy column(int i)
+	constexpr column_proxy<false> column(int i)
 	{
-		return std::array{column_proxy(m00, m01), column_proxy(m10, m11)}[i];
+		return std::array{
+		    column_proxy<false>{m00, m01},
+		    column_proxy<false>{m10, m11},
+		}[i];
 	}
-	constexpr row_proxy row(int i)
+	constexpr column_proxy<true> column(int i) const
 	{
-		return std::array{row_proxy(m00, m10), row_proxy(m01, m11)}[i];
+		return std::array{
+		    column_proxy<true>{m00, m01},
+		    column_proxy<true>{m10, m11},
+		}[i];
+	}
+	constexpr row_proxy<false> row(int i)
+	{
+		return std::array{
+		    row_proxy<false>{m00, m10},
+		    row_proxy<false>{m01, m11},
+		}[i];
+	}
+	constexpr row_proxy<true> row(int i) const
+	{
+		return std::array{
+		    row_proxy<true>{m00, m10},
+		    row_proxy<true>{m01, m11},
+		}[i];
 	}
 
 	vector2_t<T> operator*(vector2_t<T> v) const;
@@ -2106,37 +2198,6 @@ template <typename T>
 quaternion_t<T> slerp(quaternion_t<T> begin, quaternion_t<T> end, T percent);
 #pragma endregion
 
-#pragma region declaration cartesian_direction2d_t
-template <typename T>
-struct cartesian_direction2d_t
-{
-	T x, y;
-
-	static cartesian_direction2d_t from(
-	    const normalized<vector2_t<T>>& direction);
-	static cartesian_direction2d_t from(polar_direction_t<T> direction);
-	static cartesian_direction2d_t from(radian_t<T> angle);
-
-	cartesian_direction2d_t& rotate(radian_t<T> angle);
-};
-#pragma endregion
-
-#pragma region declaration polar_direction_t
-template <typename T>
-struct polar_direction_t
-{
-	radian_t<T> angle;
-
-	static polar_direction_t from(const normalized<vector2_t<T>>& direction);
-	static polar_direction_t from(cartesian_direction2d_t<T> direction);
-	static polar_direction_t from(radian_t<T> angle);
-
-	polar_direction_t& rotate(radian_t<T> angle);
-
-	polar_direction_t& wrap();
-};
-#pragma endregion
-
 #pragma region declaration line_t
 template <typename T>
 struct line_t
@@ -2329,6 +2390,12 @@ struct transform3d_t
 	quaternion_t<T> rotation;
 	vector3_t<T> scale;
 
+	static transform3d_t identity();
+
+	transform3d_t& translate_absolute(vector3_t<T> t);
+	transform3d_t& translate_relative(vector3_t<T> t);
+	transform3d_t& rotate(quaternion_t<T> r);
+
 	matrix4_t<T> to_matrix4() const;
 
 	transform3d_t operator*(const transform3d_t& t) const;
@@ -2398,12 +2465,14 @@ struct unscaled_transform3d_t
 	vector3_t<T> operator*(vector3_t<T> v) const;
 	quaternion_t<T> operator*(quaternion_t<T> q) const;
 };
-#pragma endregion
 
-#pragma region definition misc
 template <typename T>
 unscaled_transform3d_t<T> inverse(unscaled_transform3d_t<T> tr);
+#pragma endregion
 
+// ==========================================================================
+
+#pragma region definition misc
 template <typename T>
 constexpr T lerp(T begin, T end, T percent)
 {
@@ -2438,6 +2507,47 @@ constexpr int signnum(T val)
 template <typename T>
 complex_t<T>::complex_t(radian_t<T> angle) : r{cos(angle)}, i{sin(angle)}
 {
+}
+
+template <typename T>
+T complex_t<T>::norm() const
+{
+	return std::sqrt(norm_squared());
+}
+template <typename T>
+T complex_t<T>::norm_squared() const
+{
+	return r * r + i * i;
+}
+
+template <typename T>
+complex_t<T>& complex_t<T>::normalize()
+{
+	const T n = norm();
+	r /= n;
+	i /= n;
+	return *this;
+}
+template <typename T>
+complex_t<T> complex_t<T>::get_normalized() const
+{
+	complex_t<T> res{*this};
+	res.normalize();
+	return *this;
+}
+
+template <typename T>
+complex_t<T>& complex_t<T>::conjugate()
+{
+	i = -i;
+	return *this;
+}
+template <typename T>
+complex_t<T> complex_t<T>::get_conjugated() const
+{
+	complex_t<T> res{*this};
+	res.conjugate();
+	return *this;
 }
 
 template <typename T>
@@ -2503,25 +2613,23 @@ vector2_t<T> operator*(normalized<complex_t<T>> c, vector2_t<T> v)
 template <typename T>
 T norm(complex_t<T> c)
 {
-	return std::sqrt(norm_squared(c));
+	return c.norm_squared();
 }
 template <typename T>
 T norm_squared(complex_t<T> c)
 {
-	return c.r * c.r + c.i * c.i;
+	return c.norm();
 }
 template <typename T>
 complex_t<T> normalize(complex_t<T> c)
 {
-	T n = norm(c);
-	c.r /= n;
-	c.i /= n;
+	c.normalize();
 	return c;
 }
 template <typename T>
 complex_t<T> conjugate(complex_t<T> c)
 {
-	c.i = -c.i;
+	c.conjugate();
 	return c;
 }
 #pragma endregion
@@ -3091,12 +3199,20 @@ vector2_t<T> vector3_t<T>::xy() const
 template <typename T>
 vector3_t<T> vector3_t<T>::operator+(vector3_t<T> v) const
 {
-	return {x + v.x, y + v.y, z + v.z};
+	return {
+	    x + v.x,
+	    y + v.y,
+	    z + v.z,
+	};
 }
 template <typename T>
 vector3_t<T> vector3_t<T>::operator-(vector3_t<T> v) const
 {
-	return {x - v.x, y - v.y, z - v.z};
+	return {
+	    x - v.x,
+	    y - v.y,
+	    z - v.z,
+	};
 }
 
 template <typename T>
@@ -3115,7 +3231,11 @@ vector3_t<T>& vector3_t<T>::operator-=(vector3_t<T> v)
 template <typename T>
 vector3_t<T> vector3_t<T>::operator-() const
 {
-	return {-x, -y, -z};
+	return {
+	    -x,
+	    -y,
+	    -z,
+	};
 }
 
 template <typename T>
@@ -3137,12 +3257,20 @@ vector3_t<T> operator*(T f, vector3_t<T> v)
 template <typename T>
 vector3_t<T> operator*(vector3_t<T> v, T f)
 {
-	return {v.x * f, v.y * f, v.z * f};
+	return {
+	    v.x * f,
+	    v.y * f,
+	    v.z * f,
+	};
 }
 template <typename T>
 vector3_t<T> operator/(vector3_t<T> v, T f)
 {
-	return {v.x / f, v.y / f, v.z / f};
+	return {
+	    v.x / f,
+	    v.y / f,
+	    v.z / f,
+	};
 }
 template <typename T>
 vector3_t<T>& operator*=(vector3_t<T>& v, T f)
@@ -3192,8 +3320,11 @@ T dot(vector3_t<T> lhs, vector3_t<T> rhs)
 template <typename T>
 vector3_t<T> cross(vector3_t<T> lhs, vector3_t<T> rhs)
 {
-	return {lhs.y * rhs.z - lhs.z * rhs.y, lhs.z * rhs.x - lhs.x * rhs.z,
-	        lhs.x * rhs.y - lhs.y * rhs.x};
+	return {
+	    lhs.y * rhs.z - lhs.z * rhs.y,
+	    lhs.z * rhs.x - lhs.x * rhs.z,
+	    lhs.x * rhs.y - lhs.y * rhs.x,
+	};
 }
 template <typename T>
 vector3_t<T> lerp(vector3_t<T> begin, vector3_t<T> end, T percent)
@@ -3424,19 +3555,22 @@ vector4_t<T> element_wise_max(vector4_t<T> v0, vector4_t<T> v1)
 template <typename T>
 normalized<T>::normalized(const T& t) : vector(normalize(t))
 {
+	assert(vector.norm_squared() != 0);
 }
 
 template <typename T>
 normalized<T> normalized<T>::already_normalized(const T& t)
 {
-	normalized res;
+	assert(t.norm_squared() != 0);
+	normalized<T> res;
 	res.vector = t;
 	return res;
 }
 template <typename T>
 normalized<T> normalized<T>::already_normalized(T&& t) noexcept
 {
-	normalized res;
+	assert(t.norm_squared() != 0);
+	normalized<T> res;
 	res.vector = std::move(t);
 	return res;
 }
@@ -4925,22 +5059,32 @@ vector3_t<T> quaternion_t<T>::operator*(vector3_t<T> v) const
 template <typename T>
 quaternion_t<T> quaternion_t<T>::operator*(quaternion_t<T> q) const
 {
-	quaternion_t<T> res;
-	res.x = x * q.w + y * q.z - z * q.y + w * q.x;
-	res.y = -x * q.z + y * q.w + z * q.x + w * q.y;
-	res.z = x * q.y - y * q.x + z * q.w + w * q.z;
-	res.w = -x * q.x - y * q.y - z * q.z + w * q.w;
-	return res;
+	return {
+	    x * q.w + y * q.z - z * q.y + w * q.x,
+	    -x * q.z + y * q.w + z * q.x + w * q.y,
+	    x * q.y - y * q.x + z * q.w + w * q.z,
+	    -x * q.x - y * q.y - z * q.z + w * q.w,
+	};
 }
 template <typename T>
 quaternion_t<T> quaternion_t<T>::operator*(T f) const
 {
-	return {x * f, y * f, z * f, w * f};
+	return {
+	    x * f,
+	    y * f,
+	    z * f,
+	    w * f,
+	};
 }
 template <typename T>
 quaternion_t<T> quaternion_t<T>::operator/(T f) const
 {
-	return {x / f, y / f, z / f, w / f};
+	return {
+	    x / f,
+	    y / f,
+	    z / f,
+	    w / f,
+	};
 }
 
 template <typename T>
@@ -4983,7 +5127,10 @@ quaternion_t<T> quaternion_t<T>::operator-() const
 template <typename T>
 bool quaternion_t<T>::operator==(quaternion_t<T> q) const
 {
-	return x == q.x && y == q.y && z == q.z && w == q.w;
+	return x == q.x &&  //
+	       y == q.y &&  //
+	       z == q.z &&  //
+	       w == q.w;    //
 }
 template <typename T>
 bool quaternion_t<T>::operator!=(quaternion_t<T> q) const
@@ -5005,13 +5152,20 @@ vector3_t<T> operator*(const normalized<quaternion_t<T>>& q, vector3_t<T> v)
 template <typename T>
 T dot(quaternion_t<T> lhs, quaternion_t<T> rhs)
 {
-	return lhs.x * rhs.x + lhs.y * rhs.y + lhs.z * rhs.z + lhs.w * rhs.w;
+	return lhs.x * rhs.x +  //
+	       lhs.y * rhs.y +  //
+	       lhs.z * rhs.z +  //
+	       lhs.w * rhs.w;   //
 }
 template <typename T>
 quaternion_t<T> cross(quaternion_t<T> lhs, quaternion_t<T> rhs)
 {
-	return {lhs.y * rhs.z - lhs.z * rhs.y, lhs.z * rhs.x - lhs.x * rhs.z,
-	        lhs.x * rhs.y - lhs.y * rhs.x, T(1)};
+	return {
+	    lhs.y * rhs.z - lhs.z * rhs.y,  //
+	    lhs.z * rhs.x - lhs.x * rhs.z,  //
+	    lhs.x * rhs.y - lhs.y * rhs.x,  //
+	    T(1)                            //
+	};
 }
 template <typename T>
 quaternion_t<T> lerp(quaternion_t<T> begin, quaternion_t<T> end, T percent)
@@ -5049,79 +5203,6 @@ quaternion_t<T> slerp(quaternion_t<T> begin, quaternion_t<T> end, T percent)
 	res = begin * cosf(theta) + res * sinf(theta);
 
 	return res;
-}
-#pragma endregion
-
-#pragma region definition cartesian_direction2d_t
-template <typename T>
-cartesian_direction2d_t<T> cartesian_direction2d_t<T>::from(
-    const normalized<vector2_t<T>>& direction)
-{
-	cartesian_direction2d_t<T> d;
-	d.x = direction->x;
-	d.y = direction->y;
-	return d;
-}
-template <typename T>
-cartesian_direction2d_t<T> cartesian_direction2d_t<T>::from(
-    polar_direction_t<T> direction)
-{
-	return from(direction.angle);
-}
-template <typename T>
-cartesian_direction2d_t<T> cartesian_direction2d_t<T>::from(radian_t<T> angle)
-{
-	cartesian_direction2d_t<T> d;
-	d.x = cos(angle);
-	d.y = sin(angle);
-	return d;
-}
-
-template <typename T>
-cartesian_direction2d_t<T>& cartesian_direction2d_t<T>::rotate(
-    radian_t<T> angle)
-{
-	const T c = cos(angle);
-	const T s = sin(angle);
-	x = x * c - y * s;
-	y = x * s + y * c;
-
-	return *this;
-}
-#pragma endregion
-
-#pragma region definition polar_direction_t
-template <typename T>
-polar_direction_t<T> polar_direction_t<T>::from(
-    const normalized<vector2_t<T>>& direction)
-{
-	angle = radian_t<T>(atan(direction->x));
-}
-template <typename T>
-polar_direction_t<T> polar_direction_t<T>::from(
-    cartesian_direction2d_t<T> direction)
-{
-	angle = radian_t<T>(atan(direction.x));
-}
-template <typename T>
-polar_direction_t<T> polar_direction_t<T>::from(radian_t<T> angle_)
-{
-	angle = angle_;
-}
-
-template <typename T>
-polar_direction_t<T>& polar_direction_t<T>::rotate(radian_t<T> angle_)
-{
-	angle += angle_;
-	return *this;
-}
-template <typename T>
-polar_direction_t<T>& polar_direction_t<T>::wrap()
-{
-	int s = sign(T(angle));
-	while (angle > radian_t(pi) || angle <= -radian_t(pi))
-		angle -= radian_t(pi) * T(s);
-	return *this;
 }
 #pragma endregion
 
@@ -5458,6 +5539,23 @@ vector2_t<T> transform2d_t<T>::operator*(vector2_t<T> v) const
 
 #pragma region definition transform3d_t
 template <typename T>
+transform3d_t<T> transform3d_t<T>::identity()
+{
+	return transform3d_t<T>{
+	    .position{
+	        T(0),
+	        T(0),
+	        T(0),
+	    },
+	    .rotation{quaternion_t<T>::identity()},
+	    .scale{
+	        T(1),
+	        T(1),
+	        T(1),
+	    },
+	};
+}
+template <typename T>
 matrix4_t<T> transform3d_t<T>::to_matrix4() const
 {
 	matrix4_t<T> res{matrix4_t<T>::rotation(rotation)};
@@ -5481,22 +5579,55 @@ matrix4_t<T> transform3d_t<T>::to_matrix4() const
 	return res;
 }
 template <typename T>
+transform3d_t<T>& transform3d_t<T>::translate_absolute(vector3_t<T> t)
+{
+	position += t;
+	return *this;
+}
+template <typename T>
+transform3d_t<T>& transform3d_t<T>::translate_relative(vector3_t<T> t)
+{
+	position += rotation * t;
+	return *this;
+}
+template <typename T>
+transform3d_t<T>& transform3d_t<T>::rotate(quaternion_t<T> r)
+{
+	rotation = r * rotation;
+	return *this;
+}
+
+template <typename T>
 transform3d_t<T> transform3d_t<T>::operator*(const transform3d_t<T>& t) const
 {
-	transform3d_t<T> res;
-	res.position = rotation *
-	                   vector3_t{
-	                       scale.x * t.position.x,  //
-	                       scale.y * t.position.y,  //
-	                       scale.z * t.position.z,  //
-	                   } +
-	               position;
-	res.rotation = rotation * t.rotation;
-	res.scale = vector3_t{
-	    scale.x * t.scale.x,  //
-	    scale.y * t.scale.y,  //
-	    scale.z * t.scale.z,  //
-	};
+	transform3d_t<T> res{*this};
+	// res.position = rotation *
+	//                   vector3_t{
+	//                       scale.x * t.position.x,  //
+	//                       scale.y * t.position.y,  //
+	//                       scale.z * t.position.z,  //
+	//                   } +
+	//               position;
+	// res.rotation = rotation * t.rotation;
+	// res.scale = vector3_t{
+	//    scale.x * t.scale.x,  //
+	//    scale.y * t.scale.y,  //
+	//    scale.z * t.scale.z,  //
+	//};
+
+	// res.position = res.position * t.rotation;
+	// res.rotation = res.rotation * t.rotation;
+	////res.scale = t.rotation * res.scale;
+
+	// res.position.x *= t.scale.x;
+	// res.position.y *= t.scale.y;
+	// res.position.z *= t.scale.z;
+	// res.scale.x *= t.scale.x;
+	// res.scale.y *= t.scale.y;
+	// res.scale.z *= t.scale.z;
+
+	res.position += t.position;
+
 	return res;
 }
 template <typename T>
@@ -5733,37 +5864,58 @@ std::ostream& operator<<(std::ostream& os, plane_t<T> p)
 template <typename T>
 std::ostream& operator<<(std::ostream& os, const cdm::matrix2_t<T>& m)
 {
-	return os << "matrix2_t(" << m.m00 << "\t" << m.m10 << "\n        "
-	          << m.m01 << "\t" << m.m11 << ")";
+	const auto flags = os.flags();
+	const auto w = std::setw(13);
+	os << std::right;
+	// clang-format off
+	os << "matrix2_t(" << w << m.column(0).row(0) << " " << w << m.column(1).row(0) << "\n"
+	      "          " << w << m.column(0).row(1) << " " << w << m.column(1).row(1) << ")";
+	// clang-format on
+	os.setf(flags);
+	return os;
 }
 template <typename T>
 std::ostream& operator<<(std::ostream& os, const cdm::matrix3_t<T>& m)
 {
-	return os << "matrix3_t(" << m.column(0).row(0) << "\t"
-	          << m.column(1).row(0) << "\t" << m.column(2).row(0)
-	          << "\n        " << m.column(0).row(1) << "\t"
-	          << m.column(1).row(1) << "\t" << m.column(2).row(1)
-	          << "\n        " << m.column(0).row(2) << "\t"
-	          << m.column(1).row(2) << "\t" << m.column(2).row(2) << ")";
+	const auto flags = os.flags();
+	const auto w = std::setw(13);
+	os << std::right;
+	// clang-format off
+	os << "matrix3_t(" << w << m.column(0).row(0) << " " << w << m.column(1).row(0) << " " << w << m.column(2).row(0) << "\n"
+	      "          " << w << m.column(0).row(1) << " " << w << m.column(1).row(1) << " " << w << m.column(2).row(1) << "\n"
+	      "          " << w << m.column(0).row(2) << " " << w << m.column(1).row(2) << " " << w << m.column(2).row(2) << ")";
+	// clang-format on
+	os.setf(flags);
+	return os;
 }
 template <typename T>
 std::ostream& operator<<(std::ostream& os, const cdm::matrix4_t<T>& m)
 {
-	return os << "matrix4_t(" << m.column(0).row(0) << "\t"
-	          << m.column(1).row(0) << "\t" << m.column(2).row(0) << "\t"
-	          << m.column(3).row(0) << "\n        " << m.column(0).row(1)
-	          << "\t" << m.column(1).row(1) << "\t" << m.column(2).row(1)
-	          << "\t" << m.column(3).row(1) << "\n        "
-	          << m.column(0).row(2) << "\t" << m.column(1).row(2) << "\t"
-	          << m.column(2).row(2) << "\t" << m.column(3).row(2)
-	          << "\n        " << m.column(0).row(3) << "\t"
-	          << m.column(1).row(3) << "\t" << m.column(2).row(3) << "\t"
-	          << m.column(3).row(3) << ")";
+	const auto flags = os.flags();
+	const auto w = std::setw(13);
+	os << std::right;
+	// clang-format off
+	os << "matrix4_t(" << w << m.column(0).row(0) << " " << w << m.column(1).row(0) << " " << w << m.column(2).row(0) << " " << w << m.column(3).row(0) << "\n"
+	      "          " << w << m.column(0).row(1) << " " << w << m.column(1).row(1) << " " << w << m.column(2).row(1) << " " << w << m.column(3).row(1) << "\n"
+	      "          " << w << m.column(0).row(2) << " " << w << m.column(1).row(2) << " " << w << m.column(2).row(2) << " " << w << m.column(3).row(2) << "\n"
+	      "          " << w << m.column(0).row(3) << " " << w << m.column(1).row(3) << " " << w << m.column(2).row(3) << " " << w << m.column(3).row(3) << ")";
+	// clang-format on
+	os.setf(flags);
+	return os;
 }
 template <typename T>
 std::ostream& operator<<(std::ostream& os, const cdm::normalized<T>& n)
 {
 	return os << *n;
+}
+template <typename T>
+std::ostream& operator<<(std::ostream& os, transform3d_t<T> t)
+{
+	// clang-format off
+	return os << "transform3d_t(position = " << t.position << ",\n"
+	          << "              rotation = " << t.rotation << ",\n"
+	          << "              scale =    " << t.scale << ")";
+	// clang-format on
 }
 #pragma endregion
 
@@ -5953,10 +6105,6 @@ using euler_angles = euler_angles_t<float>;
 using euler_anglesd = euler_angles_t<double>;
 using quaternion = quaternion_t<float>;
 using quaterniond = quaternion_t<double>;
-using cartesian_direction2d = cartesian_direction2d_t<float>;
-using cartesian_direction2dd = cartesian_direction2d_t<double>;
-using polar_direction = polar_direction_t<float>;
-using polar_directiond = polar_direction_t<double>;
 using line = line_t<float>;
 using lined = line_t<double>;
 using segment2d = segment2d_t<float>;

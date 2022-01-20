@@ -1,10 +1,6 @@
-#include <catch2/catch.hpp>
-#include <cdm_maths.hpp>
+#include <common.hpp>
 
-#include <array>
-#include <iostream>
-
-using namespace cdm;
+INFO_BEGIN(static_pi_fraction_tan)
 
 #define FRACTION_TEST_CASE_TYPE(T, NUMERATOR, DENOMINATOR)            \
 	TEST_CASE("tan(static_pi_fraction) " #T " (PI " #NUMERATOR        \
@@ -366,3 +362,5 @@ using namespace cdm;
 	FRACTION_TEST_CASE(9, -9)
 
 INSTANCIATE_TEST_CASES
+
+INFO_END(static_pi_fraction_tan)

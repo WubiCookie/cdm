@@ -1,5 +1,7 @@
 #include <common.hpp>
 
+INFO_BEGIN(matrix3)
+
 TEST_CASE("matrix3::matrix3(std::array<float, 9>)",
           "[working][unittest][matrix3]")
 {
@@ -290,7 +292,7 @@ TEST_CASE("matrix3::rotation_around_x(radian)", "[working][unittest][matrix3]")
 {
 	using ::Catch::Matchers::WithinAbs;
 
-	const direction axis = direction::already_normalized({1.0f, 0.0f, 0.0f});
+	const direction axis = direction::posX();
 
 	const vector3 v0{0.0f, 1.0f, 0.0f};
 	const vector3 vE{0.0f, 0.0f, 1.0f};
@@ -306,68 +308,68 @@ TEST_CASE("matrix3::rotation_around_x(radian)", "[working][unittest][matrix3]")
 		const radian rotation{90_deg};
 		const matrix3 m = matrix3::rotation_around_x(rotation);
 		const vector3 v1 = m * v0;
-		CHECK_THAT(v1, Vector3Matcher(vE, 1.0e-6));
+		CHECK_THAT(v1, Vector3Matcher(vE));
 
 		const matrix3 m2 =
 		    matrix3::rotation(quaternion{axis, static_pi_fraction<1, 2>{}});
 		const vector3 v2 = m2 * v0;
-		CHECK_THAT(v2, Vector3Matcher(vE, 1.0e-6));
+		CHECK_THAT(v2, Vector3Matcher(vE));
 
-		CHECK_THAT(m, Matrix3Matcher(m2, 1.0e-6));
+		CHECK_THAT(m, Matrix3Matcher(m2));
 
 		const matrix3 m3 = matrix3::rotation(axis, rotation);
 		const vector3 v3 = m3 * v0;
-		CHECK_THAT(v3, Vector3Matcher(vE, 1.0e-6));
+		CHECK_THAT(v3, Vector3Matcher(vE));
 
-		CHECK_THAT(m2, Matrix3Matcher(m3, 1.0e-6));
+		CHECK_THAT(m2, Matrix3Matcher(m3));
 
 		const matrix3 m4 = matrix3::rotation(axis, static_pi_fraction<1, 2>{});
 		const vector3 v4 = m4 * v0;
-		CHECK_THAT(v4, Vector3Matcher(vE, 1.0e-6));
+		CHECK_THAT(v4, Vector3Matcher(vE));
 
-		CHECK_THAT(m3, Matrix3Matcher(m4, 1.0e-6));
+		CHECK_THAT(m3, Matrix3Matcher(m4));
 	}
 
 	{
 		const radian rotation{15_deg};
 		const matrix3 m = matrix3::rotation_around_x(rotation);
 		const matrix3 m2 = matrix3::rotation(quaternion{axis, rotation});
-		CHECK_THAT(m, Matrix3Matcher(m2, 1.0e-6));
+		CHECK_THAT(m, Matrix3Matcher(m2));
 	}
 
 	{
 		const radian rotation{45_deg};
 		const matrix3 m = matrix3::rotation_around_x(rotation);
 		const matrix3 m2 = matrix3::rotation(quaternion{axis, rotation});
-		CHECK_THAT(m, Matrix3Matcher(m2, 1.0e-6));
+		CHECK_THAT(m, Matrix3Matcher(m2));
 	}
 
 	{
 		const radian rotation{90_deg};
 		const matrix3 m = matrix3::rotation_around_x(rotation);
 		const matrix3 m2 = matrix3::rotation(quaternion{axis, rotation});
-		CHECK_THAT(m, Matrix3Matcher(m2, 1.0e-6));
+		CHECK_THAT(m, Matrix3Matcher(m2));
 	}
 
 	{
 		const radian rotation{180_deg};
 		const matrix3 m = matrix3::rotation_around_x(rotation);
 		const matrix3 m2 = matrix3::rotation(quaternion{axis, rotation});
-		CHECK_THAT(m, Matrix3Matcher(m2, 1.0e-6));
+		CHECK_THAT(m, Matrix3Matcher(m2));
 	}
 
 	{
 		const radian rotation{270_deg};
 		const matrix3 m = matrix3::rotation_around_x(rotation);
 		const matrix3 m2 = matrix3::rotation(quaternion{axis, rotation});
-		CHECK_THAT(m, Matrix3Matcher(m2, 1.0e-6));
+		CHECK_THAT(m, Matrix3Matcher(m2));
 	}
 
 	{
 		const radian rotation{360_deg};
 		const matrix3 m = matrix3::rotation_around_x(rotation);
 		const matrix3 m2 = matrix3::rotation(quaternion{axis, rotation});
-		CHECK_THAT(m, Matrix3Matcher(m2, 1.0e-6));
+		CHECK_THAT(m, Matrix3Matcher(m2));
 	}
 
 	{
@@ -375,7 +377,7 @@ TEST_CASE("matrix3::rotation_around_x(radian)", "[working][unittest][matrix3]")
 		const matrix3 m = matrix3::rotation_around_x(rotation);
 
 		const vector3 v1 = m * v0;
-		CHECK_THAT(v1, Vector3Matcher(-v0, 1.0e-6));
+		CHECK_THAT(v1, Vector3Matcher(-v0));
 	}
 }
 
@@ -399,18 +401,18 @@ TEST_CASE("matrix3::rotation_around_y(radian)", "[working][unittest][matrix3]")
 		radian rotation{90_deg};
 		matrix3 m = matrix3::rotation_around_y(rotation);
 		vector3 v1 = m * v0;
-		CHECK_THAT(v1, Vector3Matcher(vE, 1.0e-6));
+		CHECK_THAT(v1, Vector3Matcher(vE));
 
-		matrix3 m2 = matrix3::rotation(quaternion{direction{0.0f, 1.0f, 0.0f},
+		matrix3 m2 = matrix3::rotation(quaternion{direction::posY(),
 		                                          static_pi_fraction<1, 2>{}});
-		CHECK_THAT(m, Matrix3Matcher(m2, 1.0e-6));
+		CHECK_THAT(m, Matrix3Matcher(m2));
 	}
 
 	{
 		radian rotation{pi};
 		matrix3 m = matrix3::rotation_around_y(rotation);
 		vector3 v1 = m * v0;
-		CHECK_THAT(v1, Vector3Matcher(-v0, 1.0e-6));
+		CHECK_THAT(v1, Vector3Matcher(-v0));
 	}
 }
 
@@ -432,21 +434,21 @@ TEST_CASE("matrix3::rotation_around_z(radian)", "[working][unittest][matrix3]")
 		const radian rotation{90_deg};
 		const matrix3 m = matrix3::rotation_around_z(rotation);
 		const vector3 v1 = m * v0;
-		CHECK_THAT(v1, Vector3Matcher(vE, 1.0e-6));
+		CHECK_THAT(v1, Vector3Matcher(vE));
 
 		const matrix3 m2 = matrix3::rotation(quaternion{
-		    direction{0.0f, 0.0f, 1.0f}, static_pi_fraction<1, 2>{}});
+		    direction::posZ(), static_pi_fraction<1, 2>{}});
 		const vector3 v2 = m2 * v0;
-		CHECK_THAT(v2, Vector3Matcher(vE, 1.0e-6));
+		CHECK_THAT(v2, Vector3Matcher(vE));
 
-		CHECK_THAT(m, Matrix3Matcher(m2, 1.0e-6));
+		CHECK_THAT(m, Matrix3Matcher(m2));
 	}
 
 	{
 		const radian rotation{pi};
 		const matrix3 m = matrix3::rotation_around_z(rotation);
 		const vector3 v1 = m * v0;
-		CHECK_THAT(v1, Vector3Matcher(-v0, 1.0e-6));
+		CHECK_THAT(v1, Vector3Matcher(-v0));
 	}
 }
 
@@ -472,9 +474,9 @@ TEST_CASE("matrix3::rotation_around_z(complex)",
 		CHECK(v1.y == Approx(1.0f).margin(1.0e-6));
 		CHECK(std::abs(v1.z) == almost_0);
 
-		matrix3 m2 = matrix3::rotation(quaternion{direction{0.0f, 0.0f, 1.0f},
+		matrix3 m2 = matrix3::rotation(quaternion{direction::posZ(),
 		                                          static_pi_fraction<1, 2>{}});
-		REQUIRE_THAT(m, Matrix3Matcher(m2, 1.0e-6));
+		REQUIRE_THAT(m, Matrix3Matcher(m2));
 	}
 
 	{
@@ -565,7 +567,7 @@ TEST_CASE("matrix3::inverse()", "[working][unittest][matrix3]")
 		m1.inverse();
 		matrix3 m2 = matrix3::scale(invScale);
 
-		CHECK_THAT(m1, Matrix3Matcher(m2, 1.0e-6));
+		CHECK_THAT(m1, Matrix3Matcher(m2));
 	}
 
 	const radian rotation = 90_deg;
@@ -579,7 +581,7 @@ TEST_CASE("matrix3::inverse()", "[working][unittest][matrix3]")
 		m1.inverse();
 		const vector3 p2 = m1 * p1;
 
-		CHECK_THAT(p0, Vector3Matcher(p2, 1.0e-6));
+		CHECK_THAT(p0, Vector3Matcher(p2));
 	}
 
 	// rotation around y
@@ -591,7 +593,7 @@ TEST_CASE("matrix3::inverse()", "[working][unittest][matrix3]")
 		m1.inverse();
 		const vector3 p2 = m1 * p1;
 
-		CHECK_THAT(p0, Vector3Matcher(p2, 1.0e-6));
+		CHECK_THAT(p0, Vector3Matcher(p2));
 	}
 
 	// rotation around z
@@ -603,7 +605,7 @@ TEST_CASE("matrix3::inverse()", "[working][unittest][matrix3]")
 		m1.inverse();
 		const vector3 p2 = m1 * p1;
 
-		CHECK_THAT(p0, Vector3Matcher(p2, 1.0e-6));
+		CHECK_THAT(p0, Vector3Matcher(p2));
 	}
 }
 
@@ -738,3 +740,5 @@ TEST_CASE("matrix3::operator*(vector3)", "[working][unittest][matrix3]")
 	REQUIRE(v1.y == (v0.y * scale));
 	REQUIRE(v1.z == (v0.z * scale));
 }
+
+INFO_END(matrix3)

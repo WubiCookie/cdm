@@ -1,5 +1,7 @@
 #include <common.hpp>
 
+INFO_BEGIN(vector3)
+
 TEST_CASE("vector3::vector3(std::array<float, 3>)",
           "[working][unittest][vector3]")
 {
@@ -335,7 +337,6 @@ TEST_CASE("vector3::operator/=(float)", "[working][unittest][vector3]")
 	{
 		vector3 v1{0, 0, 0};
 		v1 /= 2.0f;
-		int i = 1;
 
 		CHECK(v1.x == 0);
 		CHECK(v1.y == 0);
@@ -355,7 +356,7 @@ TEST_CASE("vector3::operator/=(float)", "[working][unittest][vector3]")
 
 		CHECK(v1.x == 3.0f / 5.0f);
 		CHECK(v1.y == -11.0f / 5.0f);
-		CHECK(v1.z == 555.545f / 5.0f);
+		CHECK(v1.z == Approx(555.545f / 5.0f));
 	}
 }
 
@@ -525,19 +526,21 @@ TEST_CASE("angle_around_axis(vector3, vector3, direction)",
           "[working][unittest][vector3]")
 {
 	CHECK(angle_around_axis(vector3{1, 0, 0}, vector3{0, 1, 0},
-	                        direction{0.0f, 0.0f, 1.0f}) == radian(90_deg));
+	                        direction::posZ()) == radian(90_deg));
 	CHECK(angle_around_axis(vector3{1, 0, 0}, vector3{0, 1, 0},
-	                        direction{0.0f, 0.0f, -1.0f}) == radian(-90_deg));
+	                        direction::negZ()) == radian(-90_deg));
 	CHECK(angle_around_axis(vector3{0, 1, 0}, vector3{1, 0, 0},
-	                        direction{0.0f, 0.0f, 1.0f}) == radian(-90_deg));
+	                        direction::posZ()) == radian(-90_deg));
 	CHECK(angle_around_axis(vector3{0, 1, 0}, vector3{1, 0, 0},
-	                        direction{0.0f, 0.0f, -1.0f}) == radian(90_deg));
+	                        direction::negZ()) == radian(90_deg));
 	CHECK(angle_around_axis(vector3{1, 0, 0}, vector3{1, 0, 0},
-	                        direction{0.0f, 0.0f, 1.0f}) == radian(0_deg));
+	                        direction::posZ()) == radian(0_deg));
 	CHECK(angle_around_axis(vector3{1, 0, 0}, vector3{-1, 0, 0},
-	                        direction{0.0f, 0.0f, 1.0f}) == radian(180_deg));
+	                        direction::posZ()) == radian(180_deg));
 	CHECK(angle_around_axis(vector3{1, 0, 0}, vector3{0, -1, 0},
-	                        direction{0.0f, 0.0f, 1.0f}) == radian(-90_deg));
+	                        direction::posZ()) == radian(-90_deg));
 	CHECK(angle_around_axis(vector3{1, 0, 0}, vector3{1, 1, 0},
-	                        direction{0.0f, 0.0f, 1.0f}) == radian(45_deg));
+	                        direction::posZ()) == radian(45_deg));
 }
+
+INFO_END(vector3)

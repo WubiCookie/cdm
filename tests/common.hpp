@@ -7,11 +7,23 @@
 #include <array>
 #include <iostream>
 
+#define INFO_BEGIN(NAME)                                              \
+	TEST_CASE("begin " #NAME, "[working][unittest][" #NAME "][info]") \
+	{                                                                 \
+		std::cout << "begin " #NAME "\n";                             \
+	}
+
+#define INFO_END(NAME)                                              \
+	TEST_CASE("end " #NAME, "[working][unittest][" #NAME "][info]") \
+	{                                                               \
+		std::cout << #NAME " done!\n\n";                            \
+	}
+
 using namespace cdm;
 
 struct Matrix3Matcher : Catch::Matchers::Impl::MatcherBase<matrix3>
 {
-	Matrix3Matcher(matrix3 target, double margin)
+	Matrix3Matcher(matrix3 target, double margin = 1.0e-6)
 	    : m_target{target}, m_margin{margin}
 	{
 		CATCH_ENFORCE(margin >= 0,
@@ -46,7 +58,7 @@ private:
 
 struct Matrix4Matcher : Catch::Matchers::Impl::MatcherBase<matrix4>
 {
-	Matrix4Matcher(matrix4 target, double margin)
+	Matrix4Matcher(matrix4 target, double margin = 1.0e-6)
 	    : m_target{target}, m_margin{margin}
 	{
 		CATCH_ENFORCE(margin >= 0,
@@ -81,7 +93,7 @@ private:
 
 struct Vector2Matcher : Catch::Matchers::Impl::MatcherBase<vector2>
 {
-	Vector2Matcher(vector2 target, double margin)
+	Vector2Matcher(vector2 target, double margin = 1.0e-6)
 	    : m_target{target}, m_margin{margin}
 	{
 		CATCH_ENFORCE(margin >= 0,
@@ -111,7 +123,7 @@ private:
 
 struct Vector3Matcher : Catch::Matchers::Impl::MatcherBase<vector3>
 {
-	Vector3Matcher(vector3 target, double margin)
+	Vector3Matcher(vector3 target, double margin = 1.0e-6)
 	    : m_target{target}, m_margin{margin}
 	{
 		CATCH_ENFORCE(margin >= 0,
@@ -142,7 +154,7 @@ private:
 
 struct Vector4Matcher : Catch::Matchers::Impl::MatcherBase<vector4>
 {
-	Vector4Matcher(vector4 target, double margin)
+	Vector4Matcher(vector4 target, double margin = 1.0e-6)
 	    : m_target{target}, m_margin{margin}
 	{
 		CATCH_ENFORCE(margin >= 0,
@@ -174,7 +186,7 @@ private:
 
 struct PerspectiveMatcher : Catch::Matchers::Impl::MatcherBase<perspective>
 {
-	PerspectiveMatcher(perspective target, double margin)
+	PerspectiveMatcher(perspective target, double margin = 1.0e-6)
 	    : m_target{target}, m_margin{margin}
 	{
 		CATCH_ENFORCE(margin >= 0,
@@ -185,9 +197,7 @@ struct PerspectiveMatcher : Catch::Matchers::Impl::MatcherBase<perspective>
 	{
 		bool valid = true;
 		auto validate = [&](float a, float b)
-		{
-			valid &= a + m_margin >= b && b + m_margin >= a;
-		};
+		{ valid &= a + m_margin >= b && b + m_margin >= a; };
 
 		validate(float(matchee.get_angle()), float(m_target.get_angle()));
 		validate(matchee.get_far(), m_target.get_far());

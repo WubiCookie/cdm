@@ -2243,7 +2243,7 @@ struct plane_t
 	explicit operator plane_t<U>() const
 	{
 		return plane_t<U>{static_cast<vector3_t<U>>(origin),
-		                  static_cast<vector3_t<U>>(*normal)};
+		                  direction_t<U>(static_cast<vector3_t<U>>(*normal))};
 	}
 
 	T evaluate(vector3_t<T> point) const;

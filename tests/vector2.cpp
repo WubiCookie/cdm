@@ -1,7 +1,5 @@
 #include <common.hpp>
 
-INFO_BEGIN(vector2)
-
 TEST_CASE("vector2::vector2(std::array<float, 2>)",
           "[working][unittest][vector2]")
 {
@@ -476,5 +474,3 @@ TEST_CASE("angle_between(vector2, vector2)", "[working][unittest][vector2]")
 	CHECK(angle_between({1, 0}, vector2{-1, 0}) == 1_pi);
 	CHECK(angle_between({2, 0}, vector2{-1, 0}) == 1_pi);
 }
-
-INFO_END(vector2)

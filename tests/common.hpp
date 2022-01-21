@@ -7,18 +7,6 @@
 #include <array>
 #include <iostream>
 
-#define INFO_BEGIN(NAME)                                              \
-	TEST_CASE("begin " #NAME, "[working][unittest][" #NAME "][info]") \
-	{                                                                 \
-		std::cout << "begin " #NAME "\n";                             \
-	}
-
-#define INFO_END(NAME)                                              \
-	TEST_CASE("end " #NAME, "[working][unittest][" #NAME "][info]") \
-	{                                                               \
-		std::cout << #NAME " done!\n\n";                            \
-	}
-
 using namespace cdm;
 
 struct Matrix3Matcher : Catch::Matchers::Impl::MatcherBase<matrix3>

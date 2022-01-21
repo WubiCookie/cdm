@@ -1,7 +1,5 @@
 #include <common.hpp>
 
-INFO_BEGIN(static_pi_fraction_tan)
-
 #define FRACTION_TEST_CASE_TYPE(T, NUMERATOR, DENOMINATOR)            \
 	TEST_CASE("tan(static_pi_fraction) " #T " (PI " #NUMERATOR        \
 	          "/" #DENOMINATOR ")",                                   \
@@ -362,5 +360,3 @@ INFO_BEGIN(static_pi_fraction_tan)
 	FRACTION_TEST_CASE(9, -9)
 
 INSTANCIATE_TEST_CASES
-
-INFO_END(static_pi_fraction_tan)

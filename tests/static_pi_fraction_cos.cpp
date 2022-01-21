@@ -1,7 +1,5 @@
 #include <common.hpp>
 
-INFO_BEGIN(static_pi_fraction_cos)
-
 #define FRACTION_TEST_CASE_TYPE(T, NUMERATOR, DENOMINATOR)            \
 	TEST_CASE("cos(static_pi_fraction) " #T " (PI " #NUMERATOR        \
 	          "/" #DENOMINATOR ")",                                   \
@@ -362,5 +360,3 @@ INFO_BEGIN(static_pi_fraction_cos)
 	FRACTION_TEST_CASE(9, -9)
 
 INSTANCIATE_TEST_CASES
-
-INFO_END(static_pi_fraction_cos)

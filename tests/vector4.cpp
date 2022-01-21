@@ -1,7 +1,5 @@
 #include <common.hpp>
 
-INFO_BEGIN(vector4)
-
 TEST_CASE("vector4::vector4(std::array<float, 4>)",
           "[working][unittest][vector4]")
 {
@@ -527,5 +525,3 @@ TEST_CASE("element_wise_max(vector4, vector4)", "[working][unittest][vector4]")
 	                       vector4{0, 0, 0, 0}) ==
 	      vector4{0, 3.14159f, 5566656.66656f, 0});
 }
-
-INFO_END(vector4)

@@ -52,6 +52,20 @@ Written by Charles Seizilles de Mazancourt
 
 namespace cdm
 {
+#pragma region constants declarations
+// clang-format off
+constexpr double pi = 3.1415926535897932384626433832795028841971693993751058209749445923;
+constexpr double deg_to_rad = pi / 180.0;
+constexpr double rad_to_deg = 180.0 / pi;
+constexpr double sqrt2 = 1.4142135623730950488016887242096980785696718753769480731766797379;
+constexpr double sqrt3 = 1.7320508075688772935274463415058723669428052538103806280558069794;
+constexpr double inv_sqrt2 = 0.7071067811865475244008443621048490392848359376884740365883398689;
+constexpr double inv_sqrt3 = 0.5773502691896257645091487805019574556476017512701268760186023264;
+constexpr double sqrt3_over2 = 0.8660254037844386467637231707529361834714026269051903140279034897;
+constexpr double epsilon = 1.0e-05;
+// clang-format on
+#pragma endregion
+
 #pragma region forward declarations
 template <typename T>
 class normalized;
@@ -135,24 +149,6 @@ template <typename T>
 constexpr int sign(T val);
 template <typename T>
 constexpr int signnum(T val);
-#pragma endregion
-
-#pragma region constants declarations
-constexpr double pi =
-    3.1415926535897932384626433832795028841971693993751058209749445923;
-constexpr double deg_to_rad = pi / 180.0;
-constexpr double rad_to_deg = 180.0 / pi;
-constexpr double sqrt2 =
-    1.4142135623730950488016887242096980785696718753769480731766797379;
-constexpr double sqrt3 =
-    1.7320508075688772935274463415058723669428052538103806280558069794;
-constexpr double inv_sqrt2 =
-    0.7071067811865475244008443621048490392848359376884740365883398689;
-constexpr double inv_sqrt3 =
-    0.5773502691896257645091487805019574556476017512701268760186023264;
-constexpr double sqrt3_over2 =
-    0.8660254037844386467637231707529361834714026269051903140279034897;
-constexpr double epsilon = 1.0e-05;
 #pragma endregion
 
 #pragma region declaration complex_t
@@ -1311,40 +1307,16 @@ public:
 	const T* operator->() const;
 	operator const T&() const;
 
-	normalized operator+(const T& v) const;
-	normalized operator-(const T& v) const;
-	T operator*(T f) const;
-	T operator/(T f) const;
-
-	normalized& operator+=(const T& v);
-	normalized& operator-=(const T& v);
-
 	normalized operator-() const;
 
+	bool operator==(const normalized& n) const;
+	bool operator!=(const normalized& n) const;
 	bool operator==(const T& v) const;
 	bool operator!=(const T& v) const;
 
 	normalized& operator=(const normalized&) = default;
 	normalized& operator=(normalized&&) = default;
-	normalized& operator=(const T& t);
-	normalized& operator=(T&& t) noexcept;
 };
-
-template <typename VecT>
-VecT cross(normalized<VecT> lhs, VecT rhs)
-{
-	return cross(*lhs, rhs);
-}
-template <typename VecT>
-VecT cross(VecT lhs, normalized<VecT> rhs)
-{
-	return cross(lhs, *rhs);
-}
-template <typename VecT>
-normalized<VecT> cross(normalized<VecT> lhs, normalized<VecT> rhs)
-{
-	return normalized<VecT>::already_normalized(cross(*lhs, *rhs));
-}
 
 template <typename T>
 class normalized<vector3_t<T>>
@@ -1386,16 +1358,19 @@ public:
 
 	normalized operator-() const { return already_normalized(-vector); }
 
-	bool operator==(const T& v) const { return vector == v.vector; }
-	bool operator!=(const T& v) const { return vector != v.vector; }
+	bool operator==(const normalized<vector3_t<T>>& v) const
+	{
+		return vector == v.vector;
+	}
+	bool operator!=(const normalized<vector3_t<T>>& v) const
+	{
+		return vector != v.vector;
+	}
+	bool operator==(const vector3_t<T>& v) const { return vector == v; }
+	bool operator!=(const vector3_t<T>& v) const { return vector != v; }
 
 	normalized& operator=(const normalized&) = default;
 	normalized& operator=(normalized&&) = default;
-	normalized& operator=(vector3_t<T> t)
-	{
-		vector = t.get_normalized();
-		return *this;
-	}
 };
 #pragma endregion
 
@@ -2151,7 +2126,6 @@ struct quaternion_t
 		        static_cast<U>(w)};
 	}
 
-	static quaternion_t zero();
 	static quaternion_t identity();
 
 	T norm() const;
@@ -2253,11 +2227,11 @@ struct plane_t
 	T evaluate(vector3_t<T> point) const;
 	vector3_t<T> project3d(vector3_t<T> point) const;
 	vector2_t<T> project2d(vector3_t<T> point,
-	                       direction_t<T> plane_t_tangent) const;
+	                       direction_t<T> plane_tangent) const;
 	vector3_t<T> unproject(vector2_t<T> point,
-	                       direction_t<T> plane_t_tangent) const;
+	                       direction_t<T> plane_tangent) const;
 
-	direction_t<T> computeTangent(T e = T(epsilon)) const;
+	direction_t<T> computeTangent(T epsilon_ = T(epsilon)) const;
 };
 #pragma endregion
 
@@ -3596,45 +3570,21 @@ normalized<T>::operator const T&() const
 }
 
 template <typename T>
-normalized<T> normalized<T>::operator+(const T& v) const
-{
-	return normalize(vector + v);
-}
-template <typename T>
-normalized<T> normalized<T>::operator-(const T& v) const
-{
-	return normalize(vector - v);
-}
-template <typename T>
-T normalized<T>::operator*(T f) const
-{
-	return vector * f;
-}
-template <typename T>
-T normalized<T>::operator/(T f) const
-{
-	return vector / f;
-}
-
-template <typename T>
-normalized<T>& normalized<T>::operator+=(const T& v)
-{
-	vector = normalize(vector + v);
-	return *this;
-}
-template <typename T>
-normalized<T>& normalized<T>::operator-=(const T& v)
-{
-	vector = normalize(vector - v);
-	return *this;
-}
-
-template <typename T>
 normalized<T> normalized<T>::operator-() const
 {
 	return -vector;
 }
 
+template <typename T>
+bool normalized<T>::operator==(const normalized<T>& v) const
+{
+	return vector == v.vector;
+}
+template <typename T>
+bool normalized<T>::operator!=(const normalized<T>& v) const
+{
+	return vector != v.vector;
+}
 template <typename T>
 bool normalized<T>::operator==(const T& v) const
 {
@@ -3644,19 +3594,6 @@ template <typename T>
 bool normalized<T>::operator!=(const T& v) const
 {
 	return vector != v;
-}
-
-template <typename T>
-normalized<T>& normalized<T>::operator=(const T& t)
-{
-	vector = normalize(t);
-	return *this;
-}
-template <typename T>
-normalized<T>& normalized<T>::operator=(T&& t) noexcept
-{
-	vector = normalize(t);
-	return *this;
 }
 #pragma endregion
 
@@ -4947,11 +4884,6 @@ quaternion_t<T>::quaternion_t(
 }
 
 template <typename T>
-quaternion_t<T> quaternion_t<T>::zero()
-{
-	return {T(0), T(0), T(0), T(0)};
-}
-template <typename T>
 quaternion_t<T> quaternion_t<T>::identity()
 {
 	return {T(0), T(0), T(0), T(1)};
@@ -4992,7 +4924,7 @@ quaternion_t<T>& quaternion_t<T>::conjugate()
 template <typename T>
 quaternion_t<T>& quaternion_t<T>::normalize()
 {
-	T n = norm();
+	const T n = norm();
 	x /= n;
 	y /= n;
 	z /= n;
@@ -5043,12 +4975,22 @@ quaternion_t<T> quaternion_t<T>::get_clamped(quaternion_t<T> min,
 template <typename T>
 quaternion_t<T> quaternion_t<T>::operator+(quaternion_t<T> q) const
 {
-	return {x + q.x, y + q.y, z + q.z, w + q.w};
+	return {
+	    x + q.x,
+	    y + q.y,
+	    z + q.z,
+	    w + q.w,
+	};
 }
 template <typename T>
 quaternion_t<T> quaternion_t<T>::operator-(quaternion_t<T> q) const
 {
-	return {x - q.x, y - q.y, z - q.z, w - q.w};
+	return {
+	    x - q.x,
+	    y - q.y,
+	    z - q.z,
+	    w - q.w,
+	};
 }
 template <typename T>
 vector3_t<T> quaternion_t<T>::operator*(vector3_t<T> v) const
@@ -5125,7 +5067,12 @@ quaternion_t<T>& quaternion_t<T>::operator/=(T f)
 template <typename T>
 quaternion_t<T> quaternion_t<T>::operator-() const
 {
-	return {-x, -y, -z, -w};
+	return {
+	    -x,
+	    -y,
+	    -z,
+	    -w,
+	};
 }
 
 template <typename T>
@@ -5145,12 +5092,7 @@ bool quaternion_t<T>::operator!=(quaternion_t<T> q) const
 template <typename T>
 vector3_t<T> operator*(const normalized<quaternion_t<T>>& q, vector3_t<T> v)
 {
-	const vector3_t<T> qvec = {q->x, q->y, q->z};
-	vector3_t<T> uv = cross(qvec, v);
-	vector3_t<T> uuv = cross(qvec, uv);
-	uv = uv * (T(2) * q->w);
-	uuv = uuv * T(2);
-	return v + uv + uuv;
+	return *q * v;
 }
 
 template <typename T>
@@ -5347,8 +5289,9 @@ bool intersects(segment2d_t<T> s0,
 template <typename T>
 T plane_t<T>::evaluate(vector3_t<T> point) const
 {
-	return normal->x * (point.x - origin.x) +
-	       normal->y * (point.y - origin.y) + normal->z * (point.z - origin.z);
+	return normal->x * (point.x - origin.x) +  //
+	       normal->y * (point.y - origin.y) +  //
+	       normal->z * (point.z - origin.z);   //
 }
 template <typename T>
 vector3_t<T> plane_t<T>::project3d(vector3_t<T> point) const
@@ -5358,50 +5301,51 @@ vector3_t<T> plane_t<T>::project3d(vector3_t<T> point) const
 }
 template <typename T>
 vector2_t<T> plane_t<T>::project2d(vector3_t<T> point,
-                                   direction_t<T> plane_t_tangent) const
+                                   direction_t<T> plane_tangent) const
 {
-	direction_t<T> bitangent = cross(normal, plane_t_tangent);
-	direction_t<T> tangent = cross(bitangent, normal);
+	const auto bitangent = direction_t<T>(cross(*normal, *plane_tangent));
+	const auto tangent = direction_t<T>(cross(*bitangent, *normal));
 
-	matrix3_t<T> TBN{matrix3_t<T>::rows(*tangent, *bitangent, *normal)};
+	const auto TBN = matrix3_t<T>::rows(*tangent, *bitangent, *normal);
 
-	vector3_t<T> plane_t_space_point = point - origin;
+	const vector3_t<T> plane_space_point = point - origin;
 
-	return (TBN * plane_t_space_point).xy();
+	return (TBN * plane_space_point).xy();
 }
 template <typename T>
 vector3_t<T> plane_t<T>::unproject(vector2_t<T> point,
-                                   direction_t<T> plane_t_tangent) const
+                                   direction_t<T> plane_tangent) const
 {
-	direction_t<T> bitangent = cross(normal, plane_t_tangent);
-	direction_t<T> tangent = cross(bitangent, normal);
+	const auto bitangent = direction_t<T>(cross(*normal, *plane_tangent));
+	const auto tangent = direction_t<T>(cross(*bitangent, *normal));
 
-	matrix3_t<T> invTBN{
-	    matrix3_t<T>::rows(*tangent, *bitangent, *normal).get_inversed()};
+	const auto invTBN =
+	    matrix3_t<T>::rows(*tangent, *bitangent, *normal).get_inversed();
 
-	vector3_t<T> plane_t_space_point = vector3_t<T>{point.x, point.y, T(0)};
+	const auto plane_space_point = vector3_t<T>{point, T(0)};
 
-	return (invTBN * plane_t_space_point) + origin;
+	return (invTBN * plane_space_point) + origin;
 }
 template <typename T>
-direction_t<T> plane_t<T>::computeTangent(T e) const
+direction_t<T> plane_t<T>::computeTangent(T epsilon_) const
 {
-	vector3_t<T> tangent =
+	const auto tangent =
 	    project3d(vector3_t{T(1), T(0), T(0)} + origin) - origin;
-	if (norm_squared(tangent) < e)
-		tangent = project3d(vector3_t{T(0), T(1), T(0)} + origin) - origin;
+	if (norm_squared(tangent) < epsilon_)
+		return direction_t<T>(project3d(vector3_t{T(0), T(1), T(0)} + origin) -
+		                      origin);
 	return direction_t<T>(tangent);
 }
 
 template <typename T>
-bool collides(const plane_t<T>& plane_t,
+bool collides(const plane_t<T>& plane,
               ray3d_t<T> r,
               vector3_t<T>& collision_point)
 {
-	T denom = dot(*plane_t.normal, r.direction);
+	const T denom = dot(*plane.normal, r.direction);
 	if (abs(denom) > T(0.0001))
 	{
-		T t = -dot(plane_t.origin - r.origin, plane_t.normal) / denom;
+		const T t = -dot(plane.origin - r.origin, plane.normal) / denom;
 		if (t >= T(0))
 		{
 			collision_point = r.origin + r.direction * t;
@@ -5415,10 +5359,10 @@ bool collides_bidirectional(const plane_t<T>& plane,
                             ray3d_t<T> r,
                             vector3_t<T>& collision_point)
 {
-	T denom = dot(*plane.normal, *r.direction);
+	const T denom = dot(*plane.normal, *r.direction);
 	if (abs(denom) > T(0.0001))
 	{
-		T t = -dot(plane.origin - r.origin, *plane.normal) / denom;
+		const T t = -dot(plane.origin - r.origin, *plane.normal) / denom;
 
 		collision_point = r.origin + *r.direction * t;
 		return true;
@@ -5856,8 +5800,14 @@ std::ostream& operator<<(std::ostream& os, vector4_t<T> v)
 template <typename T>
 std::ostream& operator<<(std::ostream& os, quaternion_t<T> q)
 {
-	return os << "quaternion_t({" << q.x << ", " << q.y << ", " << q.z << "}, "
-	          << q.w << ")";
+	const auto flags = os.flags();
+	const auto w = std::setw(13);
+	os << std::right;
+	// clang-format off
+	os << "quaternion_t({" << w << q.x << ", " << w << q.y << ", " << w << q.z << "}, " << w << q.w << ")";
+	// clang-format on
+	os.setf(flags);
+	return os;
 }
 template <typename T>
 std::ostream& operator<<(std::ostream& os, plane_t<T> p)

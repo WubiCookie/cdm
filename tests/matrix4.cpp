@@ -1,7 +1,5 @@
 #include <common.hpp>
 
-INFO_BEGIN(matrix4)
-
 TEST_CASE("matrix4::matrix4(std::array<float, 16>)",
           "[working][unittest][matrix4]")
 {
@@ -969,5 +967,3 @@ TEST_CASE("matrix4::operator*(vector4)", "[working][unittest][matrix4]")
 	REQUIRE(v1.y == (v0.y * scale));
 	REQUIRE(v1.z == (v0.z * scale));
 }
-
-INFO_END(matrix4)

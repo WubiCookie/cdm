@@ -1,7 +1,5 @@
 #include <common.hpp>
 
-INFO_BEGIN(transform3d)
-
 TEST_CASE("transform3d::rotate(quaternion)",
           "[working][unittest][transform3d]")
 {
@@ -66,10 +64,8 @@ TEST_CASE("transform3d::rotate(quaternion)",
 	}
 }
 
-TEST_CASE(
-    "transform3d::translate_absolute(vector3) and "
-    "transform3d::translate_relative(vector3)",
-    "[working][unittest][transform3d]")
+TEST_CASE("translate_absolute(vector3), translate_relative(vector3)",
+          "[working][unittest][transform3d]")
 {
 	const float dx = GENERATE(-1, 0, 1);
 	const float dy = GENERATE(-1, 0, 1);
@@ -375,5 +371,3 @@ TEST_CASE("transform3d::operator*(vector3)",
 		CHECK_THAT(v1, Vector4Matcher(v2, 1.0e-5));
 	}
 }
-
-INFO_END(transform3d)

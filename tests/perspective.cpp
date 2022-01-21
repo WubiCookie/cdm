@@ -1,8 +1,6 @@
 #include <common.hpp>
 
-INFO_BEGIN(perspective)
-
-TEST_CASE("operator*(perspective, vector4) and perspective::to_matrix",
+TEST_CASE("operator*(perspective, vector4), perspective::to_matrix",
           "[working][unittest][perspective]")
 {
 	const perspective p{1_pi / 2.0f, 1.0f, 0.01f, 100.0f};
@@ -17,7 +15,7 @@ TEST_CASE("operator*(perspective, vector4) and perspective::to_matrix",
 	CHECK((p * v) == (pm * v));
 }
 
-TEST_CASE("operator*(perspective, vector4) and perspective::to_inverse_matrix",
+TEST_CASE("operator*(perspective, vector4), perspective::to_inverse_matrix",
           "[working][unittest][perspective]")
 {
 	const perspective p{1_pi / 2.0f, 1.0f, 0.01f, 100.0f};
@@ -52,7 +50,7 @@ TEST_CASE("perspective::set_far(float)", "[working][unittest][perspective]")
 	CHECK_THAT(v0, Vector4Matcher({0, 0, 1, 1}, 0.001));
 }
 
-TEST_CASE("operator*(perspective, matrix4) and perspective::to_inverse_matrix",
+TEST_CASE("operator*(perspective, matrix4), perspective::to_inverse_matrix",
           "[working][unittest][perspective]")
 {
 	const perspective p{1_pi / 2.0f, 1.0f, 0.01f, 100.0f};
@@ -61,7 +59,7 @@ TEST_CASE("operator*(perspective, matrix4) and perspective::to_inverse_matrix",
 	CHECK(p * m == p.to_matrix4() * m);
 }
 
-TEST_CASE("operator*(matrix4, perspective) and perspective::to_inverse_matrix",
+TEST_CASE("operator*(matrix4, perspective), perspective::to_inverse_matrix",
           "[working][unittest][perspective]")
 {
 	const perspective p{1_pi / 2.0f, 1.0f, 0.01f, 100.0f};
@@ -69,5 +67,3 @@ TEST_CASE("operator*(matrix4, perspective) and perspective::to_inverse_matrix",
 
 	CHECK(m * p == m * p.to_matrix4());
 }
-
-INFO_END(perspective)

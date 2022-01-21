@@ -1,7 +1,5 @@
 #include <common.hpp>
 
-INFO_BEGIN(vector3)
-
 TEST_CASE("vector3::vector3(std::array<float, 3>)",
           "[working][unittest][vector3]")
 {
@@ -377,7 +375,7 @@ TEST_CASE("vector3::operator-()", "[working][unittest][vector3]")
 	CHECK(v22.z == -5566656.66656f);
 }
 
-TEST_CASE("vector3::operator==()", "[working][unittest][vector3]")
+TEST_CASE("vector3::vector3::operator==()", "[working][unittest][vector3]")
 {
 	const vector3 v1{0, 0, 0};
 	const vector3 v2{0, 0, 0};
@@ -398,7 +396,7 @@ TEST_CASE("vector3::operator==()", "[working][unittest][vector3]")
 	CHECK_FALSE(v1 == v3);
 }
 
-TEST_CASE("vector3::operator!=()", "[working][unittest][vector3]")
+TEST_CASE("vector3::vector3::operator!=()", "[working][unittest][vector3]")
 {
 	const vector3 v1{0, 0, 0};
 	const vector3 v2{0, 0, 0};
@@ -421,7 +419,7 @@ TEST_CASE("vector3::operator!=()", "[working][unittest][vector3]")
 	CHECK(v1 != v3);
 }
 
-TEST_CASE("dot(vector3, vector3)", "[working][unittest][vector3]")
+TEST_CASE("vector3::dot(vector3, vector3)", "[working][unittest][vector3]")
 {
 	CHECK(dot(vector3{0, 0, 0}, {0, 0, 0}) == 0);
 	CHECK(dot(vector3{1, 0, 0}, {0, 1, 0}) == 0);
@@ -432,7 +430,7 @@ TEST_CASE("dot(vector3, vector3)", "[working][unittest][vector3]")
 	CHECK(dot(vector3{1, 0, 0}, {0.5f, 1, 0}) == 0.5f);
 }
 
-TEST_CASE("cross(vector3, vector3)", "[working][unittest][vector3]")
+TEST_CASE("vector3::cross(vector3, vector3)", "[working][unittest][vector3]")
 {
 	CHECK(cross(vector3{0, 0, 0}, vector3{0, 0, 0}) == vector3{0, 0, 0});
 
@@ -445,7 +443,7 @@ TEST_CASE("cross(vector3, vector3)", "[working][unittest][vector3]")
 	CHECK(cross(vector3{1, 0, 0}, vector3{0, 0, 1}) == vector3{0, -1, 0});
 }
 
-TEST_CASE("distance_between(vector3, vector3)", "[working][unittest][vector3]")
+TEST_CASE("vector3::distance_between(vector3, vector3)", "[working][unittest][vector3]")
 {
 	CHECK(distance_between({0, 0, 0}, vector3{0, 0, 0}) == 0);
 	CHECK(distance_between({1, 0, 0}, vector3{0, 1, 0}) == Approx(sqrt2));
@@ -458,7 +456,7 @@ TEST_CASE("distance_between(vector3, vector3)", "[working][unittest][vector3]")
 	CHECK(distance_between({2, 0, 0}, vector3{-1, 0, 0}) == 3);
 }
 
-TEST_CASE("distance_squared_between(vector3, vector3)",
+TEST_CASE("vector3::distance_squared_between(vector3, vector3)",
           "[working][unittest][vector3]")
 {
 	CHECK(distance_squared_between({0, 0, 0}, vector3{0, 0, 0}) == 0);
@@ -472,7 +470,7 @@ TEST_CASE("distance_squared_between(vector3, vector3)",
 	CHECK(distance_squared_between({2, 0, 0}, vector3{-1, 0, 0}) == 9);
 }
 
-TEST_CASE("angle_between(vector3, vector3)", "[working][unittest][vector3]")
+TEST_CASE("vector3::angle_between(vector3, vector3)", "[working][unittest][vector3]")
 {
 	CHECK(angle_between({0, 0, 0}, vector3{0, 0, 0}) == 0_rad);
 	CHECK(angle_between({1, 0, 0}, vector3{0, 0, 0}) == 0_rad);
@@ -509,20 +507,20 @@ TEST_CASE("angle_between(vector3, vector3)", "[working][unittest][vector3]")
 	CHECK(angle_between({0, 2, 0}, vector3{0, -1, 0}) == 1_pi);
 }
 
-TEST_CASE("element_wise_min(vector3, vector3)", "[working][unittest][vector3]")
+TEST_CASE("vector3::element_wise_min(vector3, vector3)", "[working][unittest][vector3]")
 {
 	CHECK(element_wise_min({-89453.6654f, 3.14159f, 5566656.66656f},
 	                       vector3{0, 0, 0}) == vector3{-89453.6654f, 0, 0});
 }
 
-TEST_CASE("element_wise_max(vector3, vector3)", "[working][unittest][vector3]")
+TEST_CASE("vector3::element_wise_max(vector3, vector3)", "[working][unittest][vector3]")
 {
 	CHECK(element_wise_max({-89453.6654f, 3.14159f, 5566656.66656f},
 	                       vector3{0, 0, 0}) ==
 	      vector3{0, 3.14159f, 5566656.66656f});
 }
 
-TEST_CASE("angle_around_axis(vector3, vector3, direction)",
+TEST_CASE("vector3::angle_around_axis(vector3, vector3, direction)",
           "[working][unittest][vector3]")
 {
 	CHECK(angle_around_axis(vector3{1, 0, 0}, vector3{0, 1, 0},
@@ -542,5 +540,3 @@ TEST_CASE("angle_around_axis(vector3, vector3, direction)",
 	CHECK(angle_around_axis(vector3{1, 0, 0}, vector3{1, 1, 0},
 	                        direction::posZ()) == radian(45_deg));
 }
-
-INFO_END(vector3)

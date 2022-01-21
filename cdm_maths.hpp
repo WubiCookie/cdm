@@ -1391,7 +1391,11 @@ public:
 
 	normalized& operator=(const normalized&) = default;
 	normalized& operator=(normalized&&) = default;
-	normalized& operator=(vector3_t<T> t) { vector = t.get_normalized(); }
+	normalized& operator=(vector3_t<T> t)
+	{
+		vector = t.get_normalized();
+		return *this;
+	}
 };
 #pragma endregion
 

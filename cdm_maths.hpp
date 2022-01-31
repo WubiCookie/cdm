@@ -127,6 +127,12 @@ template <typename T>
 struct unscaled_transform2d_t;
 template <typename T>
 struct unscaled_transform3d_t;
+template <typename T>
+class valueDomain;
+template <typename T>
+class unnormalizedValue;
+template <typename T>
+class normalizedValue;
 
 template <typename T>
 using direction_t = normalized<vector3_t<T>>;
@@ -2446,6 +2452,108 @@ struct unscaled_transform3d_t
 
 template <typename T>
 unscaled_transform3d_t<T> inverse(unscaled_transform3d_t<T> tr);
+#pragma endregion
+
+#pragma region declaration valueDomain
+template <typename T>
+class valueDomain
+{
+	T m_min = T(0);
+	T m_max = T(1);
+
+public:
+	valueDomain() = default;
+	constexpr valueDomain(T min, T max) noexcept : m_min{min}, m_max{max} {}
+	valueDomain(const valueDomain&) = default;
+	valueDomain(valueDomain&&) = default;
+	~valueDomain() = default;
+
+	constexpr T min() const noexcept { return m_min; }
+	constexpr T max() const noexcept { return m_max; }
+	constexpr T range() const noexcept { return m_max - m_min; }
+
+	constexpr T clamp(T value) const noexcept
+	{
+		return cdm::clamp(value, m_min, m_max);
+	}
+	constexpr T lerp(normalizedValue<T> value) const noexcept;
+
+	valueDomain& operator=(const valueDomain&) = default;
+	valueDomain& operator=(valueDomain&&) = default;
+};
+#pragma endregion
+
+#pragma region declaration unnormalizedValue
+template <typename T>
+class unnormalizedValue
+{
+	valueDomain<T> m_domain;
+	T m_value;
+
+public:
+	unnormalizedValue() = default;
+	constexpr explicit unnormalizedValue(valueDomain<T> domain,
+	                                     T value) noexcept
+	    : m_domain{domain}, m_value{m_domain.clamp(value)}
+	{
+	}
+	constexpr explicit unnormalizedValue(valueDomain<T> domain) noexcept
+	    : m_domain{domain}, m_value{m_domain.min()}
+	{
+	}
+	constexpr explicit unnormalizedValue(valueDomain<T> domain,
+	                                     normalizedValue<T> value) noexcept;
+	unnormalizedValue(const unnormalizedValue&) = default;
+	unnormalizedValue(unnormalizedValue&&) = default;
+	~unnormalizedValue() = default;
+
+	constexpr const valueDomain<T>& domain() const noexcept
+	{
+		return m_domain;
+	}
+	constexpr const T& value() const noexcept { return m_value; }
+	constexpr void setValue(T value) noexcept
+	{
+		m_value = m_domain.clamp(value);
+	}
+
+	constexpr unnormalizedValue& operator=(normalizedValue<T> value) noexcept;
+	unnormalizedValue& operator=(const unnormalizedValue&) = default;
+	unnormalizedValue& operator=(unnormalizedValue&&) = default;
+};
+#pragma endregion
+
+#pragma region declaration normalizedValue
+template <typename T>
+class normalizedValue
+{
+	T m_value = T(0);
+
+public:
+	normalizedValue() = default;
+	constexpr explicit normalizedValue(T value) noexcept
+	    : m_value{cdm::clamp<T>(value, T(0), T(1))}
+	{
+	}
+	constexpr explicit normalizedValue(unnormalizedValue<T> value) noexcept
+	    : m_value{(value.value() - value.domain().min()) /
+	              value.domain().range()}
+	{
+	}
+	normalizedValue(const normalizedValue&) = default;
+	normalizedValue(normalizedValue&&) = default;
+	~normalizedValue() = default;
+
+	constexpr const T& value() const noexcept { return m_value; }
+
+	constexpr normalizedValue& operator=(T value) noexcept
+	{
+		m_value = cdm::clamp<T>(value, T(0), T(1));
+		return *this;
+	}
+	normalizedValue& operator=(const normalizedValue&) = default;
+	normalizedValue& operator=(normalizedValue&&) = default;
+};
 #pragma endregion
 
 // ==========================================================================
@@ -5755,6 +5863,36 @@ quaternion_t<T> unscaled_transform3d_t<T>::operator*(quaternion_t<T> q) const
 {
 	return rotation * q;
 }
+#pragma endregion
+
+#pragma region definition valueDomain
+template <typename T>
+constexpr T valueDomain<T>::lerp(normalizedValue<T> value) const noexcept
+{
+	return cdm::lerp(m_min, m_max, value.value());
+}
+
+template <typename T>
+constexpr unnormalizedValue<T>::unnormalizedValue(
+    valueDomain<T> domain,
+    normalizedValue<T> value) noexcept
+    : m_domain{domain},
+      m_value{cdm::lerp<T>(m_domain.min(), m_domain.max(), value.value())}
+{
+}
+#pragma endregion
+
+#pragma region definition unnormalizedValue
+template <typename T>
+constexpr unnormalizedValue<T>& unnormalizedValue<T>::operator=(
+    normalizedValue<T> value) noexcept
+{
+	m_value = cdm::lerp<T>(m_domain.min(), m_domain.max(), value.value());
+	return *this;
+}
+#pragma endregion
+
+#pragma region definition normalizedValue
 #pragma endregion
 
 #pragma region definition streams

@@ -232,7 +232,7 @@ public:
 	template <typename U>
 	explicit operator radian_t<U>() const
 	{
-		return { U(angle) };
+		return radian_t<U>{ U(angle) };
 	}
 
 	radian_t& operator+=(radian_t r);
@@ -323,7 +323,7 @@ public:
 	template <typename U>
 	explicit operator degree_t<U>() const
 	{
-		return { U(angle) };
+		return degree_t<U>{ U(angle) };
 	}
 
 	degree_t& operator+=(degree_t d);

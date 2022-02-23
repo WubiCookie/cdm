@@ -157,7 +157,7 @@ template <typename T>
 constexpr int signnum(T val);
 #pragma endregion
 
-#pragma region declaration complex_t
+#pragma region declaration_complex_t
 template <typename T>
 struct complex_t
 {
@@ -213,7 +213,7 @@ template <typename T>
 complex_t<T> conjugate(complex_t<T> c);
 #pragma endregion
 
-#pragma region declaration radian_t
+#pragma region declaration_radian_t
 template <typename T>
 struct radian_t
 {
@@ -228,6 +228,12 @@ public:
 	constexpr radian_t(degree_t<T> d);
 
 	explicit operator T() const;
+
+	template <typename U>
+	explicit operator radian_t<U>() const
+	{
+		return { U(angle) };
+	}
 
 	radian_t& operator+=(radian_t r);
 	radian_t& operator-=(radian_t r);
@@ -298,7 +304,7 @@ template <typename T>
 T atanh(radian_t<T>);
 #pragma endregion
 
-#pragma region declaration degree_t
+#pragma region declaration_degree_t
 template <typename T>
 struct degree_t
 {
@@ -313,6 +319,12 @@ public:
 	constexpr degree_t(radian_t<T> r);
 
 	explicit operator T() const;
+
+	template <typename U>
+	explicit operator degree_t<U>() const
+	{
+		return { U(angle) };
+	}
 
 	degree_t& operator+=(degree_t d);
 	degree_t& operator-=(degree_t d);
@@ -383,7 +395,7 @@ template <typename T>
 T atanh(degree_t<T>);
 #pragma endregion
 
-#pragma region declaration pi_fraction_t
+#pragma region declaration_pi_fraction_t
 template <typename T>
 struct pi_fraction_t
 {
@@ -631,7 +643,7 @@ U atanh(pi_fraction_t<T> d)
 }
 #pragma endregion
 
-#pragma region declaration static_pi_fraction_t
+#pragma region declaration_static_pi_fraction_t
 template <typename T, T NumeratorT, T DenominatorT>
 struct static_pi_fraction_t
 {
@@ -943,7 +955,7 @@ U atanh(static_pi_fraction_t<T, NumeratorT, DenominatorT> d)
 }
 #pragma endregion
 
-#pragma region declaration vector2_t
+#pragma region declaration_vector2_t
 template <typename T>
 struct vector2_t
 {
@@ -1059,7 +1071,7 @@ template <typename T>
 vector2_t<T> element_wise_max(vector2_t<T> v0, vector2_t<T> v1);
 #pragma endregion
 
-#pragma region declaration vector3_t
+#pragma region declaration_vector3_t
 template <typename T>
 struct vector3_t
 {
@@ -1176,7 +1188,7 @@ radian_t<T> angle_around_axis(vector3_t<T> v0,
                               direction_t<T> axis);
 #pragma endregion
 
-#pragma region declaration vector4_t
+#pragma region declaration_vector4_t
 template <typename T>
 struct vector4_t
 {
@@ -1290,7 +1302,7 @@ template <typename T>
 vector4_t<T> element_wise_max(vector4_t<T> v0, vector4_t<T> v1);
 #pragma endregion
 
-#pragma region declaration normalized
+#pragma region declaration_normalized
 template <typename T>
 class normalized
 {
@@ -1380,7 +1392,7 @@ public:
 };
 #pragma endregion
 
-#pragma region declaration matrix2_t
+#pragma region declaration_matrix2_t
 template <typename T>
 struct matrix2_t
 {
@@ -1525,7 +1537,7 @@ template <typename T>
 matrix2_t<T> transpose(matrix2_t<T> m);
 #pragma endregion
 
-#pragma region declaration matrix3_t
+#pragma region declaration_matrix3_t
 template <typename T>
 struct matrix3_t
 {
@@ -1742,7 +1754,7 @@ public:
 };
 #pragma endregion
 
-#pragma region declaration matrix4_t
+#pragma region declaration_matrix4_t
 template <typename T>
 struct matrix4_t
 {
@@ -2032,7 +2044,7 @@ matrix4_t<T> operator*(const matrix4_t<T>& m,
                        const unscaled_transform3d_t<T>& t);
 #pragma endregion
 
-#pragma region declaration perspective_t
+#pragma region declaration_perspective_t
 template <typename T>
 struct perspective_t
 {
@@ -2094,7 +2106,7 @@ public:
 };
 #pragma endregion
 
-#pragma region declaration euler_angles_t
+#pragma region declaration_euler_angles_t
 template <typename T>
 struct euler_angles_t
 {
@@ -2102,7 +2114,7 @@ struct euler_angles_t
 };
 #pragma endregion
 
-#pragma region declaration quaternion_t
+#pragma region declaration_quaternion_t
 template <typename T>
 struct quaternion_t
 {
@@ -2182,7 +2194,7 @@ template <typename T>
 quaternion_t<T> slerp(quaternion_t<T> begin, quaternion_t<T> end, T percent);
 #pragma endregion
 
-#pragma region declaration line_t
+#pragma region declaration_line_t
 template <typename T>
 struct line_t
 {
@@ -2201,7 +2213,7 @@ template <typename T>
 bool collides(line_t<T> l1, line_t<T> l2, vector2_t<T>& intersection);
 #pragma endregion
 
-#pragma region declaration segment2d_t
+#pragma region declaration_segment2d_t
 template <typename T>
 struct segment2d_t
 {
@@ -2216,7 +2228,7 @@ bool collides(const segment2d_t<T>& s0,
               T e = T(epsilon));
 #pragma endregion
 
-#pragma region declaration plane_t
+#pragma region declaration_plane_t
 template <typename T>
 struct plane_t
 {
@@ -2241,7 +2253,7 @@ struct plane_t
 };
 #pragma endregion
 
-#pragma region declaration ray2d_t
+#pragma region declaration_ray2d_t
 template <typename T>
 struct ray2d_t
 {
@@ -2250,7 +2262,7 @@ struct ray2d_t
 };
 #pragma endregion
 
-#pragma region declaration ray3d_t
+#pragma region declaration_ray3d_t
 template <typename T>
 struct ray3d_t
 {
@@ -2259,7 +2271,7 @@ struct ray3d_t
 };
 #pragma endregion
 
-#pragma region declaration aa_rect_t
+#pragma region declaration_aa_rect_t
 template <typename T>
 struct aa_rect_t
 {
@@ -2286,7 +2298,7 @@ std::size_t collides(line_t<T> l,
                      vector2_t<T>* insersection2);
 #pragma endregion
 
-#pragma region declaration circle_t
+#pragma region declaration_circle_t
 template <typename T>
 struct circle_t
 {
@@ -2334,7 +2346,7 @@ bool collides_bidirectional(const plane_t<T>& plane,
                             vector3_t<T>& collision_point);
 #pragma endregion
 
-#pragma region declaration aabb_t
+#pragma region declaration_aabb_t
 template <typename T>
 struct aabb_t
 {
@@ -2353,7 +2365,7 @@ template <typename T>
 bool collides(aabb_t<T> b1, aabb_t<T> b2);
 #pragma endregion
 
-#pragma region declaration transform2d_t
+#pragma region declaration_transform2d_t
 template <typename T>
 struct transform2d_t
 {
@@ -2366,7 +2378,7 @@ struct transform2d_t
 };
 #pragma endregion
 
-#pragma region declaration transform3d_t
+#pragma region declaration_transform3d_t
 template <typename T>
 struct transform3d_t
 {
@@ -2388,7 +2400,7 @@ struct transform3d_t
 };
 #pragma endregion
 
-#pragma region declaration uniform_transform2d_t
+#pragma region declaration_uniform_transform2d_t
 template <typename T>
 struct uniform_transform2d_t
 {
@@ -2401,7 +2413,7 @@ struct uniform_transform2d_t
 };
 #pragma endregion
 
-#pragma region declaration uniform_transform3d_t
+#pragma region declaration_uniform_transform3d_t
 template <typename T>
 struct uniform_transform3d_t
 {
@@ -2417,7 +2429,7 @@ struct uniform_transform3d_t
 };
 #pragma endregion
 
-#pragma region declaration unscaled_transform2d_t
+#pragma region declaration_unscaled_transform2d_t
 template <typename T>
 struct unscaled_transform2d_t
 {
@@ -2429,7 +2441,7 @@ struct unscaled_transform2d_t
 };
 #pragma endregion
 
-#pragma region declaration unscaled_transform3d_t
+#pragma region declaration_unscaled_transform3d_t
 template <typename T>
 struct unscaled_transform3d_t
 {
@@ -2454,7 +2466,7 @@ template <typename T>
 unscaled_transform3d_t<T> inverse(unscaled_transform3d_t<T> tr);
 #pragma endregion
 
-#pragma region declaration valueDomain
+#pragma region declaration_valueDomain
 template <typename T>
 class valueDomain
 {
@@ -2483,7 +2495,7 @@ public:
 };
 #pragma endregion
 
-#pragma region declaration unnormalizedValue
+#pragma region declaration_unnormalizedValue
 template <typename T>
 class unnormalizedValue
 {
@@ -2523,7 +2535,7 @@ public:
 };
 #pragma endregion
 
-#pragma region declaration normalizedValue
+#pragma region declaration_normalizedValue
 template <typename T>
 class normalizedValue
 {
@@ -2558,7 +2570,7 @@ public:
 
 // ==========================================================================
 
-#pragma region definition misc
+#pragma region definition_misc
 template <typename T>
 constexpr T lerp(T begin, T end, T percent)
 {
@@ -2589,7 +2601,7 @@ constexpr int signnum(T val)
 }
 #pragma endregion
 
-#pragma region definition complex_t
+#pragma region definition_complex_t
 template <typename T>
 complex_t<T>::complex_t(radian_t<T> angle) : r{cos(angle)}, i{sin(angle)}
 {
@@ -2720,7 +2732,7 @@ complex_t<T> conjugate(complex_t<T> c)
 }
 #pragma endregion
 
-#pragma region definition radian_t
+#pragma region definition_radian_t
 template <typename T>
 constexpr radian_t<T>::radian_t(T f) : angle(f)
 {
@@ -2918,7 +2930,7 @@ T atanh(radian_t<T> r)
 }
 #pragma endregion
 
-#pragma region definition degree_t
+#pragma region definition_degree_t
 template <typename T>
 constexpr degree_t<T>::degree_t(T f) : angle(f)
 {
@@ -3109,7 +3121,7 @@ T atanh(degree_t<T> d)
 }
 #pragma endregion
 
-#pragma region definition vector2_t
+#pragma region definition_vector2_t
 template <typename T>
 vector2_t<T> vector2_t<T>::operator+(vector2_t<T> v) const
 {
@@ -3275,7 +3287,7 @@ vector2_t<T> element_wise_max(vector2_t<T> v0, vector2_t<T> v1)
 };
 #pragma endregion
 
-#pragma region definition vector3_t
+#pragma region definition_vector3_t
 template <typename T>
 vector2_t<T> vector3_t<T>::xy() const
 {
@@ -3476,7 +3488,7 @@ radian_t<T> angle_around_axis(vector3_t<T> v0,
 }
 #pragma endregion
 
-#pragma region definition vector4_t
+#pragma region definition_vector4_t
 template <typename T>
 vector2_t<T> vector4_t<T>::xy() const
 {
@@ -3637,7 +3649,7 @@ vector4_t<T> element_wise_max(vector4_t<T> v0, vector4_t<T> v1)
 };
 #pragma endregion
 
-#pragma region definition normalized
+#pragma region definition_normalized
 template <typename T>
 normalized<T>::normalized(const T& t) : vector(normalize(t))
 {
@@ -3705,7 +3717,7 @@ bool normalized<T>::operator!=(const T& v) const
 }
 #pragma endregion
 
-#pragma region definition matrix2_t
+#pragma region definition_matrix2_t
 template <typename T>
 matrix2_t<T>::matrix2_t(T e00, T e10, T e01, T e11)
     : m00{e00}, m10{e10}, m01{e01}, m11{e11}
@@ -3770,7 +3782,7 @@ matrix2_t<T> transpose(matrix2_t<T> m)
 }
 #pragma endregion
 
-#pragma region definition matrix3_t
+#pragma region definition_matrix3_t
 template <typename T>
 matrix3_t<T>::matrix3_t(T e00,
                         T e10,
@@ -4108,7 +4120,7 @@ matrix3_t<T> matrix3_t<T>::operator*(const matrix3_t<T>& m) const
 }
 #pragma endregion
 
-#pragma region definition matrix4_t
+#pragma region definition_matrix4_t
 template <typename T>
 matrix4_t<T>::matrix4_t(T e00,
                         T e10,
@@ -4674,7 +4686,7 @@ matrix4_t<T> operator*(const matrix4_t<T>& m,
 }
 #pragma endregion
 
-#pragma region definition perspective_t
+#pragma region definition_perspective_t
 template <typename T>
 perspective_t<T>::perspective_t(radian_t<T> angle, T ratio, T near, T far)
     : m_angle{angle},
@@ -4972,7 +4984,7 @@ matrix4_t<T> operator*(const perspective_t<T>& p,
 }
 #pragma endregion
 
-#pragma region definition quaternion_t
+#pragma region definition_quaternion_t
 template <typename T>
 quaternion_t<T>::quaternion_t(direction_t<T> axis, radian_t<T> angle)
 {
@@ -5260,7 +5272,7 @@ quaternion_t<T> slerp(quaternion_t<T> begin, quaternion_t<T> end, T percent)
 }
 #pragma endregion
 
-#pragma region definition line_t
+#pragma region definition_line_t
 template <typename T>
 bool are_parallel(line_t<T> l1, line_t<T> l2)
 {
@@ -5314,7 +5326,7 @@ T distance_between(vector3_t<T> v, plane_t<T> p)
 }
 #pragma endregion
 
-#pragma region definition aa_rect_t
+#pragma region definition_aa_rect_t
 template <typename T>
 bool aa_rect_t<T>::contains(vector2_t<T> v) const
 {
@@ -5393,7 +5405,7 @@ bool intersects(segment2d_t<T> s0,
 }
 #pragma endregion
 
-#pragma region definition plane_t
+#pragma region definition_plane_t
 template <typename T>
 T plane_t<T>::evaluate(vector3_t<T> point) const
 {
@@ -5479,7 +5491,7 @@ bool collides_bidirectional(const plane_t<T>& plane,
 }
 #pragma endregion
 
-#pragma region definition aabb_t
+#pragma region definition_aabb_t
 template <typename T>
 bool aabb_t<T>::contains(vector3_t<T> p) const
 {
@@ -5574,7 +5586,7 @@ bool collides(aabb_t<T> b1, aabb_t<T> b2)
 }
 #pragma endregion
 
-#pragma region definition transform2d_t
+#pragma region definition_transform2d_t
 template <typename T>
 transform2d_t<T> transform2d_t<T>::operator*(const transform2d_t<T>& t) const
 {
@@ -5593,7 +5605,7 @@ vector2_t<T> transform2d_t<T>::operator*(vector2_t<T> v) const
 }
 #pragma endregion
 
-#pragma region definition transform3d_t
+#pragma region definition_transform3d_t
 template <typename T>
 transform3d_t<T> transform3d_t<T>::identity()
 {
@@ -5702,7 +5714,7 @@ quaternion_t<T> transform3d_t<T>::operator*(quaternion_t<T> q) const
 }
 #pragma endregion
 
-#pragma region definition uniform_transform2d_t
+#pragma region definition_uniform_transform2d_t
 template <typename T>
 uniform_transform2d_t<T> uniform_transform2d_t<T>::operator*(
     uniform_transform2d_t<T> t) const
@@ -5722,7 +5734,7 @@ vector2_t<T> uniform_transform2d_t<T>::operator*(vector2_t<T> v) const
 }
 #pragma endregion
 
-#pragma region definition uniform_transform3d_t
+#pragma region definition_uniform_transform3d_t
 template <typename T>
 matrix4_t<T> uniform_transform3d_t<T>::to_matrix4() const
 {
@@ -5768,7 +5780,7 @@ quaternion_t<T> uniform_transform3d_t<T>::operator*(quaternion_t<T> q) const
 }
 #pragma endregion
 
-#pragma region definition unscaled_transform2d_t
+#pragma region definition_unscaled_transform2d_t
 template <typename T>
 unscaled_transform2d_t<T> unscaled_transform2d_t<T>::operator*(
     unscaled_transform2d_t<T> t) const
@@ -5787,7 +5799,7 @@ vector2_t<T> unscaled_transform2d_t<T>::operator*(vector2_t<T> v) const
 }
 #pragma endregion
 
-#pragma region definition unscaled_transform3d_t
+#pragma region definition_unscaled_transform3d_t
 template <typename T>
 unscaled_transform3d_t<T>& unscaled_transform3d_t<T>::translate_absolute(
     vector3_t<T> t)
@@ -5865,13 +5877,15 @@ quaternion_t<T> unscaled_transform3d_t<T>::operator*(quaternion_t<T> q) const
 }
 #pragma endregion
 
-#pragma region definition valueDomain
+#pragma region definition_valueDomain
 template <typename T>
 constexpr T valueDomain<T>::lerp(normalizedValue<T> value) const noexcept
 {
 	return cdm::lerp(m_min, m_max, value.value());
 }
+#pragma endregion
 
+#pragma region definition_unnormalizedValue
 template <typename T>
 constexpr unnormalizedValue<T>::unnormalizedValue(
     valueDomain<T> domain,
@@ -5880,9 +5894,7 @@ constexpr unnormalizedValue<T>::unnormalizedValue(
       m_value{cdm::lerp<T>(m_domain.min(), m_domain.max(), value.value())}
 {
 }
-#pragma endregion
 
-#pragma region definition unnormalizedValue
 template <typename T>
 constexpr unnormalizedValue<T>& unnormalizedValue<T>::operator=(
     normalizedValue<T> value) noexcept
@@ -5892,10 +5904,10 @@ constexpr unnormalizedValue<T>& unnormalizedValue<T>::operator=(
 }
 #pragma endregion
 
-#pragma region definition normalizedValue
+#pragma region definition_normalizedValue
 #pragma endregion
 
-#pragma region definition streams
+#pragma region definition_streams
 template <typename T>
 std::ostream& operator<<(std::ostream& o, const radian_t<T>& a)
 {
@@ -6011,7 +6023,7 @@ std::ostream& operator<<(std::ostream& os, transform3d_t<T> t)
 }
 #pragma endregion
 
-#pragma region definition misc
+#pragma region definition_misc
 namespace detail
 {
 template <unsigned char x, unsigned char y, typename T>
@@ -6116,7 +6128,7 @@ std::vector<std::vector<vector3_t<T>>> function3D_sampler(
 
 namespace literals
 {
-#pragma region definition literals
+#pragma region definition_literals
 inline cdm::radian_t<float> operator""_rad(long double d)
 {
 	return cdm::radian_t<float>(static_cast<float>(d));

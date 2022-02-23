@@ -2,6 +2,7 @@ add_rules("mode.release", "mode.debug", "mode.releasedbg")
 add_requires("catch2")
 
 set_arch("x64")
+set_plat("windows")
 
 -- Generates a hash key made of packages confs/version, for CI
 task("dephash")

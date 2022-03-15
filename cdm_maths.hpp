@@ -232,7 +232,7 @@ public:
 	template <typename U>
 	explicit operator radian_t<U>() const
 	{
-		return radian_t<U>{ U(angle) };
+		return radian_t<U>{U(angle)};
 	}
 
 	radian_t& operator+=(radian_t r);
@@ -323,7 +323,7 @@ public:
 	template <typename U>
 	explicit operator degree_t<U>() const
 	{
-		return degree_t<U>{ U(angle) };
+		return degree_t<U>{U(angle)};
 	}
 
 	degree_t& operator+=(degree_t d);
@@ -2475,7 +2475,10 @@ class value_domain
 
 public:
 	value_domain() = default;
-	constexpr value_domain(T lim0, T lim1) noexcept : m_lim0{lim0}, m_lim1{lim1} {}
+	constexpr value_domain(T lim0, T lim1) noexcept
+	    : m_lim0{lim0}, m_lim1{lim1}
+	{
+	}
 	value_domain(const value_domain&) = default;
 	value_domain(value_domain&&) = default;
 	~value_domain() = default;
@@ -2483,8 +2486,14 @@ public:
 	constexpr T lim0() const noexcept { return m_lim0; }
 	constexpr T lim1() const noexcept { return m_lim1; }
 	constexpr T range() const noexcept { return std::abs(lim0() - lim1()); }
-	constexpr T min() const noexcept { return lim0() < lim1() ? lim0() : lim1(); }
-	constexpr T max() const noexcept { return lim0() < lim1() ? lim1() : lim0(); }
+	constexpr T min() const noexcept
+	{
+		return lim0() < lim1() ? lim0() : lim1();
+	}
+	constexpr T max() const noexcept
+	{
+		return lim0() < lim1() ? lim1() : lim0();
+	}
 
 	constexpr T clamp(T value) const noexcept
 	{
@@ -2507,7 +2516,7 @@ class unnormalized_value
 public:
 	unnormalized_value() = default;
 	constexpr explicit unnormalized_value(value_domain<T> domain,
-	                                     T value) noexcept
+	                                      T value) noexcept
 	    : m_domain{domain}, m_value{m_domain.clamp(value)}
 	{
 	}
@@ -2516,7 +2525,7 @@ public:
 	{
 	}
 	constexpr explicit unnormalized_value(value_domain<T> domain,
-	                                     normalized_value<T> value) noexcept;
+	                                      normalized_value<T> value) noexcept;
 	unnormalized_value(const unnormalized_value&) = default;
 	unnormalized_value(unnormalized_value&&) = default;
 	~unnormalized_value() = default;
@@ -2533,7 +2542,8 @@ public:
 
 	constexpr normalized_value<T> to_normalized() const noexcept;
 
-	constexpr unnormalized_value& operator=(normalized_value<T> value) noexcept;
+	constexpr unnormalized_value& operator=(
+	    normalized_value<T> value) noexcept;
 	unnormalized_value& operator=(const unnormalized_value&) = default;
 	unnormalized_value& operator=(unnormalized_value&&) = default;
 };
@@ -2588,11 +2598,13 @@ public:
 #pragma endregion
 
 template <typename T>
-constexpr T domain_transfer(cdm::value_domain<T> from, cdm::value_domain<T> to, T value) noexcept
+constexpr T domain_transfer(cdm::value_domain<T> from,
+                            cdm::value_domain<T> to,
+                            T value) noexcept
 {
-	const cdm::unnormalized_value<T> valueFrom{ from, value };
-	const cdm::normalized_value<T> norm{ valueFrom };
-	const cdm::unnormalized_value<T> valueTo{ to, norm };
+	const cdm::unnormalized_value<T> valueFrom{from, value};
+	const cdm::normalized_value<T> norm{valueFrom};
+	const cdm::unnormalized_value<T> valueTo{to, norm};
 	return valueTo.value();
 }
 
@@ -5918,23 +5930,21 @@ template <typename T>
 constexpr unnormalized_value<T>::unnormalized_value(
     value_domain<T> domain,
     normalized_value<T> value) noexcept
-    : m_domain{domain},
-      //m_value{cdm::lerp<T>(m_domain.min(), m_domain.max(), value.value())}
-      m_value{ m_domain.lerp(value)}
+    : m_domain{domain}, m_value{m_domain.lerp(value)}
 {
 }
 
 template <typename T>
-constexpr normalized_value<T> unnormalized_value<T>::to_normalized() const noexcept
+constexpr normalized_value<T> unnormalized_value<T>::to_normalized()
+    const noexcept
 {
-	return { *this };
+	return {*this};
 }
 
 template <typename T>
 constexpr unnormalized_value<T>& unnormalized_value<T>::operator=(
     normalized_value<T> value) noexcept
 {
-	//m_value = cdm::lerp<T>(m_domain.min(), m_domain.max(), value.value());
 	m_value = m_domain.lerp(value);
 	return *this;
 }
@@ -6055,6 +6065,14 @@ std::ostream& operator<<(std::ostream& os, transform3d_t<T> t)
 	return os << "transform3d_t(position = " << t.position << ",\n"
 	          << "              rotation = " << t.rotation << ",\n"
 	          << "              scale =    " << t.scale << ")";
+	// clang-format on
+}
+template <typename T>
+std::ostream& operator<<(std::ostream& os, segment2d_t<T> t)
+{
+	// clang-format off
+	return os << "segment2d_t(origin = " << t.origin << ",\n"
+	          << "            end =    " << t.end << ")";
 	// clang-format on
 }
 #pragma endregion

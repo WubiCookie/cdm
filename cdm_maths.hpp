@@ -31,6 +31,7 @@ Written by Charles Seizilles de Mazancourt
 #include <cassert>
 #include <cmath>
 #include <cstdint>
+#include <functional>
 #include <iomanip>
 #include <limits>
 #include <ostream>
@@ -1446,8 +1447,8 @@ public:
 	protected:
 		using Type = std::conditional_t<IsConstT, const T, T>;
 
-		std::reference_wrapper<Type> x;
-		std::reference_wrapper<Type> y;
+		Type& x;
+		Type& y;
 
 		constexpr Type& vector(int i)
 		{
@@ -1464,7 +1465,7 @@ public:
 		constexpr proxy(proxy&&) = default;
 		constexpr proxy& operator=(const proxy&) = default;
 		constexpr proxy& operator=(proxy&&) = default;
-		constexpr proxy& operator=(vector4_t<T> v)
+		constexpr proxy& operator=(vector2_t<T> v)
 		{
 			x = v.x;
 			y = v.y;
@@ -1477,6 +1478,7 @@ public:
 	struct column_proxy : proxy<IsConstT>
 	{
 		using proxy<IsConstT>::proxy;
+		using proxy<IsConstT>::operator=;
 		constexpr proxy<IsConstT>::Type& row(int i)
 		{
 			return proxy<IsConstT>::vector(i);
@@ -1490,6 +1492,7 @@ public:
 	struct row_proxy : proxy<IsConstT>
 	{
 		using proxy<IsConstT>::proxy;
+		using proxy<IsConstT>::operator=;
 		constexpr proxy<IsConstT>::Type& column(int i)
 		{
 			return proxy<IsConstT>::vector(i);
@@ -1498,6 +1501,14 @@ public:
 		{
 			return proxy<IsConstT>::vector(i);
 		}
+	};
+	template <bool IsConstT>
+	struct diag_proxy : proxy<IsConstT>
+	{
+		using proxy<IsConstT>::proxy;
+		using proxy<IsConstT>::operator=;
+		using proxy<IsConstT>::x;
+		using proxy<IsConstT>::y;
 	};
 
 	constexpr column_proxy<false> column(int i)
@@ -1526,6 +1537,25 @@ public:
 		return std::array{
 		    row_proxy<true>{m00, m10},
 		    row_proxy<true>{m01, m11},
+		}[i];
+	}
+	constexpr diag_proxy<false> diag() { return diag_proxy<false>{m00, m11}; }
+	constexpr diag_proxy<true> diag() const
+	{
+		return diag_proxy<true>{m00, m11};
+	}
+	constexpr T& diag(int i)
+	{
+		return std::array{
+		    std::ref(m00),
+		    std::ref(m11),
+		}[i];
+	}
+	constexpr const T& diag(int i) const
+	{
+		return std::array{
+		    std::cref(m00),
+		    std::cref(m11),
 		}[i];
 	}
 
@@ -1647,9 +1677,9 @@ public:
 	protected:
 		using Type = std::conditional_t<IsConstT, const T, T>;
 
-		std::reference_wrapper<Type> x;
-		std::reference_wrapper<Type> y;
-		std::reference_wrapper<Type> z;
+		Type& x;
+		Type& y;
+		Type& z;
 
 		constexpr Type& vector(int i)
 		{
@@ -1667,7 +1697,7 @@ public:
 		constexpr proxy(proxy&&) = default;
 		constexpr proxy& operator=(const proxy&) = default;
 		constexpr proxy& operator=(proxy&&) = default;
-		constexpr proxy& operator=(vector4_t<T> v)
+		constexpr proxy& operator=(vector3_t<T> v)
 		{
 			x = v.x;
 			y = v.y;
@@ -1685,6 +1715,7 @@ public:
 	struct column_proxy : proxy<IsConstT>
 	{
 		using proxy<IsConstT>::proxy;
+		using proxy<IsConstT>::operator=;
 		constexpr proxy<IsConstT>::Type& row(int i)
 		{
 			return proxy<IsConstT>::vector(i);
@@ -1698,6 +1729,7 @@ public:
 	struct row_proxy : proxy<IsConstT>
 	{
 		using proxy<IsConstT>::proxy;
+		using proxy<IsConstT>::operator=;
 		constexpr proxy<IsConstT>::Type& column(int i)
 		{
 			return proxy<IsConstT>::vector(i);
@@ -1706,6 +1738,15 @@ public:
 		{
 			return proxy<IsConstT>::vector(i);
 		}
+	};
+	template <bool IsConstT>
+	struct diag_proxy : proxy<IsConstT>
+	{
+		using proxy<IsConstT>::proxy;
+		using proxy<IsConstT>::operator=;
+		using proxy<IsConstT>::x;
+		using proxy<IsConstT>::y;
+		using proxy<IsConstT>::z;
 	};
 
 	constexpr column_proxy<false> column(int i)
@@ -1738,6 +1779,30 @@ public:
 		    row_proxy<true>{m00, m10, m20},
 		    row_proxy<true>{m01, m11, m21},
 		    row_proxy<true>{m02, m12, m22},
+		}[i];
+	}
+	constexpr diag_proxy<false> diag()
+	{
+		return diag_proxy<false>{m00, m11, m22};
+	}
+	constexpr diag_proxy<true> diag() const
+	{
+		return diag_proxy<true>{m00, m11, m22};
+	}
+	constexpr T& diag(int i)
+	{
+		return std::array{
+		    std::ref(m00),
+		    std::ref(m11),
+		    std::ref(m22),
+		}[i];
+	}
+	constexpr const T& diag(int i) const
+	{
+		return std::array{
+		    std::cref(m00),
+		    std::cref(m11),
+		    std::cref(m22),
 		}[i];
 	}
 
@@ -1908,10 +1973,10 @@ public:
 	protected:
 		using Type = std::conditional_t<IsConstT, const T, T>;
 
-		std::reference_wrapper<Type> x;
-		std::reference_wrapper<Type> y;
-		std::reference_wrapper<Type> z;
-		std::reference_wrapper<Type> w;
+		Type& x;
+		Type& y;
+		Type& z;
+		Type& w;
 
 		constexpr Type& vector(int i)
 		{
@@ -1952,6 +2017,7 @@ public:
 	struct column_proxy : proxy<IsConstT>
 	{
 		using proxy<IsConstT>::proxy;
+		using proxy<IsConstT>::operator=;
 		constexpr proxy<IsConstT>::Type& row(int i)
 		{
 			return proxy<IsConstT>::vector(i);
@@ -1965,6 +2031,7 @@ public:
 	struct row_proxy : proxy<IsConstT>
 	{
 		using proxy<IsConstT>::proxy;
+		using proxy<IsConstT>::operator=;
 		constexpr proxy<IsConstT>::Type& column(int i)
 		{
 			return proxy<IsConstT>::vector(i);
@@ -1973,6 +2040,16 @@ public:
 		{
 			return proxy<IsConstT>::vector(i);
 		}
+	};
+	template <bool IsConstT>
+	struct diag_proxy : proxy<IsConstT>
+	{
+		using proxy<IsConstT>::proxy;
+		using proxy<IsConstT>::operator=;
+		using proxy<IsConstT>::x;
+		using proxy<IsConstT>::y;
+		using proxy<IsConstT>::z;
+		using proxy<IsConstT>::w;
 	};
 
 	constexpr column_proxy<false> column(int i)
@@ -2009,6 +2086,32 @@ public:
 		    row_proxy<true>{m01, m11, m21, m31},
 		    row_proxy<true>{m02, m12, m22, m32},
 		    row_proxy<true>{m03, m13, m23, m33},
+		}[i];
+	}
+	constexpr diag_proxy<false> diag()
+	{
+		return diag_proxy<false>{m00, m11, m22, m33};
+	}
+	constexpr diag_proxy<true> diag() const
+	{
+		return diag_proxy<true>{m00, m11, m22, m33};
+	}
+	constexpr T& diag(int i)
+	{
+		return std::array{
+		    std::ref(m00),
+		    std::ref(m11),
+		    std::ref(m22),
+		    std::ref(m33),
+		}[i];
+	}
+	constexpr const T& diag(int i) const
+	{
+		return std::array{
+		    std::cref(m00),
+		    std::cref(m11),
+		    std::cref(m22),
+		    std::cref(m33),
 		}[i];
 	}
 

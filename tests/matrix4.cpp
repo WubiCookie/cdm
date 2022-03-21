@@ -649,36 +649,6 @@ TEST_CASE("matrix4::rows(vector4, vector4, vector4, vector4)",
 	REQUIRE(m.row(3).column(3) == 16.0f);
 }
 
-TEST_CASE("matrix4::row(int)", "[working][unittest][matrix4]")
-{
-	vector4 v0{1.0f, 2.0f, 3.0f, 4.0f};
-	vector4 v1{5.0f, 6.0f, 7.0f, 8.0f};
-	vector4 v2{9.0f, 10.0f, 11.0f, 12.0f};
-	vector4 v3{13.0f, 14.0f, 15.0f, 16.0f};
-
-	matrix4 m = matrix4::rows(v0, v1, v2, v3);
-
-	REQUIRE(v0 == m.row(0));
-	REQUIRE(v1 == m.row(1));
-	REQUIRE(v2 == m.row(2));
-	REQUIRE(v3 == m.row(3));
-}
-
-TEST_CASE("matrix4::column(int)", "[working][unittest][matrix4]")
-{
-	vector4 v0{1.0f, 2.0f, 3.0f, 4.0f};
-	vector4 v1{5.0f, 6.0f, 7.0f, 8.0f};
-	vector4 v2{9.0f, 10.0f, 11.0f, 12.0f};
-	vector4 v3{13.0f, 14.0f, 15.0f, 16.0f};
-
-	matrix4 m = matrix4::columns(v0, v1, v2, v3);
-
-	REQUIRE(v0 == m.column(0));
-	REQUIRE(v1 == m.column(1));
-	REQUIRE(v2 == m.column(2));
-	REQUIRE(v3 == m.column(3));
-}
-
 TEST_CASE("matrix4::columns(vector4, vector4, vector4, vector4)",
           "[working][unittest][matrix4]")
 {
@@ -701,6 +671,105 @@ TEST_CASE("matrix4::columns(vector4, vector4, vector4, vector4)",
 	REQUIRE(m.column(3).row(1) == 14.0f);
 	REQUIRE(m.column(3).row(2) == 15.0f);
 	REQUIRE(m.column(3).row(3) == 16.0f);
+}
+
+TEST_CASE("matrix4::row(int)", "[working][unittest][matrix4]")
+{
+	vector4 v0{1.0f, 2.0f, 3.0f, 4.0f};
+	vector4 v1{5.0f, 6.0f, 7.0f, 8.0f};
+	vector4 v2{9.0f, 10.0f, 11.0f, 12.0f};
+	vector4 v3{13.0f, 14.0f, 15.0f, 16.0f};
+
+	matrix4 m = matrix4::rows(v0, v1, v2, v3);
+
+	REQUIRE(v0 == m.row(0));
+	REQUIRE(v1 == m.row(1));
+	REQUIRE(v2 == m.row(2));
+	REQUIRE(v3 == m.row(3));
+
+	for (int i = 0; i < 4; ++i)
+	{
+		m.row(i) = vector4(-1.0f, -2.0f, -3.0f, -4.0f);
+		REQUIRE(m.row(i).column(0) == -1.0f);
+		REQUIRE(m.row(i).column(1) == -2.0f);
+		REQUIRE(m.row(i).column(2) == -3.0f);
+		REQUIRE(m.row(i).column(3) == -4.0f);
+		REQUIRE(m.row(i) == vector4(-1.0f, -2.0f, -3.0f, -4.0f));
+	}
+}
+
+TEST_CASE("matrix4::column(int)", "[working][unittest][matrix4]")
+{
+	vector4 v0{1.0f, 2.0f, 3.0f, 4.0f};
+	vector4 v1{5.0f, 6.0f, 7.0f, 8.0f};
+	vector4 v2{9.0f, 10.0f, 11.0f, 12.0f};
+	vector4 v3{13.0f, 14.0f, 15.0f, 16.0f};
+
+	matrix4 m = matrix4::columns(v0, v1, v2, v3);
+
+	REQUIRE(v0 == m.column(0));
+	REQUIRE(v1 == m.column(1));
+	REQUIRE(v2 == m.column(2));
+	REQUIRE(v3 == m.column(3));
+
+	for (int i = 0; i < 4; ++i)
+	{
+		m.column(i) = vector4(-1.0f, -2.0f, -3.0f, -4.0f);
+		REQUIRE(m.column(i).row(0) == -1.0f);
+		REQUIRE(m.column(i).row(1) == -2.0f);
+		REQUIRE(m.column(i).row(2) == -3.0f);
+		REQUIRE(m.column(i).row(3) == -4.0f);
+		REQUIRE(m.column(i) == vector4(-1.0f, -2.0f, -3.0f, -4.0f));
+	}
+}
+
+TEST_CASE("matrix4::diag(int)", "[working][unittest][matrix4]")
+{
+	vector4 v0{1.0f, 2.0f, 3.0f, 4.0f};
+	vector4 v1{5.0f, 6.0f, 7.0f, 8.0f};
+	vector4 v2{9.0f, 10.0f, 11.0f, 12.0f};
+	vector4 v3{13.0f, 14.0f, 15.0f, 16.0f};
+
+	matrix4 m = matrix4::columns(v0, v1, v2, v3);
+
+	REQUIRE(v0.x == m.diag(0));
+	REQUIRE(v1.y == m.diag(1));
+	REQUIRE(v2.z == m.diag(2));
+	REQUIRE(v3.w == m.diag(3));
+
+	m.diag(0) = -1.0f;
+	m.diag(1) = -2.0f;
+	m.diag(2) = -3.0f;
+	m.diag(3) = -4.0f;
+
+	REQUIRE(m.diag(0) == -1.0f);
+	REQUIRE(m.diag(1) == -2.0f);
+	REQUIRE(m.diag(2) == -3.0f);
+	REQUIRE(m.diag(3) == -4.0f);
+	REQUIRE(m.diag() == vector4(-1.0f, -2.0f, -3.0f, -4.0f));
+}
+
+TEST_CASE("matrix4::diag()", "[working][unittest][matrix4]")
+{
+	vector4 v0{1.0f, 2.0f, 3.0f, 4.0f};
+	vector4 v1{5.0f, 6.0f, 7.0f, 8.0f};
+	vector4 v2{9.0f, 10.0f, 11.0f, 12.0f};
+	vector4 v3{13.0f, 14.0f, 15.0f, 16.0f};
+
+	matrix4 m = matrix4::columns(v0, v1, v2, v3);
+
+	REQUIRE(v0.x == m.diag().x);
+	REQUIRE(v1.y == m.diag().y);
+	REQUIRE(v2.z == m.diag().z);
+	REQUIRE(v3.w == m.diag().w);
+
+	m.diag() = vector4(-1.0f, -2.0f, -3.0f, -4.0f);
+
+	REQUIRE(m.diag().x == -1.0f);
+	REQUIRE(m.diag().y == -2.0f);
+	REQUIRE(m.diag().z == -3.0f);
+	REQUIRE(m.diag().w == -4.0f);
+	REQUIRE(m.diag() == vector4(-1.0f, -2.0f, -3.0f, -4.0f));
 }
 
 TEST_CASE("matrix4::is_orthogonal()", "[working][unittest][matrix4]")

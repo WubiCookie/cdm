@@ -401,8 +401,8 @@ TEST_CASE("matrix3::rotation_around_y(radian)", "[working][unittest][matrix3]")
 		vector3 v1 = m * v0;
 		CHECK_THAT(v1, Vector3Matcher(vE));
 
-		matrix3 m2 = matrix3::rotation(quaternion{direction::posY(),
-		                                          static_pi_fraction<1, 2>{}});
+		matrix3 m2 = matrix3::rotation(
+		    quaternion{direction::posY(), static_pi_fraction<1, 2>{}});
 		CHECK_THAT(m, Matrix3Matcher(m2));
 	}
 
@@ -434,8 +434,8 @@ TEST_CASE("matrix3::rotation_around_z(radian)", "[working][unittest][matrix3]")
 		const vector3 v1 = m * v0;
 		CHECK_THAT(v1, Vector3Matcher(vE));
 
-		const matrix3 m2 = matrix3::rotation(quaternion{
-		    direction::posZ(), static_pi_fraction<1, 2>{}});
+		const matrix3 m2 = matrix3::rotation(
+		    quaternion{direction::posZ(), static_pi_fraction<1, 2>{}});
 		const vector3 v2 = m2 * v0;
 		CHECK_THAT(v2, Vector3Matcher(vE));
 
@@ -472,8 +472,8 @@ TEST_CASE("matrix3::rotation_around_z(complex)",
 		CHECK(v1.y == Approx(1.0f).margin(1.0e-6));
 		CHECK(std::abs(v1.z) == almost_0);
 
-		matrix3 m2 = matrix3::rotation(quaternion{direction::posZ(),
-		                                          static_pi_fraction<1, 2>{}});
+		matrix3 m2 = matrix3::rotation(
+		    quaternion{direction::posZ(), static_pi_fraction<1, 2>{}});
 		REQUIRE_THAT(m, Matrix3Matcher(m2));
 	}
 
@@ -503,32 +503,6 @@ TEST_CASE("matrix3::rows(vector3, vector3, vector3)",
 	REQUIRE(m.row(2).column(2) == 11.0f);
 }
 
-TEST_CASE("matrix3::row(int)", "[working][unittest][matrix3]")
-{
-	vector3 v0{1.0f, 2.0f, 3.0f};
-	vector3 v1{5.0f, 6.0f, 7.0f};
-	vector3 v2{9.0f, 10.0f, 11.0f};
-
-	matrix3 m = matrix3::rows(v0, v1, v2);
-
-	REQUIRE(v0 == m.row(0));
-	REQUIRE(v1 == m.row(1));
-	REQUIRE(v2 == m.row(2));
-}
-
-TEST_CASE("matrix3::column(int)", "[working][unittest][matrix3]")
-{
-	vector3 v0{1.0f, 2.0f, 3.0f};
-	vector3 v1{5.0f, 6.0f, 7.0f};
-	vector3 v2{9.0f, 10.0f, 11.0f};
-
-	matrix3 m = matrix3::columns(v0, v1, v2);
-
-	REQUIRE(v0 == m.column(0));
-	REQUIRE(v1 == m.column(1));
-	REQUIRE(v2 == m.column(2));
-}
-
 TEST_CASE("matrix3::columns(vector3, vector3, vector3)",
           "[working][unittest][matrix3]")
 {
@@ -543,6 +517,92 @@ TEST_CASE("matrix3::columns(vector3, vector3, vector3)",
 	REQUIRE(m.column(2).row(0) == 9.0f);
 	REQUIRE(m.column(2).row(1) == 10.0f);
 	REQUIRE(m.column(2).row(2) == 11.0f);
+}
+
+TEST_CASE("matrix3::row(int)", "[working][unittest][matrix3]")
+{
+	vector3 v0{1.0f, 2.0f, 3.0f};
+	vector3 v1{5.0f, 6.0f, 7.0f};
+	vector3 v2{9.0f, 10.0f, 11.0f};
+
+	matrix3 m = matrix3::rows(v0, v1, v2);
+
+	REQUIRE(v0 == m.row(0));
+	REQUIRE(v1 == m.row(1));
+	REQUIRE(v2 == m.row(2));
+
+	for (int i = 0; i < 3; ++i)
+	{
+		m.row(i) = vector3(-1.0f, -2.0f, -3.0f);
+		REQUIRE(m.row(i).column(0) == -1.0f);
+		REQUIRE(m.row(i).column(1) == -2.0f);
+		REQUIRE(m.row(i).column(2) == -3.0f);
+		REQUIRE(m.row(i) == vector3(-1.0f, -2.0f, -3.0f));
+	}
+}
+
+TEST_CASE("matrix3::column(int)", "[working][unittest][matrix3]")
+{
+	vector3 v0{1.0f, 2.0f, 3.0f};
+	vector3 v1{5.0f, 6.0f, 7.0f};
+	vector3 v2{9.0f, 10.0f, 11.0f};
+
+	matrix3 m = matrix3::columns(v0, v1, v2);
+
+	REQUIRE(v0 == m.column(0));
+	REQUIRE(v1 == m.column(1));
+	REQUIRE(v2 == m.column(2));
+
+	for (int i = 0; i < 3; ++i)
+	{
+		m.column(i) = vector3(-1.0f, -2.0f, -3.0f);
+		REQUIRE(m.column(i).row(0) == -1.0f);
+		REQUIRE(m.column(i).row(1) == -2.0f);
+		REQUIRE(m.column(i).row(2) == -3.0f);
+		REQUIRE(m.column(i) == vector3(-1.0f, -2.0f, -3.0f));
+	}
+}
+
+TEST_CASE("matrix3::diag(int)", "[working][unittest][matrix3]")
+{
+	vector3 v0{1.0f, 2.0f, 3.0f};
+	vector3 v1{5.0f, 6.0f, 7.0f};
+	vector3 v2{9.0f, 10.0f, 11.0f};
+
+	matrix3 m = matrix3::columns(v0, v1, v2);
+
+	REQUIRE(v0.x == m.diag(0));
+	REQUIRE(v1.y == m.diag(1));
+	REQUIRE(v2.z == m.diag(2));
+
+	m.diag(0) = -1.0f;
+	m.diag(1) = -2.0f;
+	m.diag(2) = -3.0f;
+
+	REQUIRE(m.diag(0) == -1.0f);
+	REQUIRE(m.diag(1) == -2.0f);
+	REQUIRE(m.diag(2) == -3.0f);
+	REQUIRE(m.diag() == vector3(-1.0f, -2.0f, -3.0f));
+}
+
+TEST_CASE("matrix3::diag()", "[working][unittest][matrix3]")
+{
+	vector3 v0{1.0f, 2.0f, 3.0f};
+	vector3 v1{5.0f, 6.0f, 7.0f};
+	vector3 v2{9.0f, 10.0f, 11.0f};
+
+	matrix3 m = matrix3::columns(v0, v1, v2);
+
+	REQUIRE(v0.x == m.diag().x);
+	REQUIRE(v1.y == m.diag().y);
+	REQUIRE(v2.z == m.diag().z);
+
+	m.diag() = vector3(-1.0f, -2.0f, -3.0f);
+
+	REQUIRE(m.diag().x == -1.0f);
+	REQUIRE(m.diag().y == -2.0f);
+	REQUIRE(m.diag().z == -3.0f);
+	REQUIRE(m.diag() == vector3(-1.0f, -2.0f, -3.0f));
 }
 
 TEST_CASE("matrix3::is_orthogonal()", "[working][unittest][matrix3]")

@@ -1,3 +1,6 @@
+#define CATCH_CONFIG_MAIN
+#include <catch2/catch.hpp>
+
 #include <common.hpp>
 
 #define FRACTION_TEST_CASE_TYPE(T, NUMERATOR, DENOMINATOR)            \

@@ -103,7 +103,9 @@ struct quaternion_t;
 template <typename T>
 struct line_t;
 template <typename T>
-struct segment2d_t;
+struct segment2_t;
+template <typename T>
+struct segment3_t;
 template <typename T>
 struct plane_t;
 template <typename T>
@@ -111,23 +113,23 @@ struct aa_rect_t;
 template <typename T>
 struct circle_t;
 template <typename T>
-struct ray2d_t;
+struct ray2_t;
 template <typename T>
-struct ray3d_t;
+struct ray3_t;
 template <typename T>
 struct aabb_t;
 template <typename T>
-struct transform2d_t;
+struct transform2_t;
 template <typename T>
-struct transform3d_t;
+struct transform3_t;
 template <typename T>
-struct uniform_transform2d_t;
+struct uniform_transform2_t;
 template <typename T>
-struct uniform_transform3d_t;
+struct uniform_transform3_t;
 template <typename T>
-struct unscaled_transform2d_t;
+struct unscaled_transform2_t;
 template <typename T>
-struct unscaled_transform3d_t;
+struct unscaled_transform3_t;
 template <typename T>
 class value_domain;
 template <typename T>
@@ -1858,9 +1860,9 @@ public:
 	explicit matrix4_t(matrix2_t<T> m);
 	explicit matrix4_t(const matrix3_t<T>& m);
 	explicit matrix4_t(const perspective_t<T>& p);
-	explicit matrix4_t(const transform3d_t<T>& t);
-	explicit matrix4_t(const uniform_transform3d_t<T>& t);
-	explicit matrix4_t(const unscaled_transform3d_t<T>& t);
+	explicit matrix4_t(const transform3_t<T>& t);
+	explicit matrix4_t(const uniform_transform3_t<T>& t);
+	explicit matrix4_t(const unscaled_transform3_t<T>& t);
 	explicit matrix4_t(const std::array<T, 16>& a);
 	matrix4_t(const matrix4_t&) = default;
 	matrix4_t(matrix4_t&&) = default;
@@ -2130,21 +2132,21 @@ public:
 };
 
 template <typename T>
-matrix4_t<T> operator*(const transform3d_t<T>& t, const matrix4_t<T>& m);
+matrix4_t<T> operator*(const transform3_t<T>& t, const matrix4_t<T>& m);
 template <typename T>
-matrix4_t<T> operator*(const matrix4_t<T>& m, const transform3d_t<T>& t);
+matrix4_t<T> operator*(const matrix4_t<T>& m, const transform3_t<T>& t);
 template <typename T>
-matrix4_t<T> operator*(const uniform_transform3d_t<T>& t,
+matrix4_t<T> operator*(const uniform_transform3_t<T>& t,
                        const matrix4_t<T>& m);
 template <typename T>
 matrix4_t<T> operator*(const matrix4_t<T>& m,
-                       const uniform_transform3d_t<T>& t);
+                       const uniform_transform3_t<T>& t);
 template <typename T>
-matrix4_t<T> operator*(const unscaled_transform3d_t<T>& t,
+matrix4_t<T> operator*(const unscaled_transform3_t<T>& t,
                        const matrix4_t<T>& m);
 template <typename T>
 matrix4_t<T> operator*(const matrix4_t<T>& m,
-                       const unscaled_transform3d_t<T>& t);
+                       const unscaled_transform3_t<T>& t);
 #pragma endregion
 
 #pragma region declaration_perspective_t
@@ -2201,11 +2203,11 @@ public:
 	friend vector4_t<U> operator*(const perspective_t<U>& p,
 	                              const vector4_t<U>& v);
 	template <typename U>
-	friend matrix4_t<U> operator*(const unscaled_transform3d_t<U>& t,
+	friend matrix4_t<U> operator*(const unscaled_transform3_t<U>& t,
 	                              const perspective_t<U>& p);
 	template <typename U>
 	friend matrix4_t<U> operator*(const perspective_t<U>& p,
-	                              const unscaled_transform3d_t<U>& t);
+	                              const unscaled_transform3_t<U>& t);
 };
 #pragma endregion
 
@@ -2316,19 +2318,38 @@ template <typename T>
 bool collides(line_t<T> l1, line_t<T> l2, vector2_t<T>& intersection);
 #pragma endregion
 
-#pragma region declaration_segment2d_t
+#pragma region declaration_segment2_t
 template <typename T>
-struct segment2d_t
+struct segment2_t
 {
 	vector2_t<T> origin;
 	vector2_t<T> end;
 };
 
 template <typename T>
-bool collides(const segment2d_t<T>& s0,
-              const segment2d_t<T>& s1,
+bool collides(const segment2_t<T>& s0,
+              const segment2_t<T>& s1,
               vector2_t<T>& outPoint,
               T e = T(epsilon));
+#pragma endregion
+
+#pragma region declaration_segment3_t
+template <typename T>
+struct segment3_t
+{
+	vector3_t<T> origin;
+	vector3_t<T> end;
+};
+
+template <typename T>
+constexpr bool collides(const segment3_t<T>& s,
+                        const plane_t<T>& p,
+                        T e = T(epsilon)) noexcept;
+template <typename T>
+constexpr bool collides(const segment3_t<T>& s,
+                        const plane_t<T>& p,
+                        vector3_t<T>& outPoint,
+                        T e = T(epsilon)) noexcept;
 #pragma endregion
 
 #pragma region declaration_plane_t
@@ -2356,18 +2377,18 @@ struct plane_t
 };
 #pragma endregion
 
-#pragma region declaration_ray2d_t
+#pragma region declaration_ray2_t
 template <typename T>
-struct ray2d_t
+struct ray2_t
 {
 	vector2_t<T> origin;
 	normalized<vector2_t<T>> direction;
 };
 #pragma endregion
 
-#pragma region declaration_ray3d_t
+#pragma region declaration_ray3_t
 template <typename T>
-struct ray3d_t
+struct ray3_t
 {
 	vector3_t<T> origin;
 	direction_t<T> direction;
@@ -2436,16 +2457,16 @@ std::size_t collides(line_t<T> l,
                      vector2_t<T>* insersection2);
 
 template <typename T>
-bool collides(ray3d_t<T> r, plane_t<T> p);
+bool collides(ray3_t<T> r, plane_t<T> p);
 template <typename T>
-bool collides(ray3d_t<T> r, plane_t<T> p, vector3_t<T>& intersection);
+bool collides(ray3_t<T> r, plane_t<T> p, vector3_t<T>& intersection);
 template <typename T>
-bool collides(plane_t<T> p, ray3d_t<T> r);
+bool collides(plane_t<T> p, ray3_t<T> r);
 template <typename T>
-bool collides(plane_t<T> p, ray3d_t<T> r, vector3_t<T>& intersection);
+bool collides(plane_t<T> p, ray3_t<T> r, vector3_t<T>& intersection);
 template <typename T>
 bool collides_bidirectional(const plane_t<T>& plane,
-                            ray3d_t<T> r,
+                            ray3_t<T> r,
                             vector3_t<T>& collision_point);
 #pragma endregion
 
@@ -2463,62 +2484,62 @@ struct aabb_t
 };
 
 template <typename T>
-bool collides(aabb_t<T> b, ray3d_t<T> r);
+bool collides(aabb_t<T> b, ray3_t<T> r);
 template <typename T>
 bool collides(aabb_t<T> b1, aabb_t<T> b2);
 #pragma endregion
 
-#pragma region declaration_transform2d_t
+#pragma region declaration_transform2_t
 template <typename T>
-struct transform2d_t
+struct transform2_t
 {
 	vector2_t<T> position;
 	normalized<complex_t<T>> rotation;
 	vector2_t<T> scale;
 
-	transform2d_t operator*(const transform2d_t& t) const;
+	transform2_t operator*(const transform2_t& t) const;
 	vector2_t<T> operator*(vector2_t<T> v) const;
 };
 #pragma endregion
 
-#pragma region declaration_transform3d_t
+#pragma region declaration_transform3_t
 template <typename T>
-struct transform3d_t
+struct transform3_t
 {
 	vector3_t<T> position;
 	quaternion_t<T> rotation;
 	vector3_t<T> scale;
 
-	static transform3d_t identity();
+	static transform3_t identity();
 
-	transform3d_t& translate_absolute(vector3_t<T> t);
-	transform3d_t& translate_relative(vector3_t<T> t);
-	transform3d_t& rotate(quaternion_t<T> r);
+	transform3_t& translate_absolute(vector3_t<T> t);
+	transform3_t& translate_relative(vector3_t<T> t);
+	transform3_t& rotate(quaternion_t<T> r);
 
 	matrix4_t<T> to_matrix4() const;
 
-	transform3d_t operator*(const transform3d_t& t) const;
+	transform3_t operator*(const transform3_t& t) const;
 	vector3_t<T> operator*(vector3_t<T> v) const;
 	quaternion_t<T> operator*(quaternion_t<T> q) const;
 };
 #pragma endregion
 
-#pragma region declaration_uniform_transform2d_t
+#pragma region declaration_uniform_transform2_t
 template <typename T>
-struct uniform_transform2d_t
+struct uniform_transform2_t
 {
 	vector2_t<T> position;
 	radian_t<T> rotation;
 	T scale;
 
-	uniform_transform2d_t operator*(uniform_transform2d_t t) const;
+	uniform_transform2_t operator*(uniform_transform2_t t) const;
 	vector2_t<T> operator*(vector2_t<T> v) const;
 };
 #pragma endregion
 
-#pragma region declaration_uniform_transform3d_t
+#pragma region declaration_uniform_transform3_t
 template <typename T>
-struct uniform_transform3d_t
+struct uniform_transform3_t
 {
 	vector3_t<T> position;
 	quaternion_t<T> rotation;
@@ -2526,47 +2547,47 @@ struct uniform_transform3d_t
 
 	matrix4_t<T> to_matrix4() const;
 
-	uniform_transform3d_t operator*(const uniform_transform3d_t& t) const;
+	uniform_transform3_t operator*(const uniform_transform3_t& t) const;
 	vector3_t<T> operator*(vector3_t<T> v) const;
 	quaternion_t<T> operator*(quaternion_t<T> q) const;
 };
 #pragma endregion
 
-#pragma region declaration_unscaled_transform2d_t
+#pragma region declaration_unscaled_transform2_t
 template <typename T>
-struct unscaled_transform2d_t
+struct unscaled_transform2_t
 {
 	vector2_t<T> position;
 	radian_t<T> rotation;
 
-	unscaled_transform2d_t operator*(unscaled_transform2d_t t) const;
+	unscaled_transform2_t operator*(unscaled_transform2_t t) const;
 	vector2_t<T> operator*(vector2_t<T> v) const;
 };
 #pragma endregion
 
-#pragma region declaration_unscaled_transform3d_t
+#pragma region declaration_unscaled_transform3_t
 template <typename T>
-struct unscaled_transform3d_t
+struct unscaled_transform3_t
 {
 	vector3_t<T> position;
 	quaternion_t<T> rotation;
 
-	unscaled_transform3d_t& translate_absolute(vector3_t<T> t);
-	unscaled_transform3d_t& translate_relative(vector3_t<T> t);
-	unscaled_transform3d_t& rotate(quaternion_t<T> r);
+	unscaled_transform3_t& translate_absolute(vector3_t<T> t);
+	unscaled_transform3_t& translate_relative(vector3_t<T> t);
+	unscaled_transform3_t& rotate(quaternion_t<T> r);
 
-	unscaled_transform3d_t& inverse();
-	unscaled_transform3d_t get_inversed() const;
+	unscaled_transform3_t& inverse();
+	unscaled_transform3_t get_inversed() const;
 
 	matrix4_t<T> to_matrix4() const;
 
-	unscaled_transform3d_t operator*(const unscaled_transform3d_t& t) const;
+	unscaled_transform3_t operator*(const unscaled_transform3_t& t) const;
 	vector3_t<T> operator*(vector3_t<T> v) const;
 	quaternion_t<T> operator*(quaternion_t<T> q) const;
 };
 
 template <typename T>
-unscaled_transform3d_t<T> inverse(unscaled_transform3d_t<T> tr);
+unscaled_transform3_t<T> inverse(unscaled_transform3_t<T> tr);
 #pragma endregion
 
 #pragma region declaration_value_domain
@@ -4344,16 +4365,16 @@ matrix4_t<T>::matrix4_t(const perspective_t<T>& p) : matrix4_t(p.to_matrix4())
 {
 }
 template <typename T>
-matrix4_t<T>::matrix4_t(const transform3d_t<T>& t) : matrix4_t(t.to_matrix4())
+matrix4_t<T>::matrix4_t(const transform3_t<T>& t) : matrix4_t(t.to_matrix4())
 {
 }
 template <typename T>
-matrix4_t<T>::matrix4_t(const uniform_transform3d_t<T>& t)
+matrix4_t<T>::matrix4_t(const uniform_transform3_t<T>& t)
     : matrix4_t(t.to_matrix4())
 {
 }
 template <typename T>
-matrix4_t<T>::matrix4_t(const unscaled_transform3d_t<T>& t)
+matrix4_t<T>::matrix4_t(const unscaled_transform3_t<T>& t)
     : matrix4_t(t.to_matrix4())
 {
 }
@@ -4794,36 +4815,34 @@ matrix4_t<T> matrix4_t<T>::get_transposed() const
 }
 
 template <typename T>
-matrix4_t<T> operator*(const transform3d_t<T>& t, const matrix4_t<T>& m)
+matrix4_t<T> operator*(const transform3_t<T>& t, const matrix4_t<T>& m)
 {
 	return t.to_matrix4() * m;
 }
 template <typename T>
-matrix4_t<T> operator*(const matrix4_t<T>& m, const transform3d_t<T>& t)
+matrix4_t<T> operator*(const matrix4_t<T>& m, const transform3_t<T>& t)
 {
 	return m * t.to_matrix4();
 }
 template <typename T>
-matrix4_t<T> operator*(const uniform_transform3d_t<T>& t,
+matrix4_t<T> operator*(const uniform_transform3_t<T>& t, const matrix4_t<T>& m)
+{
+	return t.to_matrix4() * m;
+}
+template <typename T>
+matrix4_t<T> operator*(const matrix4_t<T>& m, const uniform_transform3_t<T>& t)
+{
+	return m * t.to_matrix4();
+}
+template <typename T>
+matrix4_t<T> operator*(const unscaled_transform3_t<T>& t,
                        const matrix4_t<T>& m)
 {
 	return t.to_matrix4() * m;
 }
 template <typename T>
 matrix4_t<T> operator*(const matrix4_t<T>& m,
-                       const uniform_transform3d_t<T>& t)
-{
-	return m * t.to_matrix4();
-}
-template <typename T>
-matrix4_t<T> operator*(const unscaled_transform3d_t<T>& t,
-                       const matrix4_t<T>& m)
-{
-	return t.to_matrix4() * m;
-}
-template <typename T>
-matrix4_t<T> operator*(const matrix4_t<T>& m,
-                       const unscaled_transform3d_t<T>& t)
+                       const unscaled_transform3_t<T>& t)
 {
 	return m * t.to_matrix4();
 }
@@ -5048,7 +5067,7 @@ vector4_t<T> operator*(const perspective_t<T>& p, const vector4_t<T>& v)
 	return {a * v.x, b * v.y, c * v.z + d * v.w, -v.z};
 }
 template <typename T>
-matrix4_t<T> operator*(const unscaled_transform3d_t<T>& t,
+matrix4_t<T> operator*(const unscaled_transform3_t<T>& t,
                        const perspective_t<T>& p)
 {
 	const T a = p.m_invRatio * p.m_invTanHalfFovy;
@@ -5086,7 +5105,7 @@ matrix4_t<T> operator*(const unscaled_transform3d_t<T>& t,
 }
 template <typename T>
 matrix4_t<T> operator*(const perspective_t<T>& p,
-                       const unscaled_transform3d_t<T>& t)
+                       const unscaled_transform3_t<T>& t)
 {
 	const T a = p.m_invRatio * p.m_invTanHalfFovy;
 	const T b = -p.m_invTanHalfFovy;
@@ -5488,8 +5507,8 @@ bool collides(aa_rect_t<T> r1, aa_rect_t<T> r2)
 
 // https://stackoverflow.com/a/565282
 template <typename T>
-bool intersects(segment2d_t<T> s0,
-                segment2d_t<T> s1,
+bool intersects(segment2_t<T> s0,
+                segment2_t<T> s1,
                 vector2_t<T>& outPoint,
                 T e = T(epsilon))
 {
@@ -5548,6 +5567,64 @@ bool intersects(segment2d_t<T> s0,
 }
 #pragma endregion
 
+#pragma region definition_segment3_t
+template <typename T>
+constexpr bool collides(const segment3_t<T>& seg,
+                        const plane_t<T>& plane,
+                        T e) noexcept
+{
+	// distances to point
+	const T p0 = plane.evaluate(seg.origin);
+	const T p1 = plane.evaluate(seg.end);
+
+	// are considered on the plane
+	if (nearly_equal(p0, T(0), e) || nearly_equal(p1, T(0), e))
+		return true;
+
+	// if both points are on the same side of the plane
+	if ((p0 > T(0) && p1 > T(0)) || (p0 < T(0) && p1 < T(0)))
+		return false;  // no collision
+
+	return true;
+}
+
+// I feel like there's a simpler and more efficient way to do this...
+template <typename T>
+constexpr bool collides(const segment3_t<T>& seg,
+                        const plane_t<T>& plane,
+                        vector3_t<T>& outPoint,
+                        T e) noexcept
+{
+	// distances to point
+	const T p0 = plane.evaluate(seg.origin);
+	const T p1 = plane.evaluate(seg.end);
+
+	// are considered on the plane
+	if (nearly_equal(p0, T(0), e))
+	{
+		outPoint = seg.origin;
+		return true;
+	}
+	if (nearly_equal(p1, T(0), e))
+	{
+		outPoint = seg.end;
+		return true;
+	}
+
+	// if both points are on the same side of the plane
+	if ((p0 > T(0) && p1 > T(0)) || (p0 < T(0) && p1 < T(0)))
+		return false;  // no collision
+
+	const value_domain<T> d{p0, p1};
+	const unnormalized_value<T> v{d, T(0)};
+	const normalized_value<T> n{v};
+
+	outPoint = lerp(seg.origin, seg.end, n.value());
+
+	return true;
+}
+#pragma endregion
+
 #pragma region definition_plane_t
 template <typename T>
 T plane_t<T>::evaluate(vector3_t<T> point) const
@@ -5602,7 +5679,7 @@ direction_t<T> plane_t<T>::computeTangent(T epsilon_) const
 
 template <typename T>
 bool collides(const plane_t<T>& plane,
-              ray3d_t<T> r,
+              ray3_t<T> r,
               vector3_t<T>& collision_point)
 {
 	const T denom = dot(*plane.normal, r.direction);
@@ -5619,7 +5696,7 @@ bool collides(const plane_t<T>& plane,
 }
 template <typename T>
 bool collides_bidirectional(const plane_t<T>& plane,
-                            ray3d_t<T> r,
+                            ray3_t<T> r,
                             vector3_t<T>& collision_point)
 {
 	const T denom = dot(*plane.normal, *r.direction);
@@ -5662,7 +5739,7 @@ aabb_t<T> aabb_t<T>::operator+(aabb_t<T> rhs) const
 }
 
 template <typename T>
-bool collides(aabb_t<T> b, ray3d_t<T> r)
+bool collides(aabb_t<T> b, ray3_t<T> r)
 {
 	const vector3_t<T> inv{
 	    T(1) / r.direction->x,  //
@@ -5729,11 +5806,11 @@ bool collides(aabb_t<T> b1, aabb_t<T> b2)
 }
 #pragma endregion
 
-#pragma region definition_transform2d_t
+#pragma region definition_transform2_t
 template <typename T>
-transform2d_t<T> transform2d_t<T>::operator*(const transform2d_t<T>& t) const
+transform2_t<T> transform2_t<T>::operator*(const transform2_t<T>& t) const
 {
-	transform2d_t<T> res;
+	transform2_t<T> res;
 	res.position =
 	    rotation * vector2_t(scale.x * t.position.x, scale.y * t.position.y) +
 	    position;
@@ -5742,17 +5819,17 @@ transform2d_t<T> transform2d_t<T>::operator*(const transform2d_t<T>& t) const
 	return res;
 }
 template <typename T>
-vector2_t<T> transform2d_t<T>::operator*(vector2_t<T> v) const
+vector2_t<T> transform2_t<T>::operator*(vector2_t<T> v) const
 {
 	return rotation * vector2_t(scale.x * v.x, scale.y * v.y) + position;
 }
 #pragma endregion
 
-#pragma region definition_transform3d_t
+#pragma region definition_transform3_t
 template <typename T>
-transform3d_t<T> transform3d_t<T>::identity()
+transform3_t<T> transform3_t<T>::identity()
 {
-	return transform3d_t<T>{
+	return transform3_t<T>{
 	    .position{
 	        T(0),
 	        T(0),
@@ -5767,7 +5844,7 @@ transform3d_t<T> transform3d_t<T>::identity()
 	};
 }
 template <typename T>
-matrix4_t<T> transform3d_t<T>::to_matrix4() const
+matrix4_t<T> transform3_t<T>::to_matrix4() const
 {
 	matrix4_t<T> res{matrix4_t<T>::rotation(rotation)};
 
@@ -5790,28 +5867,28 @@ matrix4_t<T> transform3d_t<T>::to_matrix4() const
 	return res;
 }
 template <typename T>
-transform3d_t<T>& transform3d_t<T>::translate_absolute(vector3_t<T> t)
+transform3_t<T>& transform3_t<T>::translate_absolute(vector3_t<T> t)
 {
 	position += t;
 	return *this;
 }
 template <typename T>
-transform3d_t<T>& transform3d_t<T>::translate_relative(vector3_t<T> t)
+transform3_t<T>& transform3_t<T>::translate_relative(vector3_t<T> t)
 {
 	position += rotation * t;
 	return *this;
 }
 template <typename T>
-transform3d_t<T>& transform3d_t<T>::rotate(quaternion_t<T> r)
+transform3_t<T>& transform3_t<T>::rotate(quaternion_t<T> r)
 {
 	rotation = r * rotation;
 	return *this;
 }
 
 template <typename T>
-transform3d_t<T> transform3d_t<T>::operator*(const transform3d_t<T>& t) const
+transform3_t<T> transform3_t<T>::operator*(const transform3_t<T>& t) const
 {
-	transform3d_t<T> res{*this};
+	transform3_t<T> res{*this};
 	// res.position = rotation *
 	//                   vector3_t{
 	//                       scale.x * t.position.x,  //
@@ -5842,7 +5919,7 @@ transform3d_t<T> transform3d_t<T>::operator*(const transform3d_t<T>& t) const
 	return res;
 }
 template <typename T>
-vector3_t<T> transform3d_t<T>::operator*(vector3_t<T> v) const
+vector3_t<T> transform3_t<T>::operator*(vector3_t<T> v) const
 {
 	vector3_t<T> res = rotation * v;
 	res.x *= scale.x;
@@ -5851,18 +5928,18 @@ vector3_t<T> transform3d_t<T>::operator*(vector3_t<T> v) const
 	return res + position;
 }
 template <typename T>
-quaternion_t<T> transform3d_t<T>::operator*(quaternion_t<T> q) const
+quaternion_t<T> transform3_t<T>::operator*(quaternion_t<T> q) const
 {
 	return rotation * q;
 }
 #pragma endregion
 
-#pragma region definition_uniform_transform2d_t
+#pragma region definition_uniform_transform2_t
 template <typename T>
-uniform_transform2d_t<T> uniform_transform2d_t<T>::operator*(
-    uniform_transform2d_t<T> t) const
+uniform_transform2_t<T> uniform_transform2_t<T>::operator*(
+    uniform_transform2_t<T> t) const
 {
-	uniform_transform2d_t<T> res;
+	uniform_transform2_t<T> res;
 	matrix2_t r = matrix2_t<T>::rotation(rotation);
 	res.position = r * (scale * t.position) + position;
 	res.rotation = rotation + t.rotation;
@@ -5870,16 +5947,16 @@ uniform_transform2d_t<T> uniform_transform2d_t<T>::operator*(
 	return res;
 }
 template <typename T>
-vector2_t<T> uniform_transform2d_t<T>::operator*(vector2_t<T> v) const
+vector2_t<T> uniform_transform2_t<T>::operator*(vector2_t<T> v) const
 {
 	matrix2_t r = matrix2_t::rotation(rotation);
 	return r * (scale * v) + position;
 }
 #pragma endregion
 
-#pragma region definition_uniform_transform3d_t
+#pragma region definition_uniform_transform3_t
 template <typename T>
-matrix4_t<T> uniform_transform3d_t<T>::to_matrix4() const
+matrix4_t<T> uniform_transform3_t<T>::to_matrix4() const
 {
 	matrix4_t<T> res{matrix4_t<T>::rotation(rotation)};
 
@@ -5902,85 +5979,85 @@ matrix4_t<T> uniform_transform3d_t<T>::to_matrix4() const
 	return res;
 }
 template <typename T>
-uniform_transform3d_t<T> uniform_transform3d_t<T>::operator*(
-    const uniform_transform3d_t<T>& t) const
+uniform_transform3_t<T> uniform_transform3_t<T>::operator*(
+    const uniform_transform3_t<T>& t) const
 {
-	uniform_transform3d_t<T> res;
+	uniform_transform3_t<T> res;
 	res.position = rotation * (scale * t.position) + position;
 	res.rotation = rotation * t.rotation;
 	res.scale = scale * t.scale;
 	return res;
 }
 template <typename T>
-vector3_t<T> uniform_transform3d_t<T>::operator*(vector3_t<T> v) const
+vector3_t<T> uniform_transform3_t<T>::operator*(vector3_t<T> v) const
 {
 	return rotation * (scale * v) + position;
 }
 template <typename T>
-quaternion_t<T> uniform_transform3d_t<T>::operator*(quaternion_t<T> q) const
+quaternion_t<T> uniform_transform3_t<T>::operator*(quaternion_t<T> q) const
 {
 	return rotation * q;
 }
 #pragma endregion
 
-#pragma region definition_unscaled_transform2d_t
+#pragma region definition_unscaled_transform2_t
 template <typename T>
-unscaled_transform2d_t<T> unscaled_transform2d_t<T>::operator*(
-    unscaled_transform2d_t<T> t) const
+unscaled_transform2_t<T> unscaled_transform2_t<T>::operator*(
+    unscaled_transform2_t<T> t) const
 {
-	unscaled_transform2d_t<T> res;
+	unscaled_transform2_t<T> res;
 	matrix2_t<T> r = matrix2_t<T>::rotation(rotation);
 	res.position = r * t.position + position;
 	res.rotation = rotation + t.rotation;
 	return res;
 }
 template <typename T>
-vector2_t<T> unscaled_transform2d_t<T>::operator*(vector2_t<T> v) const
+vector2_t<T> unscaled_transform2_t<T>::operator*(vector2_t<T> v) const
 {
 	matrix2_t<T> r = matrix2_t::rotation(rotation);
 	return r * v + position;
 }
 #pragma endregion
 
-#pragma region definition_unscaled_transform3d_t
+#pragma region definition_unscaled_transform3_t
 template <typename T>
-unscaled_transform3d_t<T>& unscaled_transform3d_t<T>::translate_absolute(
+unscaled_transform3_t<T>& unscaled_transform3_t<T>::translate_absolute(
     vector3_t<T> t)
 {
 	position += t;
 	return *this;
 }
 template <typename T>
-unscaled_transform3d_t<T>& unscaled_transform3d_t<T>::translate_relative(
+unscaled_transform3_t<T>& unscaled_transform3_t<T>::translate_relative(
     vector3_t<T> t)
 {
 	position += rotation * t;
 	return *this;
 }
 template <typename T>
-unscaled_transform3d_t<T>& unscaled_transform3d_t<T>::rotate(quaternion_t<T> r)
+unscaled_transform3_t<T>& unscaled_transform3_t<T>::rotate(quaternion_t<T> r)
 {
 	rotation = r * rotation;
 	return *this;
 }
 
 template <typename T>
-unscaled_transform3d_t<T>& unscaled_transform3d_t<T>::inverse()
+unscaled_transform3_t<T>& unscaled_transform3_t<T>::inverse()
 {
 	rotation.inverse();
 	position = rotation * -position;
 	return *this;
 }
 template <typename T>
-unscaled_transform3d_t<T> unscaled_transform3d_t<T>::get_inversed() const
+unscaled_transform3_t<T> unscaled_transform3_t<T>::get_inversed() const
 {
-	unscaled_transform3d_t<T> res{*this};
+	unscaled_transform3_t<T> res{*this};
 	res.inverse();
 	return res;
 }
 
 template <typename T>
-matrix4_t<T> unscaled_transform3d_t<T>::to_matrix4() const
+matrix4_t<T> unscaled_transform3_t<T>::to_matrix4() const
 {
 	matrix4_t<T> res{matrix4_t<T>::rotation(rotation)};
 
@@ -5992,7 +6069,7 @@ matrix4_t<T> unscaled_transform3d_t<T>::to_matrix4() const
 }
 
 template <typename T>
-unscaled_transform3d_t<T> inverse(unscaled_transform3d_t<T> t)
+unscaled_transform3_t<T> inverse(unscaled_transform3_t<T> t)
 {
 	t.rotation = inverse(t.rotation);
 	t.position = t.rotation * -t.position;
@@ -6000,21 +6077,21 @@ unscaled_transform3d_t<T> inverse(unscaled_transform3d_t<T> t)
 }
 
 template <typename T>
-unscaled_transform3d_t<T> unscaled_transform3d_t<T>::operator*(
-    const unscaled_transform3d_t<T>& t) const
+unscaled_transform3_t<T> unscaled_transform3_t<T>::operator*(
+    const unscaled_transform3_t<T>& t) const
 {
-	unscaled_transform3d_t<T> res;
+	unscaled_transform3_t<T> res;
 	res.position = rotation * t.position + position;
 	res.rotation = rotation * t.rotation;
 	return res;
 }
 template <typename T>
-vector3_t<T> unscaled_transform3d_t<T>::operator*(vector3_t<T> v) const
+vector3_t<T> unscaled_transform3_t<T>::operator*(vector3_t<T> v) const
 {
 	return rotation * v + position;
 }
 template <typename T>
-quaternion_t<T> unscaled_transform3d_t<T>::operator*(quaternion_t<T> q) const
+quaternion_t<T> unscaled_transform3_t<T>::operator*(quaternion_t<T> q) const
 {
 	return rotation * q;
 }
@@ -6162,19 +6239,19 @@ std::ostream& operator<<(std::ostream& os, const cdm::normalized<T>& n)
 	return os << *n;
 }
 template <typename T>
-std::ostream& operator<<(std::ostream& os, transform3d_t<T> t)
+std::ostream& operator<<(std::ostream& os, transform3_t<T> t)
 {
 	// clang-format off
-	return os << "transform3d_t(position = " << t.position << ",\n"
+	return os << "transform3_t(position = " << t.position << ",\n"
 	          << "              rotation = " << t.rotation << ",\n"
 	          << "              scale =    " << t.scale << ")";
 	// clang-format on
 }
 template <typename T>
-std::ostream& operator<<(std::ostream& os, segment2d_t<T> t)
+std::ostream& operator<<(std::ostream& os, segment2_t<T> t)
 {
 	// clang-format off
-	return os << "segment2d_t(origin = " << t.origin << ",\n"
+	return os << "segment2_t(origin = " << t.origin << ",\n"
 	          << "            end =    " << t.end << ")";
 	// clang-format on
 }
@@ -6368,32 +6445,34 @@ using quaternion = quaternion_t<float>;
 using quaterniond = quaternion_t<double>;
 using line = line_t<float>;
 using lined = line_t<double>;
-using segment2d = segment2d_t<float>;
-using segment2dd = segment2d_t<double>;
+using segment2 = segment2_t<float>;
+using segment2d = segment2_t<double>;
+using segment3 = segment3_t<float>;
+using segment3d = segment3_t<double>;
 using plane = plane_t<float>;
 using planed = plane_t<double>;
 using aa_rect = aa_rect_t<float>;
 using aa_rectd = aa_rect_t<double>;
 using circle = circle_t<float>;
 using circled = circle_t<double>;
-using ray2d = ray2d_t<float>;
-using ray2dd = ray2d_t<double>;
-using ray3d = ray3d_t<float>;
-using ray3dd = ray3d_t<double>;
+using ray2 = ray2_t<float>;
+using ray2d = ray2_t<double>;
+using ray3 = ray3_t<float>;
+using ray3d = ray3_t<double>;
 using aabb = aabb_t<float>;
 using aabbd = aabb_t<double>;
-using transform2d = transform2d_t<float>;
-using transform2dd = transform2d_t<double>;
-using transform3d = transform3d_t<float>;
-using transform3dd = transform3d_t<double>;
-using uniform_transform2d = uniform_transform2d_t<float>;
-using uniform_transform2dd = uniform_transform2d_t<double>;
-using uniform_transform3d = uniform_transform3d_t<float>;
-using uniform_transform3dd = uniform_transform3d_t<double>;
-using unscaled_transform2d = unscaled_transform2d_t<float>;
-using unscaled_transform2dd = unscaled_transform2d_t<double>;
-using unscaled_transform3d = unscaled_transform3d_t<float>;
-using unscaled_transform3dd = unscaled_transform3d_t<double>;
+using transform2 = transform2_t<float>;
+using transform2d = transform2_t<double>;
+using transform3 = transform3_t<float>;
+using transform3d = transform3_t<double>;
+using uniform_transform2 = uniform_transform2_t<float>;
+using uniform_transform2d = uniform_transform2_t<double>;
+using uniform_transform3 = uniform_transform3_t<float>;
+using uniform_transform3d = uniform_transform3_t<double>;
+using unscaled_transform2 = unscaled_transform2_t<float>;
+using unscaled_transform2d = unscaled_transform2_t<double>;
+using unscaled_transform3 = unscaled_transform3_t<float>;
+using unscaled_transform3d = unscaled_transform3_t<double>;
 using direction = direction_t<float>;
 using directiond = direction_t<double>;
 }  // namespace cdm

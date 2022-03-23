@@ -29,10 +29,33 @@ task("dephash")
 	}
 task_end()
 
-target("testCdm")
-	set_kind("binary")
-	set_languages("c++20")
-	add_files("tests/*.cpp")
-	add_headerfiles("*.h*")
-	add_packages("catch2")
-	add_includedirs(".", "tests")
+local tests = {
+	"direction",
+	"matrix3",
+	"matrix4",
+	"perspective",
+	"plane",
+	"quaternion",
+	"segment3",
+	"static_pi_fraction_cos",
+	"static_pi_fraction_sin",
+	"static_pi_fraction_tan",
+	"transform3",
+	"un__normalized_value",
+	"value_domain",
+	"vector2",
+	"vector3",
+	"vector4",
+}
+
+for k,v in pairs(tests) do
+	target("cdm_test_"..v)
+		set_kind("binary")
+		set_languages("c++20")
+		add_files("tests/"..v..".cpp")
+		add_headerfiles("*.hpp")
+		add_headerfiles("tests/*.hpp")
+		add_packages("catch2")
+		add_includedirs(".", "tests")
+	target_end()
+end

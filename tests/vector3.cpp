@@ -1,3 +1,6 @@
+#define CATCH_CONFIG_MAIN
+#include <catch2/catch.hpp>
+
 #include <common.hpp>
 
 TEST_CASE("vector3::vector3(std::array<float, 3>)",

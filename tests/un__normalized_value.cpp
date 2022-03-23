@@ -1,3 +1,6 @@
+#define CATCH_CONFIG_MAIN
+#include <catch2/catch.hpp>
+
 #include <common.hpp>
 
 TEST_CASE("normalized_value::normalized_value()", "[working][unittest][normalized_value]")

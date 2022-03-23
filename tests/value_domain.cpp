@@ -1,3 +1,6 @@
+#define CATCH_CONFIG_MAIN
+#include <catch2/catch.hpp>
+
 #include <common.hpp>
 
 TEST_CASE("value_domain::value_domain()", "[working][unittest][value_domain]")

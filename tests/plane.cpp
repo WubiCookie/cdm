@@ -1,3 +1,6 @@
+#define CATCH_CONFIG_MAIN
+#include <catch2/catch.hpp>
+
 #include <common.hpp>
 
 TEST_CASE("plane::evaluate(vector3)", "[working][unittest][plane]")

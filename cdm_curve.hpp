@@ -6,7 +6,7 @@ LICENSE
        DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
                    Version 2, December 2004
 
-Copyright (C) 2019 Charles Seizilles de Mazancourt <charles DOT de DOT
+Copyright (C) 2022 Charles Seizilles de Mazancourt <charles DOT de DOT
 mazancourt AT hotmail DOT fr>
 
 Everyone is permitted to copy and distribute verbatim or modified

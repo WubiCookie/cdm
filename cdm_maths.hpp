@@ -1,4 +1,4 @@
-/* cdm_maths - v2.0.0 - geometric library - https://github.com/WubiCookie/cdm
+/* cdm_maths - v2.0.0 - C++20 geometric library - https://github.com/WubiCookie/cdm
    no warranty implied; use at your own risk
 
 LICENSE
@@ -25,6 +25,8 @@ Written by Charles Seizilles de Mazancourt
 
 #ifndef CDM_MATHS_HPP
 #define CDM_MATHS_HPP
+
+#include <cdm_concepts.hpp>
 
 #include <algorithm>
 #include <array>
@@ -67,101 +69,300 @@ constexpr double epsilon = 1.0e-05;
 // clang-format on
 #pragma endregion
 
-#pragma region forward declarations
-template <typename T>
+#pragma region type_traits_and_concepts
+// clang-format off
+namespace detail
+{
+template <typename T> struct is_vector : std::false_type {};
+template <typename T> inline constexpr bool is_vector_v = is_vector<T>::value;
+
+template <typename T> struct is_matrix : std::false_type {};
+template <typename T> inline constexpr bool is_matrix_v = is_matrix<T>::value;
+}  // namespace detail
+
+template <typename T> concept vector = detail::is_vector_v<T>;
+template <typename T> concept matrix = detail::is_matrix_v<T>;
+template <typename T> concept normalizable = requires(T& t, const T& ct)
+{
+	{ t.normalize() } -> std::convertible_to<T>;
+	{ t.get_normalized() } -> std::convertible_to<T>;
+	{ ct.get_normalized() } -> std::convertible_to<T>;
+};
+// clang-format on
+#pragma endregion
+
+#pragma region forward_declarations
+template <normalizable T>
 class normalized;
-template <typename T>
+template <arithmetic T>
 struct complex_t;
-template <typename T>
+template <arithmetic T>
 struct radian_t;
-template <typename T>
+template <arithmetic T>
 struct degree_t;
-template <typename T>
+template <std::signed_integral T>
 struct pi_fraction_t;
-template <typename T, T NumeratorT, T DenominatorT>
+template <std::signed_integral T, T NumeratorT, T DenominatorT>
 struct static_pi_fraction_t;
-template <typename T>
+template <arithmetic T>
 struct vector2_t;
-template <typename T>
+template <arithmetic T>
 struct vector3_t;
-template <typename T>
+template <arithmetic T>
 struct vector4_t;
-template <typename T>
+template <arithmetic T>
 struct matrix2_t;
-template <typename T>
+template <arithmetic T>
 struct matrix3_t;
-template <typename T>
+template <arithmetic T>
 struct matrix4_t;
-template <typename T>
+template <arithmetic T>
 struct matrix4_t;
-template <typename T>
+template <arithmetic T>
 struct perspective_t;
-template <typename T>
+template <arithmetic T>
 struct euler_angles_t;
-template <typename T>
+template <arithmetic T>
 struct quaternion_t;
-template <typename T>
+template <arithmetic T>
 struct line_t;
-template <typename T>
+template <arithmetic T>
 struct segment2_t;
-template <typename T>
+template <arithmetic T>
 struct segment3_t;
-template <typename T>
+template <arithmetic T>
 struct plane_t;
-template <typename T>
+template <arithmetic T>
 struct aa_rect_t;
-template <typename T>
+template <arithmetic T>
 struct circle_t;
-template <typename T>
+template <arithmetic T>
 struct ray2_t;
-template <typename T>
+template <arithmetic T>
 struct ray3_t;
-template <typename T>
+template <arithmetic T>
 struct aabb_t;
-template <typename T>
+template <arithmetic T>
 struct transform2_t;
-template <typename T>
+template <arithmetic T>
 struct transform3_t;
-template <typename T>
+template <arithmetic T>
 struct uniform_transform2_t;
-template <typename T>
+template <arithmetic T>
 struct uniform_transform3_t;
-template <typename T>
+template <arithmetic T>
 struct unscaled_transform2_t;
-template <typename T>
+template <arithmetic T>
 struct unscaled_transform3_t;
 template <typename T>
-class value_domain;
+requires arithmetic<T> || vector<T> class value_domain;
 template <typename T>
 class unnormalized_value;
 template <typename T>
 class normalized_value;
 
-template <typename T>
+template <arithmetic T>
 using direction_t = normalized<vector3_t<T>>;
+#pragma endregion
 
+#pragma region misc
 namespace detail
 {
-template <uint8_t x, uint8_t y, typename T>
-T get_quaternion_t_matrix_element(quaternion_t<T> q);
+template <int x, int y, arithmetic T>
+T get_quaternion_t_matrix_element(quaternion_t<T> q)
+{
+	static_assert(x < 3, "x must be [0;2]");
+	static_assert(y < 3, "y must be [0;2]");
+	if constexpr (y == 0)
+	{
+		if constexpr (x == 0)
+			return T(1) - T(2) * (q.y * q.y + q.z * q.z);
+		if constexpr (x == 1)
+			return T(2) * (q.x * q.y - q.z * q.w);
+		else
+			return T(2) * (q.x * q.z + q.y * q.w);
+	}
+	if constexpr (y == 1)
+	{
+		if constexpr (x == 0)
+			return T(2) * (q.x * q.y + q.z * q.w);
+		if constexpr (x == 1)
+			return T(1) - T(2) * (q.x * q.x + q.z * q.z);
+		else
+			return T(2) * (q.y * q.z - q.x * q.w);
+	}
+	else
+	{
+		if constexpr (x == 0)
+			return T(2) * (q.x * q.z - q.y * q.w);
+		if constexpr (x == 1)
+			return T(2) * (q.y * q.z + q.x * q.w);
+		else
+			return T(1) - T(2) * (q.x * q.x + q.y * q.y);
+	}
+}
 }  // namespace detail
 
-template <typename T>
-constexpr T lerp(T begin, T end, T percent);
-template <typename T>
-constexpr T clamp(T f, T min, T max);
+template <typename Functor, arithmetic T>
+std::vector<vector3_t<T>> function2D_sampler(const Functor& functor,
+                                             T min,
+                                             T max,
+                                             T step)
+{
+	std::vector<vector3_t<T>> res;
+
+	if (min > max)
+		std::swap(min, max);
+
+	if (step < epsilon)
+		step = epsilon;
+
+	for (T f = min; f < max; f += step)
+	{
+		res.push_back(functor(f));
+	}
+
+	return res;
+}
+
+template <typename Functor, arithmetic T>
+std::vector<std::vector<vector3_t<T>>> function3D_sampler(
+    const Functor& functor,
+    vector2_t<T> min,
+    vector2_t<T> max,
+    vector2_t<T> step)
+{
+	std::vector<std::vector<vector3_t<T>>> res;
+
+	if (min.x > max.x)
+		std::swap(min.x, max.x);
+	if (min.y > max.y)
+		std::swap(min.y, max.y);
+
+	if (step.x < epsilon)
+		step.x = epsilon;
+	if (step.y < epsilon)
+		step.y = epsilon;
+
+	size_t xCount = 0;
+	size_t yCount = 0;
+
+	for (T x = min.x; x < max.x; x += step.x)
+		xCount++;
+	for (T y = min.y; y < max.y; y += step.y)
+		yCount++;
+	res.reserve(yCount);
+
+	for (T y = min.y; y < max.y; y += step.y)
+	{
+		std::vector<vector3_t<T>> row;
+		row.reserve(xCount);
+		for (T x = min.x; x < max.x; x += step.x)
+		{
+			row.push_back(functor(x, y));
+		}
+		res.push_back(std::move(row));
+	}
+
+	return res;
+}
+
+//template <arithmetic T>
+//constexpr T lerp(T begin, T end, T percent)
+//{
+//	return std::lerp(begin, end, percent);
+//}
 
 template <typename T>
-bool nearly_equal(T f1, T f2, T e = T(epsilon));
+requires arithmetic<T> || vector<T>
+constexpr T clamp(T value, T min, T max)
+{
+	if constexpr (arithmetic<T>)
+		return std::clamp(value, min, max);
+	else
+		return value.clamp(min, max);
+}
+
+template <arithmetic T>
+bool nearly_equal(T f1, T f2, T e = T(epsilon))
+{
+	return std::abs(f1 - f2) < e;
+}
+
+template <arithmetic T>
+constexpr int sign(T val)
+{
+	return (T(0) <= val) - (val < T(0));
+}
+
+template <arithmetic T>
+constexpr int signnum(T val)
+{
+	return (T(0) < val) - (val < T(0));
+}
+
+template <arithmetic T>
+constexpr T element_wise_min(T v0, T v1)
+{
+	return std::min(v0, v1);
+}
+
+template <arithmetic T>
+constexpr T element_wise_max(T v0, T v1)
+{
+	return std::max(v0, v1);
+}
+
+template <arithmetic T>
+constexpr T element_wise_abs(T v)
+{
+	return std::abs(v);
+}
+
+template <arithmetic T>
+constexpr T element_wise_lerp(T begin, T end, T percent)
+{
+	return std::lerp(begin, end, percent);
+}
 
 template <typename T>
-constexpr int sign(T val);
+requires arithmetic<T> || vector<T> || matrix<T>
+constexpr T zero()
+{
+	if constexpr (arithmetic<T>)
+		return T(0);
+	else
+		return T::zero();
+}
+
 template <typename T>
-constexpr int signnum(T val);
+requires arithmetic<T> || vector<T> || matrix<T>
+constexpr T one()
+{
+	if constexpr (arithmetic<T>)
+		return T(1);
+	else
+		return T::one();
+}
+#pragma endregion
+
+#pragma region type_traits_and_concepts_details
+// clang-format off
+namespace detail
+{
+template <typename T> struct is_vector<vector2_t<T>> : std::true_type {};
+template <typename T> struct is_vector<vector3_t<T>> : std::true_type {};
+template <typename T> struct is_vector<vector4_t<T>> : std::true_type {};
+
+template <typename T> struct is_matrix<matrix2_t<T>> : std::true_type {};
+template <typename T> struct is_matrix<matrix3_t<T>> : std::true_type {};
+template <typename T> struct is_matrix<matrix4_t<T>> : std::true_type {};
+}  // namespace detail
+//  clang-format on
 #pragma endregion
 
 #pragma region declaration_complex_t
-template <typename T>
+template <arithmetic T>
 struct complex_t
 {
 	T r;
@@ -190,34 +391,36 @@ struct complex_t
 	complex_t& operator+=(complex_t c);
 	complex_t& operator-=(complex_t c);
 	complex_t& operator*=(complex_t c);
+
+	using underlying_type = std::remove_cv_t<T>;
 };
 
-template <typename T>
+template <arithmetic T>
 complex_t<T> operator*(complex_t<T> c1, complex_t<T> c2);
-template <typename T>
+template <arithmetic T>
 complex_t<T> operator*(complex_t<T> c, T f);
-template <typename T>
+template <arithmetic T>
 complex_t<T> operator*(normalized<complex_t<T>> c1, complex_t<T> c2);
-template <typename T>
+template <arithmetic T>
 complex_t<T> operator*(complex_t<T> c1, normalized<complex_t<T>> c2);
-template <typename T>
+template <arithmetic T>
 normalized<complex_t<T>> operator*(normalized<complex_t<T>> c1,
                                    normalized<complex_t<T>> c2);
-template <typename T>
+template <arithmetic T>
 vector2_t<T> operator*(normalized<complex_t<T>> c, vector2_t<T> v);
 
-template <typename T>
+template <arithmetic T>
 T norm(complex_t<T> c);
-template <typename T>
+template <arithmetic T>
 T norm_squared(complex_t<T> c);
-template <typename T>
+template <arithmetic T>
 complex_t<T> normalize(complex_t<T> c);
-template <typename T>
+template <arithmetic T>
 complex_t<T> conjugate(complex_t<T> c);
 #pragma endregion
 
 #pragma region declaration_radian_t
-template <typename T>
+template <arithmetic T>
 struct radian_t
 {
 private:
@@ -232,7 +435,7 @@ public:
 
 	explicit operator T() const;
 
-	template <typename U>
+	template <arithmetic U>
 	explicit operator radian_t<U>() const
 	{
 		return radian_t<U>{U(angle)};
@@ -247,68 +450,70 @@ public:
 
 	radian_t& operator=(const radian_t& r) = default;
 	radian_t& operator=(degree_t<T> d);
+
+	using underlying_type = std::remove_cv_t<T>;
 };
 
-template <typename T>
+template <arithmetic T>
 radian_t<T> operator+(radian_t<T>, radian_t<T>);
-template <typename T>
+template <arithmetic T>
 radian_t<T> operator-(radian_t<T>, radian_t<T>);
-template <typename T>
+template <arithmetic T>
 radian_t<T> operator*(T, radian_t<T>);
-template <typename T>
+template <arithmetic T>
 radian_t<T> operator*(radian_t<T>, T);
-template <typename T>
+template <arithmetic T>
 radian_t<T> operator/(radian_t<T>, T);
-template <typename T>
+template <arithmetic T>
 radian_t<T>& operator+=(radian_t<T>&, T);
-template <typename T>
+template <arithmetic T>
 radian_t<T>& operator-=(radian_t<T>&, T);
-template <typename T>
+template <arithmetic T>
 radian_t<T>& operator*=(radian_t<T>&, T);
-template <typename T>
+template <arithmetic T>
 radian_t<T>& operator/=(radian_t<T>&, T);
 
-template <typename T>
+template <arithmetic T>
 bool operator<(radian_t<T>, radian_t<T>);
-template <typename T>
+template <arithmetic T>
 bool operator>(radian_t<T>, radian_t<T>);
-template <typename T>
+template <arithmetic T>
 bool operator==(radian_t<T>, radian_t<T>);
-template <typename T>
+template <arithmetic T>
 bool operator!=(radian_t<T>, radian_t<T>);
-template <typename T>
+template <arithmetic T>
 bool operator>=(radian_t<T>, radian_t<T>);
-template <typename T>
+template <arithmetic T>
 bool operator<=(radian_t<T>, radian_t<T>);
 
-template <typename T>
+template <arithmetic T>
 T sin(radian_t<T>);
-template <typename T>
+template <arithmetic T>
 T cos(radian_t<T>);
-template <typename T>
+template <arithmetic T>
 T tan(radian_t<T>);
-template <typename T>
+template <arithmetic T>
 T asin(radian_t<T>);
-template <typename T>
+template <arithmetic T>
 T acos(radian_t<T>);
-template <typename T>
+template <arithmetic T>
 T atan(radian_t<T>);
-template <typename T>
+template <arithmetic T>
 T sinh(radian_t<T>);
-template <typename T>
+template <arithmetic T>
 T cosh(radian_t<T>);
-template <typename T>
+template <arithmetic T>
 T tanh(radian_t<T>);
-template <typename T>
+template <arithmetic T>
 T asinh(radian_t<T>);
-template <typename T>
+template <arithmetic T>
 T acosh(radian_t<T>);
-template <typename T>
+template <arithmetic T>
 T atanh(radian_t<T>);
 #pragma endregion
 
 #pragma region declaration_degree_t
-template <typename T>
+template <arithmetic T>
 struct degree_t
 {
 private:
@@ -323,7 +528,7 @@ public:
 
 	explicit operator T() const;
 
-	template <typename U>
+	template <arithmetic U>
 	explicit operator degree_t<U>() const
 	{
 		return degree_t<U>{U(angle)};
@@ -338,74 +543,72 @@ public:
 
 	degree_t& operator=(const degree_t& d) = default;
 	degree_t& operator=(radian_t<T> r);
+
+	using underlying_type = std::remove_cv_t<T>;
 };
 
-template <typename T>
+template <arithmetic T>
 degree_t<T> operator+(degree_t<T>, degree_t<T>);
-template <typename T>
+template <arithmetic T>
 degree_t<T> operator-(degree_t<T>, degree_t<T>);
-template <typename T>
+template <arithmetic T>
 degree_t<T> operator*(T, degree_t<T>);
-template <typename T>
+template <arithmetic T>
 degree_t<T> operator*(degree_t<T>, T);
-template <typename T>
+template <arithmetic T>
 degree_t<T> operator/(degree_t<T>, T);
-template <typename T>
+template <arithmetic T>
 degree_t<T>& operator+=(degree_t<T>&, T);
-template <typename T>
+template <arithmetic T>
 degree_t<T>& operator-=(degree_t<T>&, T);
-template <typename T>
+template <arithmetic T>
 degree_t<T>& operator*=(degree_t<T>&, T);
-template <typename T>
+template <arithmetic T>
 degree_t<T>& operator/=(degree_t<T>&, T);
 
-template <typename T>
+template <arithmetic T>
 bool operator<(degree_t<T>, degree_t<T>);
-template <typename T>
+template <arithmetic T>
 bool operator>(degree_t<T>, degree_t<T>);
-template <typename T>
+template <arithmetic T>
 bool operator==(degree_t<T>, degree_t<T>);
-template <typename T>
+template <arithmetic T>
 bool operator!=(degree_t<T>, degree_t<T>);
-template <typename T>
+template <arithmetic T>
 bool operator>=(degree_t<T>, degree_t<T>);
-template <typename T>
+template <arithmetic T>
 bool operator<=(degree_t<T>, degree_t<T>);
 
-template <typename T>
+template <arithmetic T>
 T sin(degree_t<T>);
-template <typename T>
+template <arithmetic T>
 T cos(degree_t<T>);
-template <typename T>
+template <arithmetic T>
 T tan(degree_t<T>);
-template <typename T>
+template <arithmetic T>
 T asin(degree_t<T>);
-template <typename T>
+template <arithmetic T>
 T acos(degree_t<T>);
-template <typename T>
+template <arithmetic T>
 T atan(degree_t<T>);
-template <typename T>
+template <arithmetic T>
 T sinh(degree_t<T>);
-template <typename T>
+template <arithmetic T>
 T cosh(degree_t<T>);
-template <typename T>
+template <arithmetic T>
 T tanh(degree_t<T>);
-template <typename T>
+template <arithmetic T>
 T asinh(degree_t<T>);
-template <typename T>
+template <arithmetic T>
 T acosh(degree_t<T>);
-template <typename T>
+template <arithmetic T>
 T atanh(degree_t<T>);
 #pragma endregion
 
 #pragma region declaration_pi_fraction_t
-template <typename T>
+template <std::signed_integral T>
 struct pi_fraction_t
 {
-	static_assert(std::is_arithmetic_v<T>, "T must be arithmetic");
-	static_assert(std::is_signed_v<T>, "T must be signed");
-	static_assert(std::is_integral_v<T>, "T must be integral");
-
 	T numerator;
 	T denominator;
 
@@ -417,12 +620,12 @@ struct pi_fraction_t
 	pi_fraction_t& operator=(const pi_fraction_t&) = default;
 	pi_fraction_t& operator=(pi_fraction_t&&) = default;
 
-	template <typename U>
+	template <arithmetic U>
 	operator radian_t<U>() const
 	{
 		return radian_t<U>((U(numerator) * U(pi)) / U(denominator));
 	}
-	template <typename U>
+	template <arithmetic U>
 	operator degree_t<U>() const
 	{
 		return operator radian_t<U>();
@@ -432,9 +635,11 @@ struct pi_fraction_t
 	{
 		return pi_fraction_t{-numerator, denominator};
 	}
+
+	using underlying_type = std::remove_cv_t<T>;
 };
 
-template <typename U, typename T>
+template <arithmetic U, arithmetic T>
 U sin(pi_fraction_t<T> d)
 {
 	if constexpr (d.numerator == T(0))
@@ -484,7 +689,7 @@ U sin(pi_fraction_t<T> d)
 	constexpr radian_t<U> r = d;
 	return sin(r);
 }
-template <typename U, typename T>
+template <arithmetic U, arithmetic T>
 U cos(pi_fraction_t<T> d)
 {
 	if constexpr (d.numerator == T(0))
@@ -520,7 +725,7 @@ U cos(pi_fraction_t<T> d)
 	constexpr radian_t<U> r = d;
 	return cos(r);
 }
-template <typename U, typename T>
+template <arithmetic U, arithmetic T>
 U tan(pi_fraction_t<T> d)
 {
 	if constexpr (d.numerator == T(0))
@@ -583,61 +788,61 @@ U tan(pi_fraction_t<T> d)
 	constexpr radian_t<U> r = d;
 	return tan(r);
 }
-template <typename U, typename T>
+template <arithmetic U, arithmetic T>
 U asin(pi_fraction_t<T> d)
 {
 	/// TODO: implement
 	constexpr radian_t<U> r = d;
 	return asin(r);
 }
-template <typename U, typename T>
+template <arithmetic U, arithmetic T>
 U acos(pi_fraction_t<T> d)
 {
 	/// TODO: implement
 	return acos(radian_t<U>(d));
 }
-template <typename U, typename T>
+template <arithmetic U, arithmetic T>
 U atan(pi_fraction_t<T> d)
 {
 	/// TODO: implement
 	return atan(radian_t<U>(d));
 }
-template <typename U, typename T>
+template <arithmetic U, arithmetic T>
 U sinh(pi_fraction_t<T> d)
 {
 	/// TODO: implement
 	constexpr radian_t<U> r = d;
 	return sinh(r);
 }
-template <typename U, typename T>
+template <arithmetic U, arithmetic T>
 U cosh(pi_fraction_t<T> d)
 {
 	/// TODO: implement
 	constexpr radian_t<U> r = d;
 	return cosh(r);
 }
-template <typename U, typename T>
+template <arithmetic U, arithmetic T>
 U tanh(pi_fraction_t<T> d)
 {
 	/// TODO: implement
 	constexpr radian_t<U> r = d;
 	return tanh(r);
 }
-template <typename U, typename T>
+template <arithmetic U, arithmetic T>
 U asinh(pi_fraction_t<T> d)
 {
 	/// TODO: implement
 	constexpr radian_t<U> r = d;
 	return asinh(r);
 }
-template <typename U, typename T>
+template <arithmetic U, arithmetic T>
 U acosh(pi_fraction_t<T> d)
 {
 	/// TODO: implement
 	constexpr radian_t<U> r = d;
 	return acosh(r);
 }
-template <typename U, typename T>
+template <arithmetic U, arithmetic T>
 U atanh(pi_fraction_t<T> d)
 {
 	/// TODO: implement
@@ -647,12 +852,9 @@ U atanh(pi_fraction_t<T> d)
 #pragma endregion
 
 #pragma region declaration_static_pi_fraction_t
-template <typename T, T NumeratorT, T DenominatorT>
+template <std::signed_integral T, T NumeratorT, T DenominatorT>
 struct static_pi_fraction_t
 {
-	static_assert(std::is_arithmetic_v<T>, "T must be arithmetic");
-	static_assert(std::is_signed_v<T>, "T must be signed");
-	static_assert(std::is_integral_v<T>, "T must be integral");
 	static_assert(DenominatorT != T(0), "the denominator can not be 0");
 
 	template <T NumT, T DenT>
@@ -702,7 +904,7 @@ struct static_pi_fraction_t
 	static constexpr T numerator{wrap<NumeratorT, DenominatorT>().first};
 	static constexpr T denominator{wrap<NumeratorT, DenominatorT>().second};
 
-	template <typename U>
+	template <arithmetic U>
 	constexpr operator radian_t<U>() const
 	{
 		if constexpr (numerator == T(0))
@@ -710,7 +912,7 @@ struct static_pi_fraction_t
 		else
 			return radian_t<U>((U(numerator) * U(pi)) / U(denominator));
 	}
-	template <typename U>
+	template <arithmetic U>
 	constexpr operator degree_t<U>() const
 	{
 		if constexpr (numerator == T(0))
@@ -728,9 +930,11 @@ struct static_pi_fraction_t
 	{
 		return {};
 	}
+
+	using underlying_type = std::remove_cv_t<T>;
 };
 
-template <typename T,
+template <std::signed_integral T,
           T NumeratorTL,
           T DenominatorTL,
           T NumeratorTR,
@@ -742,7 +946,7 @@ constexpr bool operator==(
 	return lhs.numerator == rhs.numerator &&
 	       lhs.denominator == rhs.denominator;
 }
-template <typename T,
+template <std::signed_integral T,
           T NumeratorTL,
           T DenominatorTL,
           T NumeratorTR,
@@ -754,7 +958,7 @@ constexpr bool operator!=(
 	return !(lhs == rhs);
 }
 
-template <typename U, typename T, T NumeratorT, T DenominatorT>
+template <arithmetic U, std::signed_integral T, T NumeratorT, T DenominatorT>
 U sin(static_pi_fraction_t<T, NumeratorT, DenominatorT> d)
 {
 	if constexpr (d.numerator == T(0))
@@ -804,7 +1008,7 @@ U sin(static_pi_fraction_t<T, NumeratorT, DenominatorT> d)
 	constexpr radian_t<U> r = d;
 	return sin(r);
 }
-template <typename U, typename T, T NumeratorT, T DenominatorT>
+template <arithmetic U, std::signed_integral T, T NumeratorT, T DenominatorT>
 U cos(static_pi_fraction_t<T, NumeratorT, DenominatorT> d)
 {
 	if constexpr (d.numerator == T(0))
@@ -840,7 +1044,7 @@ U cos(static_pi_fraction_t<T, NumeratorT, DenominatorT> d)
 	constexpr radian_t<U> r = d;
 	return cos(r);
 }
-template <typename U, typename T, T NumeratorT, T DenominatorT>
+template <arithmetic U, arithmetic T, T NumeratorT, T DenominatorT>
 U tan(static_pi_fraction_t<T, NumeratorT, DenominatorT> d)
 {
 	if constexpr (d.numerator == T(0))
@@ -895,61 +1099,61 @@ U tan(static_pi_fraction_t<T, NumeratorT, DenominatorT> d)
 	constexpr radian_t<U> r = d;
 	return tan(r);
 }
-template <typename U, typename T, T NumeratorT, T DenominatorT>
+template <arithmetic U, arithmetic T, T NumeratorT, T DenominatorT>
 U asin(static_pi_fraction_t<T, NumeratorT, DenominatorT> d)
 {
 	/// TODO: implement
 	constexpr radian_t<U> r = d;
 	return asin(r);
 }
-template <typename U, typename T, T NumeratorT, T DenominatorT>
+template <arithmetic U, arithmetic T, T NumeratorT, T DenominatorT>
 U acos(static_pi_fraction_t<T, NumeratorT, DenominatorT> d)
 {
 	/// TODO: implement
 	return acos(radian_t<U>(d));
 }
-template <typename U, typename T, T NumeratorT, T DenominatorT>
+template <arithmetic U, arithmetic T, T NumeratorT, T DenominatorT>
 U atan(static_pi_fraction_t<T, NumeratorT, DenominatorT> d)
 {
 	/// TODO: implement
 	return atan(radian_t<U>(d));
 }
-template <typename U, typename T, T NumeratorT, T DenominatorT>
+template <arithmetic U, arithmetic T, T NumeratorT, T DenominatorT>
 U sinh(static_pi_fraction_t<T, NumeratorT, DenominatorT> d)
 {
 	/// TODO: implement
 	constexpr radian_t<U> r = d;
 	return sinh(r);
 }
-template <typename U, typename T, T NumeratorT, T DenominatorT>
+template <arithmetic U, arithmetic T, T NumeratorT, T DenominatorT>
 U cosh(static_pi_fraction_t<T, NumeratorT, DenominatorT> d)
 {
 	/// TODO: implement
 	constexpr radian_t<U> r = d;
 	return cosh(r);
 }
-template <typename U, typename T, T NumeratorT, T DenominatorT>
+template <arithmetic U, arithmetic T, T NumeratorT, T DenominatorT>
 U tanh(static_pi_fraction_t<T, NumeratorT, DenominatorT> d)
 {
 	/// TODO: implement
 	constexpr radian_t<U> r = d;
 	return tanh(r);
 }
-template <typename U, typename T, T NumeratorT, T DenominatorT>
+template <arithmetic U, arithmetic T, T NumeratorT, T DenominatorT>
 U asinh(static_pi_fraction_t<T, NumeratorT, DenominatorT> d)
 {
 	/// TODO: implement
 	constexpr radian_t<U> r = d;
 	return asinh(r);
 }
-template <typename U, typename T, T NumeratorT, T DenominatorT>
+template <arithmetic U, arithmetic T, T NumeratorT, T DenominatorT>
 U acosh(static_pi_fraction_t<T, NumeratorT, DenominatorT> d)
 {
 	/// TODO: implement
 	constexpr radian_t<U> r = d;
 	return acosh(r);
 }
-template <typename U, typename T, T NumeratorT, T DenominatorT>
+template <arithmetic U, arithmetic T, T NumeratorT, T DenominatorT>
 U atanh(static_pi_fraction_t<T, NumeratorT, DenominatorT> d)
 {
 	/// TODO: implement
@@ -959,16 +1163,16 @@ U atanh(static_pi_fraction_t<T, NumeratorT, DenominatorT> d)
 #pragma endregion
 
 #pragma region declaration_vector2_t
-template <typename T>
+template <arithmetic T>
 struct vector2_t
 {
 	T x, y;
 
 	vector2_t() = default;
-	vector2_t(T x_, T y_) : x{x_}, y{y_} {}
-	vector2_t(std::array<T, 2> a) : vector2_t(a[0], a[1]) {}
+	constexpr vector2_t(T x_, T y_) : x{x_}, y{y_} {}
+	constexpr vector2_t(std::array<T, 2> a) : vector2_t(a[0], a[1]) {}
 
-	template <typename U>
+	template <arithmetic U>
 	explicit operator vector2_t<U>() const
 	{
 		return vector2_t<U>{static_cast<U>(x), static_cast<U>(y)};
@@ -976,7 +1180,7 @@ struct vector2_t
 
 	operator std::array<T, 2>() const { return {x, y}; }
 
-	template <typename U = T>
+	template <arithmetic U = T>
 	std::array<U, 2> to_array() const
 	{
 		return {static_cast<U>(x), static_cast<U>(y)};
@@ -997,13 +1201,13 @@ struct vector2_t
 		res.normalize();
 		return res;
 	}
-	vector2_t& clamp(vector2_t min, vector2_t max)
+	constexpr vector2_t& clamp(vector2_t min, vector2_t max)
 	{
-		x = cdm::clamp(x, min.x, max.x);
-		y = cdm::clamp(y, min.y, max.y);
+		x = std::clamp(x, min.x, max.x);
+		y = std::clamp(y, min.y, max.y);
 		return *this;
 	}
-	vector2_t get_clamped(vector2_t min, vector2_t max) const
+	constexpr vector2_t get_clamped(vector2_t min, vector2_t max) const
 	{
 		vector2_t res{*this};
 		res.clamp(min, max);
@@ -1035,57 +1239,74 @@ struct vector2_t
 
 	bool operator==(vector2_t v) const;
 	bool operator!=(vector2_t v) const;
+	
+	static constexpr vector2_t zero() { return { T(0), T(0) }; }
+	static constexpr vector2_t one() { return { T(1), T(1) }; }
+
+	using underlying_type = std::remove_cv_t<T>;
 };
 
-template <typename T>
+template <arithmetic T>
 vector2_t<T> operator*(T f, vector2_t<T> v);
-template <typename T>
+template <arithmetic T>
 vector2_t<T> operator*(vector2_t<T> v, T f);
-template <typename T>
+template <arithmetic T>
 vector2_t<T> operator/(vector2_t<T> v, T f);
-template <typename T>
+template <arithmetic T>
 vector2_t<T>& operator*=(vector2_t<T>& v, T f);
-template <typename T>
+template <arithmetic T>
 vector2_t<T>& operator/=(vector2_t<T>& v, T f);
 
-template <typename T>
+template <arithmetic T>
 T dot(vector2_t<T> lhs, vector2_t<T> rhs);
-template <typename T>
+template <arithmetic T>
 T cross(vector2_t<T> lhs, vector2_t<T> rhs);
-template <typename T>
-vector2_t<T> lerp(vector2_t<T> begin, vector2_t<T> end, T percent);
-template <typename T>
+//template <arithmetic T>
+//constexpr vector2_t<T> clamp(vector2_t<T> v,
+//                             vector2_t<T> min,
+//                             vector2_t<T> max);
+template <arithmetic T>
+constexpr vector2_t<T> lerp(vector2_t<T> begin, vector2_t<T> end, T percent);
+template <arithmetic T>
 vector2_t<T> nlerp(vector2_t<T> begin, vector2_t<T> end, T percent);
-template <typename T>
+template <arithmetic T>
 vector2_t<T> slerp(vector2_t<T> begin, vector2_t<T> end, T percent);
-template <typename T>
+template <arithmetic T>
 T distance_between(vector2_t<T> v1, vector2_t<T> v2);
-template <typename T>
+template <arithmetic T>
 T distance_squared_between(vector2_t<T> v1, vector2_t<T> v2);
-template <typename T>
+template <arithmetic T>
 vector2_t<T> from_to(vector2_t<T> from, vector2_t<T> to);
-template <typename T>
+template <arithmetic T>
 radian_t<T> angle_between(vector2_t<T> v1, vector2_t<T> v2);
-template <typename T>
+template <arithmetic T>
 bool nearly_equal(vector2_t<T> v1, vector2_t<T> v2, T e = T(epsilon));
-template <typename T>
-vector2_t<T> element_wise_min(vector2_t<T> v0, vector2_t<T> v1);
-template <typename T>
-vector2_t<T> element_wise_max(vector2_t<T> v0, vector2_t<T> v1);
+template <arithmetic T>
+constexpr vector2_t<T> element_wise_min(vector2_t<T> v0, vector2_t<T> v1);
+template <arithmetic T>
+constexpr vector2_t<T> element_wise_max(vector2_t<T> v0, vector2_t<T> v1);
+template <arithmetic T>
+constexpr vector2_t<T> element_wise_abs(vector2_t<T> v);
+template <arithmetic T>
+constexpr vector2_t<T> element_wise_lerp(vector2_t<T> begin, vector2_t<T> end, vector2_t<T> percent);
+//template <typename vector2_t>
+//constexpr vector2_t zero();
+//template <typename vector2_t>
+//constexpr vector2_t one();
 #pragma endregion
 
 #pragma region declaration_vector3_t
-template <typename T>
+template <arithmetic T>
 struct vector3_t
 {
 	T x, y, z;
 
 	vector3_t() = default;
-	vector3_t(T x_, T y_, T z_) : x{x_}, y{y_}, z{z_} {}
-	vector3_t(vector2_t<T> v, T z_) : vector3_t(v.x, v.y, z_) {}
-	vector3_t(std::array<T, 3> a) : vector3_t(a[0], a[1], a[2]) {}
+	constexpr vector3_t(T x_, T y_, T z_) : x{x_}, y{y_}, z{z_} {}
+	constexpr vector3_t(vector2_t<T> v, T z_) : vector3_t(v.x, v.y, z_) {}
+	constexpr vector3_t(std::array<T, 3> a) : vector3_t(a[0], a[1], a[2]) {}
 
-	template <typename U>
+	template <arithmetic U>
 	explicit operator vector3_t<U>() const
 	{
 		return vector3_t<U>{static_cast<U>(x), static_cast<U>(y),
@@ -1094,7 +1315,7 @@ struct vector3_t
 
 	operator std::array<T, 3>() const { return {x, y, z}; }
 
-	template <typename U = T>
+	template <arithmetic U = T>
 	std::array<U, 3> to_array() const
 	{
 		return {static_cast<U>(x), static_cast<U>(y), static_cast<U>(z)};
@@ -1118,14 +1339,14 @@ struct vector3_t
 		res.normalize();
 		return res;
 	}
-	vector3_t& clamp(vector3_t min, vector3_t max)
+	constexpr vector3_t& clamp(vector3_t min, vector3_t max)
 	{
-		x = cdm::clamp(x, min.x, max.x);
-		y = cdm::clamp(y, min.y, max.y);
-		z = cdm::clamp(z, min.z, max.z);
+		x = std::clamp(x, min.x, max.x);
+		y = std::clamp(y, min.y, max.y);
+		z = std::clamp(z, min.z, max.z);
 		return *this;
 	}
-	vector3_t get_clamped(vector3_t min, vector3_t max) const
+	constexpr vector3_t get_clamped(vector3_t min, vector3_t max) const
 	{
 		vector3_t res{*this};
 		res.clamp(min, max);
@@ -1142,68 +1363,79 @@ struct vector3_t
 
 	bool operator==(vector3_t v) const;
 	bool operator!=(vector3_t v) const;
+	
+	static constexpr vector3_t zero() { return { T(0), T(0), T(0) }; }
+	static constexpr vector3_t one() { return { T(1), T(1), T(1) }; }
+
+	using underlying_type = std::remove_cv_t<T>;
 };
 
-template <typename T>
+template <arithmetic T>
 vector3_t<T> operator*(T f, vector3_t<T> v);
-template <typename T>
+template <arithmetic T>
 vector3_t<T> operator*(vector3_t<T> v, T f);
-template <typename T>
+template <arithmetic T>
 vector3_t<T> operator/(vector3_t<T> v, T f);
-template <typename T>
+template <arithmetic T>
 vector3_t<T>& operator*=(vector3_t<T>& v, T f);
-template <typename T>
+template <arithmetic T>
 vector3_t<T>& operator/=(vector3_t<T>& v, T f);
 
-template <typename T>
+template <arithmetic T>
 T norm(vector3_t<T> v);
-template <typename T>
+template <arithmetic T>
 T norm_squared(vector3_t<T> v);
-template <typename T>
+template <arithmetic T>
 vector3_t<T> normalize(vector3_t<T> v);
-template <typename T>
-vector3_t<T> clamp(vector3_t<T> v, vector3_t<T> min, vector3_t<T> max);
-template <typename T>
+//template <arithmetic T>
+//constexpr vector3_t<T> clamp(vector3_t<T> v,
+//                             vector3_t<T> min,
+//                             vector3_t<T> max);
+template <arithmetic T>
 T dot(vector3_t<T> lhs, vector3_t<T> rhs);
-template <typename T>
+template <arithmetic T>
 vector3_t<T> cross(vector3_t<T> lhs, vector3_t<T> rhs);
-template <typename T>
+template <arithmetic T>
 vector3_t<T> lerp(vector3_t<T> begin, vector3_t<T> end, T percent);
-template <typename T>
+template <arithmetic T>
 vector3_t<T> nlerp(vector3_t<T> begin, vector3_t<T> end, T percent);
-template <typename T>
+template <arithmetic T>
 T distance_between(vector3_t<T> v1, vector3_t<T> v2);
-template <typename T>
+template <arithmetic T>
 T distance_squared_between(vector3_t<T> v1, vector3_t<T> v2);
-template <typename T>
+template <arithmetic T>
 vector3_t<T> from_to(vector3_t<T> from, vector3_t<T> to);
-template <typename T>
+template <arithmetic T>
 radian_t<T> angle_between(vector3_t<T> v1, vector3_t<T> v2);
-template <typename T>
+template <arithmetic T>
 bool nearly_equal(vector3_t<T> v1, vector3_t<T> v2, T e = epsilon);
-template <typename T>
-vector3_t<T> element_wise_min(vector3_t<T> v0, vector3_t<T> v1);
-template <typename T>
-vector3_t<T> element_wise_max(vector3_t<T> v0, vector3_t<T> v1);
-template <typename T>
+template <arithmetic T>
+constexpr vector3_t<T> element_wise_min(vector3_t<T> v0, vector3_t<T> v1);
+template <arithmetic T>
+constexpr vector3_t<T> element_wise_max(vector3_t<T> v0, vector3_t<T> v1);
+template <arithmetic T>
+constexpr vector3_t<T> element_wise_abs(vector3_t<T> v);
+template <arithmetic T>
+constexpr vector3_t<T> element_wise_lerp(vector3_t<T> begin, vector3_t<T> end, vector3_t<T> percent);
+template <arithmetic T>
 radian_t<T> angle_around_axis(vector3_t<T> v0,
                               vector3_t<T> v1,
                               direction_t<T> axis);
 #pragma endregion
 
 #pragma region declaration_vector4_t
-template <typename T>
+template <arithmetic T>
 struct vector4_t
 {
 	T x, y, z, w;
 
 	vector4_t() = default;
-	vector4_t(T x_, T y_, T z_, T w_) : x{x_}, y{y_}, z{z_}, w{w_} {}
-	vector4_t(vector2_t<T> v, T z_, T w_) : vector4_t(v.x, v.y, z_, w_) {}
-	vector4_t(vector3_t<T> v, T w_) : vector4_t(v.x, v.y, v.z, w_) {}
-	vector4_t(std::array<T, 4> a) : vector4_t(a[0], a[1], a[2], a[3]) {}
+	constexpr vector4_t(T x_, T y_, T z_, T w_) : x{x_}, y{y_}, z{z_}, w{w_} {}
+	constexpr vector4_t(vector2_t<T> v, T z_, T w_) : vector4_t(v.x, v.y, z_, w_) {}
+	constexpr vector4_t(vector3_t<T> v, T w_) : vector4_t(v.x, v.y, v.z, w_) {}
+	constexpr vector4_t(std::array<T, 4> a) : vector4_t(a[0], a[1], a[2], a[3]) {}
 
-	template <typename U>
+	template <arithmetic U>
 	explicit operator vector4_t<U>() const
 	{
 		return vector4_t<U>{static_cast<U>(x), static_cast<U>(y),
@@ -1212,7 +1444,7 @@ struct vector4_t
 
 	operator std::array<T, 4>() const { return {x, y, z, w}; }
 
-	template <typename U = T>
+	template <arithmetic U = T>
 	std::array<U, 4> to_array() const
 	{
 		return {static_cast<U>(x), static_cast<U>(y), static_cast<U>(z),
@@ -1239,15 +1471,15 @@ struct vector4_t
 		res.normalize();
 		return res;
 	}
-	vector4_t& clamp(vector4_t min, vector4_t max)
+	constexpr vector4_t& clamp(vector4_t min, vector4_t max)
 	{
-		x = cdm::clamp(x, min.x, max.x);
-		y = cdm::clamp(y, min.y, max.y);
-		z = cdm::clamp(z, min.z, max.z);
-		w = cdm::clamp(w, min.w, max.w);
+		x = std::clamp(x, min.x, max.x);
+		y = std::clamp(y, min.y, max.y);
+		z = std::clamp(z, min.z, max.z);
+		w = std::clamp(w, min.w, max.w);
 		return *this;
 	}
-	vector4_t get_clamped(vector4_t min, vector4_t max) const
+	constexpr vector4_t get_clamped(vector4_t min, vector4_t max) const
 	{
 		vector4_t res{*this};
 		res.clamp(min, max);
@@ -1264,49 +1496,60 @@ struct vector4_t
 
 	bool operator==(vector4_t v) const;
 	bool operator!=(vector4_t v) const;
+
+	static constexpr vector4_t zero() { return { T(0), T(0), T(0), T(0) }; }
+	static constexpr vector4_t one() { return { T(1), T(1), T(1), T(1) }; }
+
+	using underlying_type = std::remove_cv_t<T>;
 };
 
-template <typename T>
+template <arithmetic T>
 vector4_t<T> operator*(T f, vector4_t<T> v);
-template <typename T>
+template <arithmetic T>
 vector4_t<T> operator*(vector4_t<T> v, T f);
-template <typename T>
+template <arithmetic T>
 vector4_t<T> operator/(vector4_t<T> v, T f);
-template <typename T>
+template <arithmetic T>
 vector4_t<T>& operator*=(vector4_t<T>& v, T f);
-template <typename T>
+template <arithmetic T>
 vector4_t<T>& operator/=(vector4_t<T>& v, T f);
 
-template <typename T>
+template <arithmetic T>
 T norm(vector4_t<T> v);
-template <typename T>
+template <arithmetic T>
 T norm_squared(vector4_t<T> v);
-template <typename T>
+template <arithmetic T>
 vector4_t<T> normalize(vector4_t<T> v);
-template <typename T>
-vector4_t<T> clamp(vector4_t<T> v, vector4_t<T> min, vector4_t<T> max);
-template <typename T>
+//template <arithmetic T>
+//constexpr vector4_t<T> clamp(vector4_t<T> v,
+//                             vector4_t<T> min,
+//                             vector4_t<T> max);
+template <arithmetic T>
 T dot(vector4_t<T> lhs, vector4_t<T> rhs);
-template <typename T>
+template <arithmetic T>
 vector4_t<T> lerp(vector4_t<T> begin, vector4_t<T> end, T percent);
-template <typename T>
+template <arithmetic T>
 vector4_t<T> nlerp(vector4_t<T> begin, vector4_t<T> end, T percent);
-template <typename T>
+template <arithmetic T>
 T distance_between(vector4_t<T> v1, vector4_t<T> v2);
-template <typename T>
+template <arithmetic T>
 T distance_squared_between(vector4_t<T> v1, vector4_t<T> v2);
-template <typename T>
+template <arithmetic T>
 vector4_t<T> from_to(vector4_t<T> from, vector4_t<T> to);
-template <typename T>
+template <arithmetic T>
 bool nearly_equal(vector4_t<T> v1, vector4_t<T> v2, T e = epsilon);
-template <typename T>
-vector4_t<T> element_wise_min(vector4_t<T> v0, vector4_t<T> v1);
-template <typename T>
-vector4_t<T> element_wise_max(vector4_t<T> v0, vector4_t<T> v1);
+template <arithmetic T>
+constexpr vector4_t<T> element_wise_min(vector4_t<T> v0, vector4_t<T> v1);
+template <arithmetic T>
+constexpr vector4_t<T> element_wise_max(vector4_t<T> v0, vector4_t<T> v1);
+template <arithmetic T>
+constexpr vector4_t<T> element_wise_abs(vector4_t<T> v);
+template <arithmetic T>
+constexpr vector4_t<T> element_wise_lerp(vector4_t<T> begin, vector4_t<T> end, vector4_t<T> percent);
 #pragma endregion
 
 #pragma region declaration_normalized
-template <typename T>
+template <normalizable T>
 class normalized
 {
 	T vector;
@@ -1337,9 +1580,11 @@ public:
 
 	normalized& operator=(const normalized&) = default;
 	normalized& operator=(normalized&&) = default;
+
+	using underlying_type = std::remove_cv_t<T>;
 };
 
-template <typename T>
+template <arithmetic T>
 class normalized<vector3_t<T>>
 {
 	vector3_t<T> vector;
@@ -1392,18 +1637,20 @@ public:
 
 	normalized& operator=(const normalized&) = default;
 	normalized& operator=(normalized&&) = default;
+
+	using underlying_type = std::remove_cv_t<T>;
 };
 #pragma endregion
 
 #pragma region declaration_matrix2_t
-template <typename T>
+template <arithmetic T>
 struct matrix2_t
 {
-	template <typename U>
+	template <arithmetic U>
 	friend class matrix2_t;
-	template <typename U>
+	template <arithmetic U>
 	friend class matrix3_t;
-	template <typename U>
+	template <arithmetic U>
 	friend class matrix4_t;
 
 private:
@@ -1420,14 +1667,14 @@ public:
 	matrix2_t& operator=(const matrix2_t&) = default;
 	matrix2_t& operator=(matrix2_t&&) = default;
 
-	template <typename U = T>
+	template <arithmetic U = T>
 	std::array<U, 4> to_array() const
 	{
 		return {static_cast<U>(m00), static_cast<U>(m10), static_cast<U>(m01),
 		        static_cast<U>(m11)};
 	}
 
-	template <typename U>
+	template <arithmetic U>
 	explicit operator matrix2_t<U>() const
 	{
 		return {U(m00), U(m10), U(m01), U(m11)};
@@ -1563,21 +1810,23 @@ public:
 
 	vector2_t<T> operator*(vector2_t<T> v) const;
 	matrix2_t operator*(matrix2_t m) const;
+
+	using underlying_type = std::remove_cv_t<T>;
 };
 
-template <typename T>
+template <arithmetic T>
 matrix2_t<T> transpose(matrix2_t<T> m);
 #pragma endregion
 
 #pragma region declaration_matrix3_t
-template <typename T>
+template <arithmetic T>
 struct matrix3_t
 {
-	template <typename U>
+	template <arithmetic U>
 	friend class matrix2_t;
-	template <typename U>
+	template <arithmetic U>
 	friend class matrix3_t;
-	template <typename U>
+	template <arithmetic U>
 	friend class matrix4_t;
 
 private:
@@ -1595,7 +1844,7 @@ public:
 	matrix3_t& operator=(const matrix3_t&) = default;
 	matrix3_t& operator=(matrix3_t&&) = default;
 
-	template <typename U>
+	template <arithmetic U>
 	explicit operator matrix3_t<U>() const
 	{
 		return {U(m00), U(m10), U(m20), U(m01), U(m11),
@@ -1611,7 +1860,7 @@ public:
 		};
 	}
 
-	template <typename U = T>
+	template <arithmetic U = T>
 	std::array<U, 9> to_array() const
 	{
 		return {static_cast<U>(m00), static_cast<U>(m10), static_cast<U>(m20),
@@ -1635,7 +1884,7 @@ public:
 	static matrix3_t rotation(direction_t<T> axis, radian_t<T> angle);
 	static matrix3_t rotation(direction_t<T> axis,
 	                          normalized<complex_t<T>> angle);
-	template <typename U, U NumeratorT, U DenominatorT>
+	template <std::signed_integral U, U NumeratorT, U DenominatorT>
 	static matrix3_t rotation(
 	    direction_t<T> axis,
 	    static_pi_fraction_t<U, NumeratorT, DenominatorT> angle);
@@ -1654,13 +1903,13 @@ public:
 	static matrix3_t rotation_around_x(normalized<complex_t<T>> angle);
 	static matrix3_t rotation_around_y(normalized<complex_t<T>> angle);
 	static matrix3_t rotation_around_z(normalized<complex_t<T>> angle);
-	template <typename U, U NumeratorT, U DenominatorT>
+	template <std::signed_integral U, U NumeratorT, U DenominatorT>
 	static matrix3_t rotation_around_x(
 	    static_pi_fraction_t<U, NumeratorT, DenominatorT> angle);
-	template <typename U, U NumeratorT, U DenominatorT>
+	template <std::signed_integral U, U NumeratorT, U DenominatorT>
 	static matrix3_t rotation_around_y(
 	    static_pi_fraction_t<U, NumeratorT, DenominatorT> angle);
-	template <typename U, U NumeratorT, U DenominatorT>
+	template <std::signed_integral U, U NumeratorT, U DenominatorT>
 	static matrix3_t rotation_around_z(
 	    static_pi_fraction_t<U, NumeratorT, DenominatorT> angle);
 	static matrix3_t scale(vector3_t<T> t);
@@ -1818,18 +2067,20 @@ public:
 		       m11 == m.m11 && m12 == m.m12 && m20 == m.m20 && m21 == m.m21 &&
 		       m22 == m.m22;
 	}
+
+	using underlying_type = std::remove_cv_t<T>;
 };
 #pragma endregion
 
 #pragma region declaration_matrix4_t
-template <typename T>
+template <arithmetic T>
 struct matrix4_t
 {
-	template <typename U>
+	template <arithmetic U>
 	friend class matrix2_t;
-	template <typename U>
+	template <arithmetic U>
 	friend class matrix3_t;
-	template <typename U>
+	template <arithmetic U>
 	friend class matrix4_t;
 
 private:
@@ -1870,7 +2121,7 @@ public:
 	matrix4_t& operator=(const matrix4_t&) = default;
 	matrix4_t& operator=(matrix4_t&&) = default;
 
-	template <typename U>
+	template <arithmetic U>
 	explicit operator matrix4_t<U>() const
 	{
 		return {U(m00), U(m10), U(m20), U(m30), U(m01), U(m11),
@@ -1888,7 +2139,7 @@ public:
 		};
 	}
 
-	template <typename U = T>
+	template <arithmetic U = T>
 	std::array<U, 16> to_array() const
 	{
 		return {
@@ -1924,7 +2175,7 @@ public:
 	static matrix4_t rotation(direction_t<T> axis, radian_t<T> angle);
 	static matrix4_t rotation(direction_t<T> axis,
 	                          normalized<complex_t<T>> angle);
-	template <typename U, U NumeratorT, U DenominatorT>
+	template <std::signed_integral U, U NumeratorT, U DenominatorT>
 	static matrix4_t rotation(
 	    direction_t<T> axis,
 	    static_pi_fraction_t<U, NumeratorT, DenominatorT> angle);
@@ -1952,13 +2203,13 @@ public:
 	static matrix4_t rotation_around_x(normalized<complex_t<T>> angle);
 	static matrix4_t rotation_around_y(normalized<complex_t<T>> angle);
 	static matrix4_t rotation_around_z(normalized<complex_t<T>> angle);
-	template <typename T, T NumeratorT, T DenominatorT>
+	template <std::signed_integral T, T NumeratorT, T DenominatorT>
 	static matrix4_t rotation_around_x(
 	    static_pi_fraction_t<T, NumeratorT, DenominatorT> angle);
-	template <typename T, T NumeratorT, T DenominatorT>
+	template <std::signed_integral T, T NumeratorT, T DenominatorT>
 	static matrix4_t rotation_around_y(
 	    static_pi_fraction_t<T, NumeratorT, DenominatorT> angle);
-	template <typename T, T NumeratorT, T DenominatorT>
+	template <std::signed_integral T, T NumeratorT, T DenominatorT>
 	static matrix4_t rotation_around_z(
 	    static_pi_fraction_t<T, NumeratorT, DenominatorT> angle);
 	bool is_orthogonal() const;
@@ -2129,28 +2380,30 @@ public:
 		       m20 == m.m20 && m21 == m.m21 && m22 == m.m22 && m23 == m.m23 &&
 		       m30 == m.m30 && m31 == m.m31 && m32 == m.m32 && m33 == m.m33;
 	}
+
+	using underlying_type = std::remove_cv_t<T>;
 };
 
-template <typename T>
+template <arithmetic T>
 matrix4_t<T> operator*(const transform3_t<T>& t, const matrix4_t<T>& m);
-template <typename T>
+template <arithmetic T>
 matrix4_t<T> operator*(const matrix4_t<T>& m, const transform3_t<T>& t);
-template <typename T>
+template <arithmetic T>
 matrix4_t<T> operator*(const uniform_transform3_t<T>& t,
                        const matrix4_t<T>& m);
-template <typename T>
+template <arithmetic T>
 matrix4_t<T> operator*(const matrix4_t<T>& m,
                        const uniform_transform3_t<T>& t);
-template <typename T>
+template <arithmetic T>
 matrix4_t<T> operator*(const unscaled_transform3_t<T>& t,
                        const matrix4_t<T>& m);
-template <typename T>
+template <arithmetic T>
 matrix4_t<T> operator*(const matrix4_t<T>& m,
                        const unscaled_transform3_t<T>& t);
 #pragma endregion
 
 #pragma region declaration_perspective_t
-template <typename T>
+template <arithmetic T>
 struct perspective_t
 {
 private:
@@ -2163,21 +2416,21 @@ private:
 
 public:
 	perspective_t(radian_t<T> angle, T ratio, T near, T far);
-	template <typename U, U NumeratorT, U DenominatorT>
+	template <std::signed_integral U, U NumeratorT, U DenominatorT>
 	perspective_t(static_pi_fraction_t<U, NumeratorT, DenominatorT> angle,
 	              T ratio,
 	              T near,
 	              T far);
 
 	void set(radian_t<T> angle, T ratio, T near, T far);
-	template <typename U, U NumeratorT, U DenominatorT>
+	template <std::signed_integral U, U NumeratorT, U DenominatorT>
 	void set(static_pi_fraction_t<U, NumeratorT, DenominatorT> angle,
 	         T ratio,
 	         T near,
 	         T far);
 
 	void set_angle(radian_t<T> angle);
-	template <typename U, U NumeratorT, U DenominatorT>
+	template <std::signed_integral U, U NumeratorT, U DenominatorT>
 	void set_angle(static_pi_fraction_t<U, NumeratorT, DenominatorT> angle);
 	radian_t<T> get_angle() const;
 
@@ -2193,47 +2446,51 @@ public:
 	matrix4_t<T> to_matrix4() const;
 	matrix4_t<T> to_inverse_matrix4() const;
 
-	template <typename U>
+	template <arithmetic U>
 	friend matrix4_t<U> operator*(const matrix4_t<U>& m,
 	                              const perspective_t<U>& p);
-	template <typename U>
+	template <arithmetic U>
 	friend matrix4_t<U> operator*(const perspective_t<U>& p,
 	                              const matrix4_t<U>& m);
-	template <typename U>
+	template <arithmetic U>
 	friend vector4_t<U> operator*(const perspective_t<U>& p,
 	                              const vector4_t<U>& v);
-	template <typename U>
+	template <arithmetic U>
 	friend matrix4_t<U> operator*(const unscaled_transform3_t<U>& t,
 	                              const perspective_t<U>& p);
-	template <typename U>
+	template <arithmetic U>
 	friend matrix4_t<U> operator*(const perspective_t<U>& p,
 	                              const unscaled_transform3_t<U>& t);
+
+	using underlying_type = std::remove_cv_t<T>;
 };
 #pragma endregion
 
 #pragma region declaration_euler_angles_t
-template <typename T>
+template <arithmetic T>
 struct euler_angles_t
 {
 	radian_t<T> x, y, z;
+
+	using underlying_type = std::remove_cv_t<T>;
 };
 #pragma endregion
 
 #pragma region declaration_quaternion_t
-template <typename T>
+template <arithmetic T>
 struct quaternion_t
 {
 	T x, y, z, w;
 
 	quaternion_t() = default;
-	quaternion_t(T x_, T y_, T z_, T w_) : x{x_}, y{y_}, z{z_}, w{w_} {}
-	quaternion_t(std::array<T, 4> a) : quaternion_t{a[0], a[1], a[2], a[3]} {}
+	constexpr quaternion_t(T x_, T y_, T z_, T w_) : x{x_}, y{y_}, z{z_}, w{w_} {}
+	constexpr quaternion_t(std::array<T, 4> a) : quaternion_t{a[0], a[1], a[2], a[3]} {}
 	quaternion_t(direction_t<T> axis, radian_t<T> angle);
-	template <typename U, U NumeratorT, U DenominatorT>
+	template <std::signed_integral U, U NumeratorT, U DenominatorT>
 	quaternion_t(direction_t<T> axis,
 	             static_pi_fraction_t<U, NumeratorT, DenominatorT> angle);
 
-	template <typename U>
+	template <arithmetic U>
 	explicit operator quaternion_t<U>() const
 	{
 		return quaternion_t<U>{static_cast<U>(x), static_cast<U>(y),
@@ -2242,7 +2499,7 @@ struct quaternion_t
 
 	operator std::array<T, 4>() const { return {x, y, z, w}; }
 
-	template <typename U = T>
+	template <arithmetic U = T>
 	std::array<U, 4> to_array() const
 	{
 		return {static_cast<U>(x), static_cast<U>(y), static_cast<U>(z),
@@ -2257,12 +2514,12 @@ struct quaternion_t
 	quaternion_t& inverse();
 	quaternion_t& conjugate();
 	quaternion_t& normalize();
-	quaternion_t& clamp(quaternion_t min, quaternion_t max);
+	constexpr quaternion_t& clamp(quaternion_t min, quaternion_t max);
 
 	quaternion_t get_inversed() const;
 	quaternion_t get_conjugated() const;
 	quaternion_t get_normalized() const;
-	quaternion_t get_clamped(quaternion_t min, quaternion_t max) const;
+	constexpr quaternion_t get_clamped(quaternion_t min, quaternion_t max) const;
 
 	quaternion_t operator+(quaternion_t q) const;
 	quaternion_t operator-(quaternion_t q) const;
@@ -2285,48 +2542,54 @@ struct quaternion_t
 
 	bool operator==(quaternion_t v) const;
 	bool operator!=(quaternion_t v) const;
+
+	using underlying_type = std::remove_cv_t<T>;
 };
 
-template <typename T>
+template <arithmetic T>
 T dot(quaternion_t<T> lhs, quaternion_t<T> rhs);
-template <typename T>
+template <arithmetic T>
 quaternion_t<T> cross(quaternion_t<T> lhs, quaternion_t<T> rhs);
-template <typename T>
+template <arithmetic T>
 quaternion_t<T> lerp(quaternion_t<T> begin, quaternion_t<T> end, T percent);
-template <typename T>
+template <arithmetic T>
 quaternion_t<T> nlerp(quaternion_t<T> begin, quaternion_t<T> end, T percent);
-template <typename T>
+template <arithmetic T>
 quaternion_t<T> slerp(quaternion_t<T> begin, quaternion_t<T> end, T percent);
 #pragma endregion
 
 #pragma region declaration_line_t
-template <typename T>
+template <arithmetic T>
 struct line_t
 {
 	T coefficient;
 	T offset;
 
 	static line_t from(vector2_t<T> v);
+
+	using underlying_type = std::remove_cv_t<T>;
 };
 
-template <typename T>
+template <arithmetic T>
 bool are_parallel(line_t<T> l1, line_t<T> l2);
 
-template <typename T>
+template <arithmetic T>
 bool collides(line_t<T> l1, line_t<T> l2);
-template <typename T>
+template <arithmetic T>
 bool collides(line_t<T> l1, line_t<T> l2, vector2_t<T>& intersection);
 #pragma endregion
 
 #pragma region declaration_segment2_t
-template <typename T>
+template <arithmetic T>
 struct segment2_t
 {
 	vector2_t<T> origin;
 	vector2_t<T> end;
+
+	using underlying_type = std::remove_cv_t<T>;
 };
 
-template <typename T>
+template <arithmetic T>
 bool collides(const segment2_t<T>& s0,
               const segment2_t<T>& s1,
               vector2_t<T>& outPoint,
@@ -2334,18 +2597,20 @@ bool collides(const segment2_t<T>& s0,
 #pragma endregion
 
 #pragma region declaration_segment3_t
-template <typename T>
+template <arithmetic T>
 struct segment3_t
 {
 	vector3_t<T> origin;
 	vector3_t<T> end;
+
+	using underlying_type = std::remove_cv_t<T>;
 };
 
-template <typename T>
+template <arithmetic T>
 constexpr bool collides(const segment3_t<T>& s,
                         const plane_t<T>& p,
                         T e = T(epsilon)) noexcept;
-template <typename T>
+template <arithmetic T>
 constexpr bool collides(const segment3_t<T>& s,
                         const plane_t<T>& p,
                         vector3_t<T>& outPoint,
@@ -2353,13 +2618,13 @@ constexpr bool collides(const segment3_t<T>& s,
 #pragma endregion
 
 #pragma region declaration_plane_t
-template <typename T>
+template <arithmetic T>
 struct plane_t
 {
 	vector3_t<T> origin;
 	direction_t<T> normal;
 
-	template <typename U>
+	template <arithmetic U>
 	explicit operator plane_t<U>() const
 	{
 		return plane_t<U>{static_cast<vector3_t<U>>(origin),
@@ -2374,48 +2639,56 @@ struct plane_t
 	                       direction_t<T> plane_tangent) const;
 
 	direction_t<T> computeTangent(T epsilon_ = T(epsilon)) const;
+
+	using underlying_type = std::remove_cv_t<T>;
 };
 #pragma endregion
 
 #pragma region declaration_ray2_t
-template <typename T>
+template <arithmetic T>
 struct ray2_t
 {
 	vector2_t<T> origin;
 	normalized<vector2_t<T>> direction;
+
+	using underlying_type = std::remove_cv_t<T>;
 };
 #pragma endregion
 
 #pragma region declaration_ray3_t
-template <typename T>
+template <arithmetic T>
 struct ray3_t
 {
 	vector3_t<T> origin;
 	direction_t<T> direction;
+
+	using underlying_type = std::remove_cv_t<T>;
 };
 #pragma endregion
 
 #pragma region declaration_aa_rect_t
-template <typename T>
+template <arithmetic T>
 struct aa_rect_t
 {
 	vector2_t<T> origin;
 	vector2_t<T> dimention;
 
 	bool contains(vector2_t<T> v) const;
+
+	using underlying_type = std::remove_cv_t<T>;
 };
 
-template <typename T>
+template <arithmetic T>
 std::size_t collides(aa_rect_t<T> r1,
                      aa_rect_t<T> r2,
                      vector2_t<T>* intersection1,
                      vector2_t<T>* insersection2);
-template <typename T>
+template <arithmetic T>
 std::size_t collides(aa_rect_t<T> r,
                      line_t<T> l,
                      vector2_t<T>* intersection1,
                      vector2_t<T>* insersection2);
-template <typename T>
+template <arithmetic T>
 std::size_t collides(line_t<T> l,
                      aa_rect_t<T> r,
                      vector2_t<T>* intersection1,
@@ -2423,55 +2696,57 @@ std::size_t collides(line_t<T> l,
 #pragma endregion
 
 #pragma region declaration_circle_t
-template <typename T>
+template <arithmetic T>
 struct circle_t
 {
 	vector2_t<T> origin;
 	T radius;
+
+	using underlying_type = std::remove_cv_t<T>;
 };
 
-template <typename T>
+template <arithmetic T>
 std::size_t collides(circle_t<T> c1,
                      circle_t<T> c2,
                      vector2_t<T>* intersection1,
                      vector2_t<T>* insersection2);
-template <typename T>
+template <arithmetic T>
 std::size_t collides(circle_t<T> c,
                      aa_rect_t<T> r,
                      vector2_t<T>* intersection1,
                      vector2_t<T>* insersection2);
-template <typename T>
+template <arithmetic T>
 std::size_t collides(aa_rect_t<T> r,
                      circle_t<T> c,
                      vector2_t<T>* intersection1,
                      vector2_t<T>* insersection2);
-template <typename T>
+template <arithmetic T>
 std::size_t collides(circle_t<T> c,
                      line_t<T> l,
                      vector2_t<T>* intersection1,
                      vector2_t<T>* insersection2);
-template <typename T>
+template <arithmetic T>
 std::size_t collides(line_t<T> l,
                      circle_t<T> c,
                      vector2_t<T>* intersection1,
                      vector2_t<T>* insersection2);
 
-template <typename T>
+template <arithmetic T>
 bool collides(ray3_t<T> r, plane_t<T> p);
-template <typename T>
+template <arithmetic T>
 bool collides(ray3_t<T> r, plane_t<T> p, vector3_t<T>& intersection);
-template <typename T>
+template <arithmetic T>
 bool collides(plane_t<T> p, ray3_t<T> r);
-template <typename T>
+template <arithmetic T>
 bool collides(plane_t<T> p, ray3_t<T> r, vector3_t<T>& intersection);
-template <typename T>
+template <arithmetic T>
 bool collides_bidirectional(const plane_t<T>& plane,
                             ray3_t<T> r,
                             vector3_t<T>& collision_point);
 #pragma endregion
 
 #pragma region declaration_aabb_t
-template <typename T>
+template <arithmetic T>
 struct aabb_t
 {
 	vector3_t<T> min;
@@ -2481,16 +2756,18 @@ struct aabb_t
 	vector3_t<T> get_center() const;
 
 	aabb_t operator+(aabb_t rhs) const;
+
+	using underlying_type = std::remove_cv_t<T>;
 };
 
-template <typename T>
+template <arithmetic T>
 bool collides(aabb_t<T> b, ray3_t<T> r);
-template <typename T>
+template <arithmetic T>
 bool collides(aabb_t<T> b1, aabb_t<T> b2);
 #pragma endregion
 
 #pragma region declaration_transform2_t
-template <typename T>
+template <arithmetic T>
 struct transform2_t
 {
 	vector2_t<T> position;
@@ -2499,11 +2776,13 @@ struct transform2_t
 
 	transform2_t operator*(const transform2_t& t) const;
 	vector2_t<T> operator*(vector2_t<T> v) const;
+
+	using underlying_type = std::remove_cv_t<T>;
 };
 #pragma endregion
 
 #pragma region declaration_transform3_t
-template <typename T>
+template <arithmetic T>
 struct transform3_t
 {
 	vector3_t<T> position;
@@ -2521,11 +2800,13 @@ struct transform3_t
 	transform3_t operator*(const transform3_t& t) const;
 	vector3_t<T> operator*(vector3_t<T> v) const;
 	quaternion_t<T> operator*(quaternion_t<T> q) const;
+
+	using underlying_type = std::remove_cv_t<T>;
 };
 #pragma endregion
 
 #pragma region declaration_uniform_transform2_t
-template <typename T>
+template <arithmetic T>
 struct uniform_transform2_t
 {
 	vector2_t<T> position;
@@ -2534,11 +2815,13 @@ struct uniform_transform2_t
 
 	uniform_transform2_t operator*(uniform_transform2_t t) const;
 	vector2_t<T> operator*(vector2_t<T> v) const;
+
+	using underlying_type = std::remove_cv_t<T>;
 };
 #pragma endregion
 
 #pragma region declaration_uniform_transform3_t
-template <typename T>
+template <arithmetic T>
 struct uniform_transform3_t
 {
 	vector3_t<T> position;
@@ -2550,11 +2833,13 @@ struct uniform_transform3_t
 	uniform_transform3_t operator*(const uniform_transform3_t& t) const;
 	vector3_t<T> operator*(vector3_t<T> v) const;
 	quaternion_t<T> operator*(quaternion_t<T> q) const;
+
+	using underlying_type = std::remove_cv_t<T>;
 };
 #pragma endregion
 
 #pragma region declaration_unscaled_transform2_t
-template <typename T>
+template <arithmetic T>
 struct unscaled_transform2_t
 {
 	vector2_t<T> position;
@@ -2562,11 +2847,13 @@ struct unscaled_transform2_t
 
 	unscaled_transform2_t operator*(unscaled_transform2_t t) const;
 	vector2_t<T> operator*(vector2_t<T> v) const;
+
+	using underlying_type = std::remove_cv_t<T>;
 };
 #pragma endregion
 
 #pragma region declaration_unscaled_transform3_t
-template <typename T>
+template <arithmetic T>
 struct unscaled_transform3_t
 {
 	vector3_t<T> position;
@@ -2584,18 +2871,20 @@ struct unscaled_transform3_t
 	unscaled_transform3_t operator*(const unscaled_transform3_t& t) const;
 	vector3_t<T> operator*(vector3_t<T> v) const;
 	quaternion_t<T> operator*(quaternion_t<T> q) const;
+
+	using underlying_type = std::remove_cv_t<T>;
 };
 
-template <typename T>
+template <arithmetic T>
 unscaled_transform3_t<T> inverse(unscaled_transform3_t<T> tr);
 #pragma endregion
 
 #pragma region declaration_value_domain
-template <typename T>
+template <typename T> requires arithmetic<T> || vector<T>
 class value_domain
 {
-	T m_lim0 = T(0);
-	T m_lim1 = T(1);
+	T m_lim0;
+	T m_lim1;
 
 public:
 	value_domain() = default;
@@ -2609,14 +2898,17 @@ public:
 
 	constexpr T lim0() const noexcept { return m_lim0; }
 	constexpr T lim1() const noexcept { return m_lim1; }
-	constexpr T range() const noexcept { return std::abs(lim0() - lim1()); }
+	constexpr T range() const noexcept
+	{
+		return element_wise_abs(lim0() - lim1());
+	}
 	constexpr T min() const noexcept
 	{
-		return lim0() < lim1() ? lim0() : lim1();
+		return element_wise_min(lim0(), lim1());
 	}
 	constexpr T max() const noexcept
 	{
-		return lim0() < lim1() ? lim1() : lim0();
+		return element_wise_max(lim0(), lim1());
 	}
 
 	constexpr T clamp(T value) const noexcept
@@ -2627,6 +2919,8 @@ public:
 
 	value_domain& operator=(const value_domain&) = default;
 	value_domain& operator=(value_domain&&) = default;
+
+	using underlying_type = std::remove_cv_t<T>;
 };
 #pragma endregion
 
@@ -2670,6 +2964,8 @@ public:
 	    normalized_value<T> value) noexcept;
 	unnormalized_value& operator=(const unnormalized_value&) = default;
 	unnormalized_value& operator=(unnormalized_value&&) = default;
+
+	using underlying_type = std::remove_cv_t<T>;
 };
 #pragma endregion
 
@@ -2677,12 +2973,12 @@ public:
 template <typename T>
 class normalized_value
 {
-	T m_value = T(0);
+	T m_value;
 
 public:
 	normalized_value() = default;
 	constexpr explicit normalized_value(T value) noexcept
-	    : m_value{cdm::clamp<T>(value, T(0), T(1))}
+	    : m_value{cdm::clamp<T>(value, zero<T>(), one<T>())}
 	{
 	}
 	constexpr explicit normalized_value(unnormalized_value<T> value) noexcept
@@ -2718,6 +3014,8 @@ public:
 	}
 	normalized_value& operator=(const normalized_value&) = default;
 	normalized_value& operator=(normalized_value&&) = default;
+
+	using underlying_type = std::remove_cv_t<T>;
 };
 #pragma endregion
 
@@ -2734,55 +3032,24 @@ constexpr T domain_transfer(cdm::value_domain<T> from,
 
 // ==========================================================================
 
-#pragma region definition_misc
-template <typename T>
-constexpr T lerp(T begin, T end, T percent)
-{
-	return (end - begin) * percent + begin;
-}
-
-template <typename T>
-constexpr T clamp(T f, T min, T max)
-{
-	return std::min(std::max(f, min), max);
-}
-
-template <typename T>
-bool nearly_equal(T f1, T f2, T e)
-{
-	return std::abs(f1 - f2) < e;
-}
-
-template <typename T>
-constexpr int sign(T val)
-{
-	return (T(0) <= val) - (val < T(0));
-}
-template <typename T>
-constexpr int signnum(T val)
-{
-	return (T(0) < val) - (val < T(0));
-}
-#pragma endregion
-
 #pragma region definition_complex_t
-template <typename T>
+template <arithmetic T>
 complex_t<T>::complex_t(radian_t<T> angle) : r{cos(angle)}, i{sin(angle)}
 {
 }
 
-template <typename T>
+template <arithmetic T>
 T complex_t<T>::norm() const
 {
 	return std::sqrt(norm_squared());
 }
-template <typename T>
+template <arithmetic T>
 T complex_t<T>::norm_squared() const
 {
 	return r * r + i * i;
 }
 
-template <typename T>
+template <arithmetic T>
 complex_t<T>& complex_t<T>::normalize()
 {
 	const T n = norm();
@@ -2790,7 +3057,7 @@ complex_t<T>& complex_t<T>::normalize()
 	i /= n;
 	return *this;
 }
-template <typename T>
+template <arithmetic T>
 complex_t<T> complex_t<T>::get_normalized() const
 {
 	complex_t<T> res{*this};
@@ -2798,13 +3065,13 @@ complex_t<T> complex_t<T>::get_normalized() const
 	return *this;
 }
 
-template <typename T>
+template <arithmetic T>
 complex_t<T>& complex_t<T>::conjugate()
 {
 	i = -i;
 	return *this;
 }
-template <typename T>
+template <arithmetic T>
 complex_t<T> complex_t<T>::get_conjugated() const
 {
 	complex_t<T> res{*this};
@@ -2812,83 +3079,83 @@ complex_t<T> complex_t<T>::get_conjugated() const
 	return *this;
 }
 
-template <typename T>
+template <arithmetic T>
 complex_t<T> complex_t<T>::operator+(complex_t<T> c) const
 {
 	return {r + c.r, i + c.i};
 }
-template <typename T>
+template <arithmetic T>
 complex_t<T> complex_t<T>::operator-(complex_t<T> c) const
 {
 	return {r - c.r, i - c.i};
 }
 
-template <typename T>
+template <arithmetic T>
 complex_t<T>& complex_t<T>::operator+=(complex_t<T> c)
 {
 	return *this = *this + c;
 }
-template <typename T>
+template <arithmetic T>
 complex_t<T>& complex_t<T>::operator-=(complex_t<T> c)
 {
 	return *this = *this - c;
 }
-template <typename T>
+template <arithmetic T>
 complex_t<T>& complex_t<T>::operator*=(complex_t<T> c)
 {
 	return *this = *this * c;
 }
 
-template <typename T>
+template <arithmetic T>
 complex_t<T> operator*(complex_t<T> c1, complex_t<T> c2)
 {
 	return {c1.r * c2.r - c1.i * c2.i, c1.r * c2.i + c1.i * c2.r};
 }
-template <typename T>
+template <arithmetic T>
 complex_t<T> operator*(complex_t<T> c, T f)
 {
 	return {c.r * f, c.i * f};
 }
-template <typename T>
+template <arithmetic T>
 complex_t<T> operator*(normalized<complex_t<T>> c1, complex_t<T> c2)
 {
 	return *c1 * c2;
 }
-template <typename T>
+template <arithmetic T>
 complex_t<T> operator*(complex_t<T> c1, normalized<complex_t<T>> c2)
 {
 	return c1 * *c2;
 }
-template <typename T>
+template <arithmetic T>
 normalized<complex_t<T>> operator*(normalized<complex_t<T>> c1,
                                    normalized<complex_t<T>> c2)
 {
 	return normalized<complex_t<T>>::already_normalized(complex_t<T>{
 	    c1->r * c2->r - c1->i * c2->i, c1->r * c2->i + c1->i * c2->r});
 }
-template <typename T>
+template <arithmetic T>
 vector2_t<T> operator*(normalized<complex_t<T>> c, vector2_t<T> v)
 {
 	return {c->r * v.x - c->i * v.y, c->r * v.y + c->i * v.x};
 }
 
-template <typename T>
+template <arithmetic T>
 T norm(complex_t<T> c)
 {
 	return c.norm_squared();
 }
-template <typename T>
+template <arithmetic T>
 T norm_squared(complex_t<T> c)
 {
 	return c.norm();
 }
-template <typename T>
+template <arithmetic T>
 complex_t<T> normalize(complex_t<T> c)
 {
 	c.normalize();
 	return c;
 }
-template <typename T>
+template <arithmetic T>
 complex_t<T> conjugate(complex_t<T> c)
 {
 	c.conjugate();
@@ -2897,197 +3164,197 @@ complex_t<T> conjugate(complex_t<T> c)
 #pragma endregion
 
 #pragma region definition_radian_t
-template <typename T>
+template <arithmetic T>
 constexpr radian_t<T>::radian_t(T f) : angle(f)
 {
 }
-template <typename T>
+template <arithmetic T>
 constexpr radian_t<T>::radian_t(degree_t<T> d)
     : angle(static_cast<T>(d) * T(deg_to_rad))
 {
 }
 
-template <typename T>
+template <arithmetic T>
 radian_t<T>::operator T() const
 {
 	return angle;
 }
 
-template <typename T>
+template <arithmetic T>
 radian_t<T>& radian_t<T>::operator+=(radian_t<T> r)
 {
 	angle += r.angle;
 	return *this;
 }
-template <typename T>
+template <arithmetic T>
 radian_t<T>& radian_t<T>::operator-=(radian_t<T> r)
 {
 	angle -= r.angle;
 	return *this;
 }
-template <typename T>
+template <arithmetic T>
 radian_t<T>& radian_t<T>::operator*=(radian_t<T> r)
 {
 	angle *= r.angle;
 	return *this;
 }
-template <typename T>
+template <arithmetic T>
 radian_t<T>& radian_t<T>::operator/=(radian_t<T> r)
 {
 	angle /= r.angle;
 	return *this;
 }
 
-template <typename T>
+template <arithmetic T>
 radian_t<T> radian_t<T>::operator-() const
 {
 	return radian_t<T>{-angle};
 }
 
-template <typename T>
+template <arithmetic T>
 radian_t<T>& radian_t<T>::operator=(degree_t<T> d)
 {
 	angle = d.angle * T(deg_to_rad);
 	return *this;
 }
 
-template <typename T>
+template <arithmetic T>
 radian_t<T> operator+(radian_t<T> r1, radian_t<T> r2)
 {
 	return radian_t<T>{static_cast<T>(r1) + static_cast<T>(r2)};
 }
-template <typename T>
+template <arithmetic T>
 radian_t<T> operator-(radian_t<T> r1, radian_t<T> r2)
 {
 	return radian_t<T>{static_cast<T>(r1) - static_cast<T>(r2)};
 }
-template <typename T>
+template <arithmetic T>
 radian_t<T> operator*(T f, radian_t<T> r)
 {
 	return radian_t<T>{static_cast<T>(r) * f};
 }
-template <typename T>
+template <arithmetic T>
 radian_t<T> operator*(radian_t<T> r, T f)
 {
 	return radian_t<T>{f * static_cast<T>(r)};
 }
-template <typename T>
+template <arithmetic T>
 radian_t<T> operator/(radian_t<T> r, T f)
 {
 	return radian_t<T>{static_cast<T>(r) / f};
 }
-template <typename T>
+template <arithmetic T>
 radian_t<T>& operator+=(radian_t<T>& r, T f)
 {
 	r = r + f;
 	return r;
 }
-template <typename T>
+template <arithmetic T>
 radian_t<T>& operator-=(radian_t<T>& r, T f)
 {
 	r = r - f;
 	return r;
 }
-template <typename T>
+template <arithmetic T>
 radian_t<T>& operator*=(radian_t<T>& r, T f)
 {
 	r = r * f;
 	return r;
 }
-template <typename T>
+template <arithmetic T>
 radian_t<T>& operator/=(radian_t<T>& r, T f)
 {
 	r = r / f;
 	return r;
 }
 
-template <typename T>
+template <arithmetic T>
 bool operator<(radian_t<T> lhs, radian_t<T> rhs)
 {
 	return T(lhs) < T(rhs);
 }
-template <typename T>
+template <arithmetic T>
 bool operator>(radian_t<T> lhs, radian_t<T> rhs)
 {
 	return T(lhs) > T(rhs);
 }
-template <typename T>
+template <arithmetic T>
 bool operator==(radian_t<T> lhs, radian_t<T> rhs)
 {
 	return T(lhs) == T(rhs);
 }
-template <typename T>
+template <arithmetic T>
 bool operator!=(radian_t<T> lhs, radian_t<T> rhs)
 {
 	return T(lhs) != T(rhs);
 }
-template <typename T>
+template <arithmetic T>
 bool operator>=(radian_t<T> lhs, radian_t<T> rhs)
 {
 	return T(lhs) >= T(rhs);
 }
-template <typename T>
+template <arithmetic T>
 bool operator<=(radian_t<T> lhs, radian_t<T> rhs)
 {
 	return T(lhs) <= T(rhs);
 }
 
-template <typename T>
+template <arithmetic T>
 T sin(radian_t<T> r)
 {
 	return std::sin(static_cast<T>(r));
 }
-template <typename T>
+template <arithmetic T>
 T cos(radian_t<T> r)
 {
 	return std::cos(static_cast<T>(r));
 }
-template <typename T>
+template <arithmetic T>
 T tan(radian_t<T> r)
 {
 	return std::tan(static_cast<T>(r));
 }
-template <typename T>
+template <arithmetic T>
 T asin(radian_t<T> r)
 {
 	return std::asin(static_cast<T>(r));
 }
-template <typename T>
+template <arithmetic T>
 T acos(radian_t<T> r)
 {
 	return std::acos(static_cast<T>(r));
 }
-template <typename T>
+template <arithmetic T>
 T atan(radian_t<T> r)
 {
 	return std::atan(static_cast<T>(r));
 }
-template <typename T>
+template <arithmetic T>
 T sinh(radian_t<T> r)
 {
 	return std::sinh(static_cast<T>(r));
 }
-template <typename T>
+template <arithmetic T>
 T cosh(radian_t<T> r)
 {
 	return std::cosh(static_cast<T>(r));
 }
-template <typename T>
+template <arithmetic T>
 T tanh(radian_t<T> r)
 {
 	return std::tanh(static_cast<T>(r));
 }
-template <typename T>
+template <arithmetic T>
 T asinh(radian_t<T> r)
 {
 	return std::asinh(static_cast<T>(r));
 }
-template <typename T>
+template <arithmetic T>
 T acosh(radian_t<T> r)
 {
 	return std::acosh(static_cast<T>(r));
 }
-template <typename T>
+template <arithmetic T>
 T atanh(radian_t<T> r)
 {
 	return std::atanh(static_cast<T>(r));
@@ -3095,190 +3362,190 @@ T atanh(radian_t<T> r)
 #pragma endregion
 
 #pragma region definition_degree_t
-template <typename T>
+template <arithmetic T>
 constexpr degree_t<T>::degree_t(T f) : angle(f)
 {
 }
-template <typename T>
+template <arithmetic T>
 constexpr degree_t<T>::degree_t(radian_t<T> r)
     : angle(static_cast<T>(r) * T(rad_to_deg))
 {
 }
 
-template <typename T>
+template <arithmetic T>
 degree_t<T>::operator T() const
 {
 	return angle;
 }
 
-template <typename T>
+template <arithmetic T>
 degree_t<T>& degree_t<T>::operator+=(degree_t d)
 {
 	angle += d.angle;
 	return *this;
 }
-template <typename T>
+template <arithmetic T>
 degree_t<T>& degree_t<T>::operator-=(degree_t d)
 {
 	angle -= d.angle;
 	return *this;
 }
-template <typename T>
+template <arithmetic T>
 degree_t<T>& degree_t<T>::operator*=(degree_t d)
 {
 	angle *= d.angle;
 	return *this;
 }
-template <typename T>
+template <arithmetic T>
 degree_t<T>& degree_t<T>::operator/=(degree_t d)
 {
 	angle /= d.angle;
 	return *this;
 }
 
-template <typename T>
+template <arithmetic T>
 degree_t<T> degree_t<T>::operator-() const
 {
 	return degree_t(-angle);
 }
 
-template <typename T>
+template <arithmetic T>
 degree_t<T> operator+(degree_t<T> d1, degree_t<T> d2)
 {
 	return degree_t<T>{static_cast<T>(d1) + static_cast<T>(d2)};
 }
-template <typename T>
+template <arithmetic T>
 degree_t<T> operator-(degree_t<T> d1, degree_t<T> d2)
 {
 	return degree_t<T>{static_cast<T>(d1) - static_cast<T>(d2)};
 }
-template <typename T>
+template <arithmetic T>
 degree_t<T> operator*(T f, degree_t<T> d)
 {
 	return degree_t<T>{static_cast<T>(d) * f};
 }
-template <typename T>
+template <arithmetic T>
 degree_t<T> operator*(degree_t<T> d, T f)
 {
 	return degree_t<T>{f * static_cast<T>(d)};
 }
-template <typename T>
+template <arithmetic T>
 degree_t<T> operator/(degree_t<T> d, T f)
 {
 	return degree_t<T>{static_cast<T>(d) / f};
 }
-template <typename T>
+template <arithmetic T>
 degree_t<T>& operator+=(degree_t<T>& d, T f)
 {
 	d = d + f;
 	return d;
 }
-template <typename T>
+template <arithmetic T>
 degree_t<T>& operator-=(degree_t<T>& d, T f)
 {
 	d = d - f;
 	return d;
 }
-template <typename T>
+template <arithmetic T>
 degree_t<T>& operator*=(degree_t<T>& d, T f)
 {
 	d = d * f;
 	return d;
 }
-template <typename T>
+template <arithmetic T>
 degree_t<T>& operator/=(degree_t<T>& d, T f)
 {
 	d = d / f;
 	return d;
 }
 
-template <typename T>
+template <arithmetic T>
 bool operator<(degree_t<T> lhs, degree_t<T> rhs)
 {
 	return T(lhs) < T(rhs);
 }
-template <typename T>
+template <arithmetic T>
 bool operator>(degree_t<T> lhs, degree_t<T> rhs)
 {
 	return T(lhs) > T(rhs);
 }
-template <typename T>
+template <arithmetic T>
 bool operator==(degree_t<T> lhs, degree_t<T> rhs)
 {
 	return T(lhs) == T(rhs);
 }
-template <typename T>
+template <arithmetic T>
 bool operator!=(degree_t<T> lhs, degree_t<T> rhs)
 {
 	return T(lhs) != T(rhs);
 }
-template <typename T>
+template <arithmetic T>
 bool operator>=(degree_t<T> lhs, degree_t<T> rhs)
 {
 	return T(lhs) >= T(rhs);
 }
-template <typename T>
+template <arithmetic T>
 bool operator<=(degree_t<T> lhs, degree_t<T> rhs)
 {
 	return T(lhs) <= T(rhs);
 }
 
-template <typename T>
+template <arithmetic T>
 T sin(degree_t<T> d)
 {
 	return sin(radian_t<T>(d));
 }
-template <typename T>
+template <arithmetic T>
 T cos(degree_t<T> d)
 {
 	return cos(radian_t<T>(d));
 }
-template <typename T>
+template <arithmetic T>
 T tan(degree_t<T> d)
 {
 	return tan(radian_t<T>(d));
 }
-template <typename T>
+template <arithmetic T>
 T asin(degree_t<T> d)
 {
 	return asin(radian_t<T>(d));
 }
-template <typename T>
+template <arithmetic T>
 T acos(degree_t<T> d)
 {
 	return acos(radian_t<T>(d));
 }
-template <typename T>
+template <arithmetic T>
 T atan(degree_t<T> d)
 {
 	return atan(radian_t<T>(d));
 }
-template <typename T>
+template <arithmetic T>
 T sinh(degree_t<T> d)
 {
 	return sinh(radian_t<T>(d));
 }
-template <typename T>
+template <arithmetic T>
 T cosh(degree_t<T> d)
 {
 	return cosh(radian_t<T>(d));
 }
-template <typename T>
+template <arithmetic T>
 T tanh(degree_t<T> d)
 {
 	return tanh(radian_t<T>(d));
 }
-template <typename T>
+template <arithmetic T>
 T asinh(degree_t<T> d)
 {
 	return asinh(radian_t<T>(d));
 }
-template <typename T>
+template <arithmetic T>
 T acosh(degree_t<T> d)
 {
 	return acosh(radian_t<T>(d));
 }
-template <typename T>
+template <arithmetic T>
 T atanh(degree_t<T> d)
 {
 	return atanh(radian_t<T>(d));
@@ -3286,121 +3553,126 @@ T atanh(degree_t<T> d)
 #pragma endregion
 
 #pragma region definition_vector2_t
-template <typename T>
+template <arithmetic T>
 vector2_t<T> vector2_t<T>::operator+(vector2_t<T> v) const
 {
 	return {x + v.x, y + v.y};
 }
-template <typename T>
+template <arithmetic T>
 vector2_t<T> vector2_t<T>::operator-(vector2_t<T> v) const
 {
 	return {x - v.x, y - v.y};
 }
 
-template <typename T>
+template <arithmetic T>
 vector2_t<T>& vector2_t<T>::operator+=(vector2_t<T> v)
 {
 	*this = *this + v;
 	return *this;
 }
-template <typename T>
+template <arithmetic T>
 vector2_t<T>& vector2_t<T>::operator-=(vector2_t<T> v)
 {
 	*this = *this - v;
 	return *this;
 }
 
-template <typename T>
+template <arithmetic T>
 vector2_t<T> vector2_t<T>::operator-() const
 {
 	return {-x, -y};
 }
 
-template <typename T>
+template <arithmetic T>
 bool vector2_t<T>::operator==(vector2_t<T> v) const
 {
 	return x == v.x && y == v.y;
 }
-template <typename T>
+template <arithmetic T>
 bool vector2_t<T>::operator!=(vector2_t<T> v) const
 {
 	return !operator==(v);
 }
 
-template <typename T>
+template <arithmetic T>
 vector2_t<T> operator*(T f, vector2_t<T> v)
 {
 	return v * f;
 }
-template <typename T>
+template <arithmetic T>
 vector2_t<T> operator*(vector2_t<T> v, T f)
 {
 	return {v.x * f, v.y * f};
 }
-template <typename T>
+template <arithmetic T>
 vector2_t<T> operator/(vector2_t<T> v, T f)
 {
 	return {v.x / f, v.y / f};
 }
-template <typename T>
+template <arithmetic T>
 vector2_t<T>& operator*=(vector2_t<T>& v, T f)
 {
 	v = v * f;
 	return v;
 }
-template <typename T>
+template <arithmetic T>
 vector2_t<T>& operator/=(vector2_t<T>& v, T f)
 {
 	v = v / f;
 	return v;
 }
 
-template <typename T>
+template <arithmetic T>
 T norm(vector2_t<T> v)
 {
 	return std::sqrt(norm_squared(v));
 }
-template <typename T>
+template <arithmetic T>
 T norm_squared(vector2_t<T> v)
 {
 	return v.x * v.x + v.y * v.y;
 }
-template <typename T>
-vector2_t<T>& normalize(vector2_t<T>& v)
+template <arithmetic T>
+vector2_t<T> normalize(vector2_t<T> v)
 {
 	T n = norm(v);
 	v.x /= n;
 	v.y /= n;
 	return v;
 }
-template <typename T>
-vector2_t<T> clamp(vector2_t<T> v, vector2_t<T> min, vector2_t<T> max)
-{
-	v.x = cdm::clamp(v.x, min.x, max.x);
-	v.y = cdm::clamp(v.y, min.y, max.y);
-	return v;
-}
-template <typename T>
+//template <arithmetic T>
+//constexpr vector2_t<T> clamp(vector2_t<T> v,
+//                             vector2_t<T> min,
+//                             vector2_t<T> max)
+//{
+//	v.clamp(min, max);
+//	return v;
+//}
+template <arithmetic T>
 T dot(vector2_t<T> lhs, vector2_t<T> rhs)
 {
 	return lhs.x * rhs.x + lhs.y * rhs.y;
 }
-template <typename T>
+template <arithmetic T>
 T cross(vector2_t<T> lhs, vector2_t<T> rhs)
 {
 	return lhs.x * rhs.y - lhs.y * rhs.x;
 }
-template <typename T>
-vector2_t<T> lerp(vector2_t<T> begin, vector2_t<T> end, T percent)
+template <arithmetic T>
+constexpr vector2_t<T> lerp(vector2_t<T> begin, vector2_t<T> end, T percent)
 {
-	return (end - begin) * percent + begin;
+	//return (end - begin) * percent + begin;
+	return {
+		std::lerp(begin.x, end.x, percent),
+		std::lerp(begin.y, end.y, percent),
+	};
 }
-template <typename T>
+template <arithmetic T>
 vector2_t<T> nlerp(vector2_t<T> begin, vector2_t<T> end, T percent)
 {
 	return lerp(begin, end, percent).get_normalized();
 }
-template <typename T>
+template <arithmetic T>
 vector2_t<T> slerp(vector2_t<T> begin, vector2_t<T> end, T percent)
 {
 	const radian_t angle = angle_between(begin, end) * percent;
@@ -3413,52 +3685,74 @@ vector2_t<T> slerp(vector2_t<T> begin, vector2_t<T> end, T percent)
 	T f = cdm::lerp(norm(begin), norm(end), percent);
 	return res * f;
 }
-template <typename T>
+template <arithmetic T>
 T distance_between(vector2_t<T> v1, vector2_t<T> v2)
 {
 	return norm(v1 - v2);
 }
-template <typename T>
+template <arithmetic T>
 T distance_squared_between(vector2_t<T> v1, vector2_t<T> v2)
 {
 	return norm_squared(v1 - v2);
 }
-template <typename T>
+template <arithmetic T>
 vector2_t<T> from_to(vector2_t<T> from, vector2_t<T> to)
 {
 	return {to.x - from.x, to.y - from.y};
 }
-template <typename T>
+template <arithmetic T>
 radian_t<T> angle_between(vector2_t<T> v1, vector2_t<T> v2)
 {
 	return radian_t{atan2f(v2.y, v2.x) - atan2f(v1.y, v1.x)};
 }
-template <typename T>
+template <arithmetic T>
 bool nearly_equal(vector2_t<T> v1, vector2_t<T> v2, T e)
 {
 	return cdm::nearly_equal(v1.x, v2.x, e) &&
 	       cdm::nearly_equal(v1.y, v2.y, e);
 }
-template <typename T>
-vector2_t<T> element_wise_min(vector2_t<T> v0, vector2_t<T> v1)
+template <arithmetic T>
+constexpr vector2_t<T> element_wise_min(vector2_t<T> v0, vector2_t<T> v1)
 {
-	return {v0.x < v1.x ? v0.x : v1.x, v0.y < v1.y ? v0.y : v1.y};
-};
-template <typename T>
-vector2_t<T> element_wise_max(vector2_t<T> v0, vector2_t<T> v1)
+	return {
+	    std::min(v0.x, v1.x),
+	    std::min(v0.y, v1.y),
+	};
+}
+template <arithmetic T>
+constexpr vector2_t<T> element_wise_max(vector2_t<T> v0, vector2_t<T> v1)
 {
-	return {v0.x > v1.x ? v0.x : v1.x, v0.y > v1.y ? v0.y : v1.y};
-};
+	return {
+	    std::max(v0.x, v1.x),
+	    std::max(v0.y, v1.y),
+	};
+}
+template <arithmetic T>
+constexpr vector2_t<T> element_wise_abs(vector2_t<T> v)
+{
+	return {
+	    std::abs(v.x),
+	    std::abs(v.y),
+	};
+}
+template <arithmetic T>
+constexpr vector2_t<T> element_wise_lerp(vector2_t<T> begin, vector2_t<T> end, vector2_t<T> percent)
+{
+	return {
+		std::lerp(begin.x, end.x, percent.x),
+		std::lerp(begin.y, end.y, percent.y),
+	};
+}
 #pragma endregion
 
 #pragma region definition_vector3_t
-template <typename T>
+template <arithmetic T>
 vector2_t<T> vector3_t<T>::xy() const
 {
 	return {x, y};
 }
 
-template <typename T>
+template <arithmetic T>
 vector3_t<T> vector3_t<T>::operator+(vector3_t<T> v) const
 {
 	return {
@@ -3467,7 +3761,7 @@ vector3_t<T> vector3_t<T>::operator+(vector3_t<T> v) const
 	    z + v.z,
 	};
 }
-template <typename T>
+template <arithmetic T>
 vector3_t<T> vector3_t<T>::operator-(vector3_t<T> v) const
 {
 	return {
@@ -3477,20 +3771,20 @@ vector3_t<T> vector3_t<T>::operator-(vector3_t<T> v) const
 	};
 }
 
-template <typename T>
+template <arithmetic T>
 vector3_t<T>& vector3_t<T>::operator+=(vector3_t<T> v)
 {
 	*this = *this + v;
 	return *this;
 }
-template <typename T>
+template <arithmetic T>
 vector3_t<T>& vector3_t<T>::operator-=(vector3_t<T> v)
 {
 	*this = *this - v;
 	return *this;
 }
 
-template <typename T>
+template <arithmetic T>
 vector3_t<T> vector3_t<T>::operator-() const
 {
 	return {
@@ -3500,23 +3794,23 @@ vector3_t<T> vector3_t<T>::operator-() const
 	};
 }
 
-template <typename T>
+template <arithmetic T>
 bool vector3_t<T>::operator==(vector3_t<T> v) const
 {
 	return x == v.x && y == v.y && z == v.z;
 }
-template <typename T>
+template <arithmetic T>
 bool vector3_t<T>::operator!=(vector3_t<T> v) const
 {
 	return !operator==(v);
 }
 
-template <typename T>
+template <arithmetic T>
 vector3_t<T> operator*(T f, vector3_t<T> v)
 {
 	return v * f;
 }
-template <typename T>
+template <arithmetic T>
 vector3_t<T> operator*(vector3_t<T> v, T f)
 {
 	return {
@@ -3525,7 +3819,7 @@ vector3_t<T> operator*(vector3_t<T> v, T f)
 	    v.z * f,
 	};
 }
-template <typename T>
+template <arithmetic T>
 vector3_t<T> operator/(vector3_t<T> v, T f)
 {
 	return {
@@ -3534,30 +3828,30 @@ vector3_t<T> operator/(vector3_t<T> v, T f)
 	    v.z / f,
 	};
 }
-template <typename T>
+template <arithmetic T>
 vector3_t<T>& operator*=(vector3_t<T>& v, T f)
 {
 	v = v * f;
 	return v;
 }
-template <typename T>
+template <arithmetic T>
 vector3_t<T>& operator/=(vector3_t<T>& v, T f)
 {
 	v = v / f;
 	return v;
 }
 
-template <typename T>
+template <arithmetic T>
 T norm(vector3_t<T> v)
 {
 	return std::sqrt(norm_squared(v));
 }
-template <typename T>
+template <arithmetic T>
 T norm_squared(vector3_t<T> v)
 {
 	return v.x * v.x + v.y * v.y + v.z * v.z;
 }
-template <typename T>
+template <arithmetic T>
 vector3_t<T> normalize(vector3_t<T> v)
 {
 	const T n = norm(v);
@@ -3566,20 +3860,20 @@ vector3_t<T> normalize(vector3_t<T> v)
 	v.z /= n;
 	return v;
 }
-template <typename T>
-vector3_t<T> clamp(vector3_t<T> v, vector3_t<T> min, vector3_t<T> max)
-{
-	v.x = cdm::clamp(v.x, min.x, max.x);
-	v.y = cdm::clamp(v.y, min.y, max.y);
-	v.z = cdm::clamp(v.z, min.z, max.z);
-	return v;
-}
-template <typename T>
+//template <arithmetic T>
+//constexpr vector3_t<T> clamp(vector3_t<T> v,
+//                             vector3_t<T> min,
+//                             vector3_t<T> max)
+//{
+//	v.clamp(min, max);
+//	return v;
+//}
+template <arithmetic T>
 T dot(vector3_t<T> lhs, vector3_t<T> rhs)
 {
 	return lhs.x * rhs.x + lhs.y * rhs.y + lhs.z * rhs.z;
 }
-template <typename T>
+template <arithmetic T>
 vector3_t<T> cross(vector3_t<T> lhs, vector3_t<T> rhs)
 {
 	return {
@@ -3588,32 +3882,32 @@ vector3_t<T> cross(vector3_t<T> lhs, vector3_t<T> rhs)
 	    lhs.x * rhs.y - lhs.y * rhs.x,
 	};
 }
-template <typename T>
+template <arithmetic T>
 vector3_t<T> lerp(vector3_t<T> begin, vector3_t<T> end, T percent)
 {
 	return (end - begin) * percent + begin;
 }
-template <typename T>
+template <arithmetic T>
 vector3_t<T> nlerp(vector3_t<T> begin, vector3_t<T> end, T percent)
 {
 	return normalize(lerp(begin, end, percent));
 }
-template <typename T>
+template <arithmetic T>
 T distance_between(vector3_t<T> v1, vector3_t<T> v2)
 {
 	return norm(v1 - v2);
 }
-template <typename T>
+template <arithmetic T>
 T distance_squared_between(vector3_t<T> v1, vector3_t<T> v2)
 {
 	return norm_squared(v1 - v2);
 }
-template <typename T>
+template <arithmetic T>
 vector3_t<T> from_to(vector3_t<T> from, vector3_t<T> to)
 {
 	return {to.x - from.x, to.y - from.y, to.z - from.z};
 }
-template <typename T>
+template <arithmetic T>
 radian_t<T> angle_between(vector3_t<T> v1, vector3_t<T> v2)
 {
 	T divisor = std::sqrt(norm_squared(v1) * norm_squared(v2));
@@ -3623,25 +3917,50 @@ radian_t<T> angle_between(vector3_t<T> v1, vector3_t<T> v2)
 	T alpha = dot(v1, v2) / divisor;
 	return radian_t<T>(std::acosf(cdm::clamp(alpha, T(-1), T(1))));
 }
-template <typename T>
+template <arithmetic T>
 bool nearly_equal(vector3_t<T> v1, vector3_t<T> v2, T e)
 {
 	return nearly_equal(v1.x, v2.x, e) && nearly_equal(v1.y, v2.y, e) &&
 	       nearly_equal(v1.z, v2.z, e);
 }
-template <typename T>
-vector3_t<T> element_wise_min(vector3_t<T> v0, vector3_t<T> v1)
+template <arithmetic T>
+constexpr vector3_t<T> element_wise_min(vector3_t<T> v0, vector3_t<T> v1)
 {
-	return {v0.x < v1.x ? v0.x : v1.x, v0.y < v1.y ? v0.y : v1.y,
-	        v0.z < v1.z ? v0.z : v1.z};
+	return {
+	    std::min(v0.x, v1.x),
+	    std::min(v0.y, v1.y),
+	    std::min(v0.z, v1.z),
+	};
 }
-template <typename T>
-vector3_t<T> element_wise_max(vector3_t<T> v0, vector3_t<T> v1)
+template <arithmetic T>
+constexpr vector3_t<T> element_wise_max(vector3_t<T> v0, vector3_t<T> v1)
 {
-	return {v0.x > v1.x ? v0.x : v1.x, v0.y > v1.y ? v0.y : v1.y,
-	        v0.z > v1.z ? v0.z : v1.z};
+	return {
+	    std::max(v0.x, v1.x),
+	    std::max(v0.y, v1.y),
+	    std::max(v0.z, v1.z),
+	};
 }
-template <typename T>
+template <arithmetic T>
+constexpr vector3_t<T> element_wise_abs(vector3_t<T> v)
+{
+	return {
+	    std::abs(v.x),
+	    std::abs(v.y),
+	    std::abs(v.z),
+	};
+}
+template <arithmetic T>
+constexpr vector3_t<T> element_wise_lerp(vector3_t<T> begin, vector3_t<T> end, vector3_t<T> percent)
+{
+	return {
+		std::lerp(begin.x, end.x, percent.x),
+		std::lerp(begin.y, end.y, percent.y),
+		std::lerp(begin.z, end.z, percent.z),
+	};
+}
+
+template <arithmetic T>
 radian_t<T> angle_around_axis(vector3_t<T> v0,
                               vector3_t<T> v1,
                               direction_t<T> axis)
@@ -3653,174 +3972,196 @@ radian_t<T> angle_around_axis(vector3_t<T> v0,
 #pragma endregion
 
 #pragma region definition_vector4_t
-template <typename T>
+template <arithmetic T>
 vector2_t<T> vector4_t<T>::xy() const
 {
 	return {x, y};
 }
-template <typename T>
+template <arithmetic T>
 vector3_t<T> vector4_t<T>::xyz() const
 {
 	return {x, y, z};
 }
 
-template <typename T>
+template <arithmetic T>
 vector4_t<T> vector4_t<T>::operator+(vector4_t<T> v) const
 {
 	return {x + v.x, y + v.y, z + v.z, w + v.w};
 }
-template <typename T>
+template <arithmetic T>
 vector4_t<T> vector4_t<T>::operator-(vector4_t<T> v) const
 {
 	return {x - v.x, y - v.y, z - v.z, w - v.w};
 }
 
-template <typename T>
+template <arithmetic T>
 vector4_t<T>& vector4_t<T>::operator+=(vector4_t<T> v)
 {
 	*this = *this + v;
 	return *this;
 }
-template <typename T>
+template <arithmetic T>
 vector4_t<T>& vector4_t<T>::operator-=(vector4_t<T> v)
 {
 	*this = *this - v;
 	return *this;
 }
 
-template <typename T>
+template <arithmetic T>
 vector4_t<T> vector4_t<T>::operator-() const
 {
 	return {-x, -y, -z, -w};
 }
 
-template <typename T>
+template <arithmetic T>
 bool vector4_t<T>::operator==(vector4_t<T> v) const
 {
 	return x == v.x && y == v.y && z == v.z && w == v.w;
 }
-template <typename T>
+template <arithmetic T>
 bool vector4_t<T>::operator!=(vector4_t<T> v) const
 {
 	return !operator==(v);
 }
 
-template <typename T>
+template <arithmetic T>
 vector4_t<T> operator*(T f, vector4_t<T> v)
 {
 	return v * f;
 }
-template <typename T>
+template <arithmetic T>
 vector4_t<T> operator*(vector4_t<T> v, T f)
 {
 	return {v.x * f, v.y * f, v.z * f, v.w * f};
 }
-template <typename T>
+template <arithmetic T>
 vector4_t<T> operator/(vector4_t<T> v, T f)
 {
 	return {v.x / f, v.y / f, v.z / f, v.w / f};
 }
-template <typename T>
+template <arithmetic T>
 vector4_t<T>& operator*=(vector4_t<T>& v, T f)
 {
 	v = v * f;
 	return v;
 }
-template <typename T>
+template <arithmetic T>
 vector4_t<T>& operator/=(vector4_t<T>& v, T f)
 {
 	v = v / f;
 	return v;
 }
 
-template <typename T>
+template <arithmetic T>
 T norm(vector4_t<T> v)
 {
 	return v.norm();
 }
-template <typename T>
+template <arithmetic T>
 T norm_squared(vector4_t<T> v)
 {
 	return v.norm_squared();
 }
-template <typename T>
+template <arithmetic T>
 vector4_t<T> normalize(vector4_t<T> v)
 {
 	v.normalize();
 	return v;
 }
-template <typename T>
-vector4_t<T> clamp(vector4_t<T> v, vector4_t<T> min, vector4_t<T> max)
-{
-	v.clamp(min, max);
-	return v;
-}
-template <typename T>
+//template <arithmetic T>
+//constexpr vector4_t<T> clamp(vector4_t<T> v,
+//                             vector4_t<T> min,
+//                             vector4_t<T> max)
+//{
+//	v.clamp(min, max);
+//	return v;
+//}
+template <arithmetic T>
 T dot(vector4_t<T> lhs, vector4_t<T> rhs)
 {
 	return lhs.x * rhs.x + lhs.y * rhs.y + lhs.z * rhs.z + lhs.w * rhs.w;
 }
-template <typename T>
+template <arithmetic T>
 vector4_t<T> lerp(vector4_t<T> begin, vector4_t<T> end, T percent)
 {
 	return (end - begin) * percent + begin;
 }
-template <typename T>
+template <arithmetic T>
 vector4_t<T> nlerp(vector4_t<T> begin, vector4_t<T> end, T percent)
 {
 	return normalize(lerp(begin, end, percent));
 }
-template <typename T>
+template <arithmetic T>
 T distance_between(vector4_t<T> v1, vector4_t<T> v2)
 {
 	return norm(v1 - v2);
 }
-template <typename T>
+template <arithmetic T>
 T distance_squared_between(vector4_t<T> v1, vector4_t<T> v2)
 {
 	return norm_squared(v1 - v2);
 }
-template <typename T>
+template <arithmetic T>
 vector4_t<T> from_to(vector4_t<T> from, vector4_t<T> to)
 {
 	return to - from;
 }
-template <typename T>
+template <arithmetic T>
 bool nearly_equal(vector4_t<T> v1, vector4_t<T> v2, T e)
 {
 	return nearly_equal(v1.x, v2.x, e) && nearly_equal(v1.y, v2.y, e) &&
 	       nearly_equal(v1.z, v2.z, e) && nearly_equal(v1.w, v2.w, e);
 }
-template <typename T>
-vector4_t<T> element_wise_min(vector4_t<T> v0, vector4_t<T> v1)
+template <arithmetic T>
+constexpr vector4_t<T> element_wise_min(vector4_t<T> v0, vector4_t<T> v1)
 {
 	return {
-	    v0.x < v1.x ? v0.x : v1.x,  //
-	    v0.y < v1.y ? v0.y : v1.y,  //
-	    v0.z < v1.z ? v0.z : v1.z,  //
-	    v0.w < v1.w ? v0.w : v1.w   //
+	    std::min(v0.x, v1.x),
+	    std::min(v0.y, v1.y),
+	    std::min(v0.z, v1.z),
+	    std::min(v0.w, v1.w),
 	};
-};
-template <typename T>
-vector4_t<T> element_wise_max(vector4_t<T> v0, vector4_t<T> v1)
+}
+template <arithmetic T>
+constexpr vector4_t<T> element_wise_max(vector4_t<T> v0, vector4_t<T> v1)
 {
 	return {
-	    v0.x > v1.x ? v0.x : v1.x,  //
-	    v0.y > v1.y ? v0.y : v1.y,  //
-	    v0.z > v1.z ? v0.z : v1.z,  //
-	    v0.w > v1.w ? v0.w : v1.w   //
+	    std::max(v0.x, v1.x),
+	    std::max(v0.y, v1.y),
+	    std::max(v0.z, v1.z),
+	    std::max(v0.w, v1.w),
 	};
-};
+}
+template <arithmetic T>
+constexpr vector4_t<T> element_wise_abs(vector4_t<T> v)
+{
+	return {
+	    std::abs(v.x),
+	    std::abs(v.y),
+	    std::abs(v.z),
+	    std::abs(v.w),
+	};
+}
+template <arithmetic T>
+constexpr vector4_t<T> element_wise_lerp(vector4_t<T> begin, vector4_t<T> end, vector4_t<T> percent)
+{
+	return {
+		std::lerp(begin.x, end.x, percent.x),
+		std::lerp(begin.y, end.y, percent.y),
+		std::lerp(begin.z, end.z, percent.z),
+		std::lerp(begin.w, end.w, percent.w),
+	};
+}
 #pragma endregion
 
 #pragma region definition_normalized
-template <typename T>
+template <normalizable T>
 normalized<T>::normalized(const T& t) : vector(normalize(t))
 {
 	assert(vector.norm_squared() != 0);
 }
 
-template <typename T>
+template <normalizable T>
 normalized<T> normalized<T>::already_normalized(const T& t)
 {
 	assert(t.norm_squared() != 0);
@@ -3828,7 +4169,7 @@ normalized<T> normalized<T>::already_normalized(const T& t)
 	res.vector = t;
 	return res;
 }
-template <typename T>
+template <normalizable T>
 normalized<T> normalized<T>::already_normalized(T&& t) noexcept
 {
 	assert(t.norm_squared() != 0);
@@ -3837,44 +4178,44 @@ normalized<T> normalized<T>::already_normalized(T&& t) noexcept
 	return res;
 }
 
-template <typename T>
+template <normalizable T>
 const T& normalized<T>::operator*() const
 {
 	return vector;
 }
-template <typename T>
+template <normalizable T>
 const T* normalized<T>::operator->() const
 {
 	return &vector;
 }
-template <typename T>
+template <normalizable T>
 normalized<T>::operator const T&() const
 {
 	return vector;
 }
 
-template <typename T>
+template <normalizable T>
 normalized<T> normalized<T>::operator-() const
 {
 	return -vector;
 }
 
-template <typename T>
+template <normalizable T>
 bool normalized<T>::operator==(const normalized<T>& v) const
 {
 	return vector == v.vector;
 }
-template <typename T>
+template <normalizable T>
 bool normalized<T>::operator!=(const normalized<T>& v) const
 {
 	return vector != v.vector;
 }
-template <typename T>
+template <normalizable T>
 bool normalized<T>::operator==(const T& v) const
 {
 	return vector == v;
 }
-template <typename T>
+template <normalizable T>
 bool normalized<T>::operator!=(const T& v) const
 {
 	return vector != v;
@@ -3882,55 +4223,55 @@ bool normalized<T>::operator!=(const T& v) const
 #pragma endregion
 
 #pragma region definition_matrix2_t
-template <typename T>
+template <arithmetic T>
 matrix2_t<T>::matrix2_t(T e00, T e10, T e01, T e11)
     : m00{e00}, m10{e10}, m01{e01}, m11{e11}
 {
 }
-template <typename T>
+template <arithmetic T>
 matrix2_t<T>::matrix2_t(const std::array<T, 4>& a)
     : matrix2_t(a[0], a[1], a[2], a[3])
 {
 }
-template <typename T>
+template <arithmetic T>
 matrix2_t<T> matrix2_t<T>::zero()
 {
 	return {T(0), T(0), T(0), T(0)};
 }
-template <typename T>
+template <arithmetic T>
 matrix2_t<T> matrix2_t<T>::identity()
 {
 	return {T(1), T(0), T(0), T(1)};
 }
-template <typename T>
+template <arithmetic T>
 matrix2_t<T> matrix2_t<T>::rows(vector2_t<T> row0, vector2_t<T> row1)
 {
 	return {row0.x, row0.y, row1.x, row1.y};
 }
-template <typename T>
+template <arithmetic T>
 matrix2_t<T> matrix2_t<T>::columns(vector2_t<T> column0, vector2_t<T> column1)
 {
 	return {column0.x, column1.x, column0.y, column1.y};
 }
-template <typename T>
+template <arithmetic T>
 matrix2_t<T> matrix2_t<T>::rotation(radian_t<T> angle)
 {
 	T c = cos(angle);
 	T s = sin(angle);
 	return {c, -s, s, c};
 }
-template <typename T>
+template <arithmetic T>
 matrix2_t<T> matrix2_t<T>::rotation(normalized<complex_t<T>> angle)
 {
 	return {angle->r, -angle->i, angle->i, angle->r};
 }
 
-template <typename T>
+template <arithmetic T>
 vector2_t<T> matrix2_t<T>::operator*(vector2_t<T> v) const
 {
 	return {m00 * v.x + m01 * v.y, m10 * v.x + m11 * v.y};
 }
-template <typename T>
+template <arithmetic T>
 matrix2_t<T> matrix2_t<T>::operator*(matrix2_t<T> m) const
 {
 	return {m00 * m.m00 + m01 * m.m10, m00 * m.m01 + m01 * m.m11,
@@ -3938,7 +4279,7 @@ matrix2_t<T> matrix2_t<T>::operator*(matrix2_t<T> m) const
 	        m10 * m.m00 + m11 * m.m10, m10 * m.m01 + m11 * m.m11};
 }
 
-template <typename T>
+template <arithmetic T>
 matrix2_t<T> transpose(matrix2_t<T> m)
 {
 	std::swap(m.m01, m.m10);
@@ -3947,7 +4288,7 @@ matrix2_t<T> transpose(matrix2_t<T> m)
 #pragma endregion
 
 #pragma region definition_matrix3_t
-template <typename T>
+template <arithmetic T>
 matrix3_t<T>::matrix3_t(T e00,
                         T e10,
                         T e20,
@@ -3968,27 +4309,27 @@ matrix3_t<T>::matrix3_t(T e00,
       m22{e22}
 {
 }
-template <typename T>
+template <arithmetic T>
 matrix3_t<T>::matrix3_t(matrix2_t<T> m)
     : matrix3_t(m.m00, m.m10, T(0), m.m10, m.m11, T(0), T(0), T(0), T(1))
 {
 }
-template <typename T>
+template <arithmetic T>
 matrix3_t<T>::matrix3_t(const std::array<T, 9>& a)
     : matrix3_t(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8])
 {
 }
-template <typename T>
+template <arithmetic T>
 matrix3_t<T> matrix3_t<T>::zero()
 {
 	return {T(0), T(0), T(0), T(0), T(0), T(0), T(0), T(0), T(0)};
 }
-template <typename T>
+template <arithmetic T>
 matrix3_t<T> matrix3_t<T>::identity()
 {
 	return {T(1), T(0), T(0), T(0), T(1), T(0), T(0), T(0), T(1)};
 }
-template <typename T>
+template <arithmetic T>
 matrix3_t<T> matrix3_t<T>::rows(vector3_t<T> row0,
                                 vector3_t<T> row1,
                                 vector3_t<T> row2)
@@ -3996,7 +4337,7 @@ matrix3_t<T> matrix3_t<T>::rows(vector3_t<T> row0,
 	return {row0.x, row0.y, row0.z, row1.x, row1.y,
 	        row1.z, row2.x, row2.y, row2.z};
 }
-template <typename T>
+template <arithmetic T>
 matrix3_t<T> matrix3_t<T>::columns(vector3_t<T> column0,
                                    vector3_t<T> column1,
                                    vector3_t<T> column2)
@@ -4004,7 +4345,7 @@ matrix3_t<T> matrix3_t<T>::columns(vector3_t<T> column0,
 	return {column0.x, column1.x, column2.x, column0.y, column1.y,
 	        column2.y, column0.z, column1.z, column2.z};
 }
-template <typename T>
+template <arithmetic T>
 matrix3_t<T> matrix3_t<T>::rotation(direction_t<T> axis,
                                     T sinAngle,
                                     T cosAngle)
@@ -4027,26 +4368,26 @@ matrix3_t<T> matrix3_t<T>::rotation(direction_t<T> axis,
 	    (l * nd) - ms, (m * nd) + ls, (n * nd) + c,   //
 	};
 }
-template <typename T>
+template <arithmetic T>
 matrix3_t<T> matrix3_t<T>::rotation(direction_t<T> axis, radian_t<T> angle)
 {
 	return matrix3_t<T>::rotation(axis, sin(angle), cos(angle));
 }
-template <typename T>
+template <arithmetic T>
 matrix3_t<T> matrix3_t<T>::rotation(direction_t<T> axis,
                                     normalized<complex_t<T>> angle)
 {
 	return matrix3_t<T>::rotation(axis, sin(angle), cos(angle));
 }
-template <typename T>
-template <typename U, U NumeratorT, U DenominatorT>
+template <arithmetic T>
+template <std::signed_integral U, U NumeratorT, U DenominatorT>
 matrix3_t<T> matrix3_t<T>::rotation(
     direction_t<T> axis,
     static_pi_fraction_t<U, NumeratorT, DenominatorT> angle)
 {
 	return matrix3_t<T>::rotation(axis, sin<T>(angle), cos<T>(angle));
 }
-template <typename T>
+template <arithmetic T>
 matrix3_t<T> matrix3_t<T>::rotation(euler_angles_t<T> r)
 {
 	matrix3_t<T> RX = matrix3_t<T>::identity();
@@ -4069,7 +4410,7 @@ matrix3_t<T> matrix3_t<T>::rotation(euler_angles_t<T> r)
 
 	return RY * RX * RZ;
 }
-template <typename T>
+template <arithmetic T>
 matrix3_t<T> matrix3_t<T>::rotation(quaternion_t<T> q)
 {
 	return {
@@ -4084,7 +4425,7 @@ matrix3_t<T> matrix3_t<T>::rotation(quaternion_t<T> q)
 	    detail::get_quaternion_t_matrix_element<2, 2>(q),
 	};
 }
-template <typename T>
+template <arithmetic T>
 matrix3_t<T> matrix3_t<T>::rotation_around_x(T sinAngle, T cosAngle)
 {
 	return {
@@ -4093,7 +4434,7 @@ matrix3_t<T> matrix3_t<T>::rotation_around_x(T sinAngle, T cosAngle)
 	    T(0), sinAngle, cosAngle    //
 	};
 }
-template <typename T>
+template <arithmetic T>
 matrix3_t<T> matrix3_t<T>::rotation_around_y(T sinAngle, T cosAngle)
 {
 	return {
@@ -4102,7 +4443,7 @@ matrix3_t<T> matrix3_t<T>::rotation_around_y(T sinAngle, T cosAngle)
 	    -sinAngle, T(0), cosAngle   //
 	};
 }
-template <typename T>
+template <arithmetic T>
 matrix3_t<T> matrix3_t<T>::rotation_around_z(T sinAngle, T cosAngle)
 {
 	return {
@@ -4111,63 +4452,63 @@ matrix3_t<T> matrix3_t<T>::rotation_around_z(T sinAngle, T cosAngle)
 	    T(0),     T(0),      T(1)   //
 	};
 }
-template <typename T>
+template <arithmetic T>
 matrix3_t<T> matrix3_t<T>::rotation_around_x(radian_t<T> angle)
 {
 	return rotation_around_x(sin(angle), cos(angle));
 }
-template <typename T>
+template <arithmetic T>
 matrix3_t<T> matrix3_t<T>::rotation_around_y(radian_t<T> angle)
 {
 	return rotation_around_y(sin(angle), cos(angle));
 }
-template <typename T>
+template <arithmetic T>
 matrix3_t<T> matrix3_t<T>::rotation_around_z(radian_t<T> angle)
 {
 	return rotation_around_z(sin(angle), cos(angle));
 }
-template <typename T>
+template <arithmetic T>
 matrix3_t<T> matrix3_t<T>::rotation_around_x(normalized<complex_t<T>> angle)
 {
 	return rotation_around_x(angle->i, angle->r);
 }
-template <typename T>
+template <arithmetic T>
 matrix3_t<T> matrix3_t<T>::rotation_around_y(normalized<complex_t<T>> angle)
 {
 	return rotation_around_y(angle->i, angle->r);
 }
-template <typename T>
+template <arithmetic T>
 matrix3_t<T> matrix3_t<T>::rotation_around_z(normalized<complex_t<T>> angle)
 {
 	return rotation_around_z(angle->i, angle->r);
 }
-template <typename T>
-template <typename U, U NumeratorT, U DenominatorT>
+template <arithmetic T>
+template <std::signed_integral U, U NumeratorT, U DenominatorT>
 matrix3_t<T> matrix3_t<T>::rotation_around_x(
     static_pi_fraction_t<U, NumeratorT, DenominatorT> angle)
 {
 	return rotation_around_x(sin<T>(angle), cos<T>(angle));
 }
-template <typename T>
-template <typename U, U NumeratorT, U DenominatorT>
+template <arithmetic T>
+template <std::signed_integral U, U NumeratorT, U DenominatorT>
 matrix3_t<T> matrix3_t<T>::rotation_around_y(
     static_pi_fraction_t<U, NumeratorT, DenominatorT> angle)
 {
 	return rotation_around_y(sin<T>(angle), cos<T>(angle));
 }
-template <typename T>
-template <typename U, U NumeratorT, U DenominatorT>
+template <arithmetic T>
+template <std::signed_integral U, U NumeratorT, U DenominatorT>
 matrix3_t<T> matrix3_t<T>::rotation_around_z(
     static_pi_fraction_t<U, NumeratorT, DenominatorT> angle)
 {
 	return rotation_around_z(sin<T>(angle), cos<T>(angle));
 }
-template <typename T>
+template <arithmetic T>
 matrix3_t<T> matrix3_t<T>::scale(vector3_t<T> s)
 {
 	return scale(s.x, s.y, s.z);
 }
-template <typename T>
+template <arithmetic T>
 matrix3_t<T> matrix3_t<T>::scale(T x, T y, T z)
 {
 	return {
@@ -4176,12 +4517,12 @@ matrix3_t<T> matrix3_t<T>::scale(T x, T y, T z)
 	    T(0), T(0), z,     //
 	};
 }
-template <typename T>
+template <arithmetic T>
 matrix3_t<T> matrix3_t<T>::scale(T s)
 {
 	return scale(s, s, s);
 }
-template <typename T>
+template <arithmetic T>
 matrix3_t<T>& matrix3_t<T>::inverse()
 {
 	if (is_orthogonal())
@@ -4209,14 +4550,14 @@ matrix3_t<T>& matrix3_t<T>::inverse()
 
 	return *this;
 }
-template <typename T>
+template <arithmetic T>
 matrix3_t<T> matrix3_t<T>::get_inversed() const
 {
 	matrix3_t<T> res = *this;
 	res.inverse();
 	return res;
 }
-template <typename T>
+template <arithmetic T>
 matrix3_t<T>& matrix3_t<T>::transpose()
 {
 	std::swap(m01, m10);
@@ -4224,7 +4565,7 @@ matrix3_t<T>& matrix3_t<T>::transpose()
 	std::swap(m12, m21);
 	return *this;
 }
-template <typename T>
+template <arithmetic T>
 matrix3_t<T> matrix3_t<T>::get_transposed() const
 {
 	return {
@@ -4234,13 +4575,13 @@ matrix3_t<T> matrix3_t<T>::get_transposed() const
 	};
 }
 
-template <typename T>
+template <arithmetic T>
 T matrix3_t<T>::determinant() const
 {
 	return m00 * m11 * m22 + m01 * m12 * m20 + m02 * m10 * m21 -
 	       m20 * m11 * m02 - m21 * m12 * m00 - m22 * m10 * m01;
 }
-template <typename T>
+template <arithmetic T>
 bool matrix3_t<T>::is_orthogonal() const
 {
 	return nearly_equal(m00 * m01 + m10 * m11 + m20 * m21, T(0)) &&
@@ -4251,7 +4592,7 @@ bool matrix3_t<T>::is_orthogonal() const
 	       nearly_equal(m02 * m02 + m12 * m12 + m22 * m22, T(1));
 }
 
-template <typename T>
+template <arithmetic T>
 matrix3_t<T> matrix3_t<T>::operator*(T f) const
 {
 	return {
@@ -4260,14 +4601,14 @@ matrix3_t<T> matrix3_t<T>::operator*(T f) const
 	    m02 * f, m12 * f, m22 * f   //
 	};
 }
-template <typename T>
+template <arithmetic T>
 vector3_t<T> matrix3_t<T>::operator*(vector3_t<T> v) const
 {
 	return {m00 * v.x + m10 * v.y + m20 * v.z,
 	        m01 * v.x + m11 * v.y + m21 * v.z,
 	        m02 * v.x + m12 * v.y + m22 * v.z};
 }
-template <typename T>
+template <arithmetic T>
 matrix3_t<T> matrix3_t<T>::operator*(const matrix3_t<T>& m) const
 {
 	return {m00 * m.m00 + m10 * m.m01 + m20 * m.m02,
@@ -4285,7 +4626,7 @@ matrix3_t<T> matrix3_t<T>::operator*(const matrix3_t<T>& m) const
 #pragma endregion
 
 #pragma region definition_matrix4_t
-template <typename T>
+template <arithmetic T>
 matrix4_t<T>::matrix4_t(T e00,
                         T e10,
                         T e20,
@@ -4320,7 +4661,7 @@ matrix4_t<T>::matrix4_t(T e00,
       m33{e33}
 {
 }
-template <typename T>
+template <arithmetic T>
 matrix4_t<T>::matrix4_t(matrix2_t<T> m)
     : matrix4_t(m.m00,
                 m.m10,
@@ -4340,7 +4681,7 @@ matrix4_t<T>::matrix4_t(matrix2_t<T> m)
                 T(1))
 {
 }
-template <typename T>
+template <arithmetic T>
 matrix4_t<T>::matrix4_t(const matrix3_t<T>& m)
     : matrix4_t(m.m00,
                 m.m10,
@@ -4360,25 +4701,25 @@ matrix4_t<T>::matrix4_t(const matrix3_t<T>& m)
                 T(1))
 {
 }
-template <typename T>
+template <arithmetic T>
 matrix4_t<T>::matrix4_t(const perspective_t<T>& p) : matrix4_t(p.to_matrix4())
 {
 }
-template <typename T>
+template <arithmetic T>
 matrix4_t<T>::matrix4_t(const transform3_t<T>& t) : matrix4_t(t.to_matrix4())
 {
 }
-template <typename T>
+template <arithmetic T>
 matrix4_t<T>::matrix4_t(const uniform_transform3_t<T>& t)
     : matrix4_t(t.to_matrix4())
 {
 }
-template <typename T>
+template <arithmetic T>
 matrix4_t<T>::matrix4_t(const unscaled_transform3_t<T>& t)
     : matrix4_t(t.to_matrix4())
 {
 }
-template <typename T>
+template <arithmetic T>
 matrix4_t<T>::matrix4_t(const std::array<T, 16>& a)
     : matrix4_t(a[0],
                 a[1],
@@ -4399,19 +4740,19 @@ matrix4_t<T>::matrix4_t(const std::array<T, 16>& a)
 {
 }
 
-template <typename T>
+template <arithmetic T>
 matrix4_t<T> matrix4_t<T>::zero()
 {
 	return {T(0), T(0), T(0), T(0), T(0), T(0), T(0), T(0),
 	        T(0), T(0), T(0), T(0), T(0), T(0), T(0), T(0)};
 }
-template <typename T>
+template <arithmetic T>
 matrix4_t<T> matrix4_t<T>::identity()
 {
 	return {T(1), T(0), T(0), T(0), T(0), T(1), T(0), T(0),
 	        T(0), T(0), T(1), T(0), T(0), T(0), T(0), T(1)};
 }
-template <typename T>
+template <arithmetic T>
 matrix4_t<T> matrix4_t<T>::rows(vector4_t<T> row0,
                                 vector4_t<T> row1,
                                 vector4_t<T> row2,
@@ -4424,7 +4765,7 @@ matrix4_t<T> matrix4_t<T>::rows(vector4_t<T> row0,
 	    row3.x, row3.y, row3.z, row3.w   //
 	};
 }
-template <typename T>
+template <arithmetic T>
 matrix4_t<T> matrix4_t<T>::columns(vector4_t<T> column0,
                                    vector4_t<T> column1,
                                    vector4_t<T> column2,
@@ -4437,36 +4778,36 @@ matrix4_t<T> matrix4_t<T>::columns(vector4_t<T> column0,
 	    column0.w, column1.w, column2.w, column3.w   //
 	};
 }
-template <typename T>
+template <arithmetic T>
 matrix4_t<T> matrix4_t<T>::rotation(direction_t<T> axis, radian_t<T> angle)
 {
 	return matrix4_t<T>(matrix3_t<T>::rotation(axis, angle));
 }
-template <typename T>
+template <arithmetic T>
 matrix4_t<T> matrix4_t<T>::rotation(direction_t<T> axis,
                                     normalized<complex_t<T>> angle)
 {
 	return matrix4_t<T>(matrix3_t<T>::rotation(axis, angle));
 }
-template <typename T>
-template <typename U, U NumeratorT, U DenominatorT>
+template <arithmetic T>
+template <std::signed_integral U, U NumeratorT, U DenominatorT>
 matrix4_t<T> matrix4_t<T>::rotation(
     direction_t<T> axis,
     static_pi_fraction_t<U, NumeratorT, DenominatorT> angle)
 {
 	return matrix4_t<T>(matrix3_t<T>::rotation(axis, angle));
 }
-template <typename T>
+template <arithmetic T>
 matrix4_t<T> matrix4_t<T>::rotation(euler_angles_t<T> r)
 {
 	return matrix4_t<T>(matrix3_t<T>::rotation(r));
 }
-template <typename T>
+template <arithmetic T>
 matrix4_t<T> matrix4_t<T>::rotation(quaternion_t<T> q)
 {
 	return matrix4_t<T>(matrix3_t<T>::rotation(q));
 }
-template <typename T>
+template <arithmetic T>
 matrix4_t<T> matrix4_t<T>::translation(vector3_t<T> t)
 {
 	return {
@@ -4476,27 +4817,27 @@ matrix4_t<T> matrix4_t<T>::translation(vector3_t<T> t)
 	    T(0), T(0), T(0), T(1)  //
 	};
 }
-template <typename T>
+template <arithmetic T>
 matrix4_t<T> matrix4_t<T>::translation(T x, T y, T z)
 {
 	return translation({x, y, z});
 }
-template <typename T>
+template <arithmetic T>
 matrix4_t<T> matrix4_t<T>::scale(vector3_t<T> s)
 {
 	return matrix4_t<T>(matrix3_t<T>::scale(s));
 }
-template <typename T>
+template <arithmetic T>
 matrix4_t<T> matrix4_t<T>::scale(T x, T y, T z)
 {
 	return matrix4_t<T>(matrix3_t<T>::scale(x, y, z));
 }
-template <typename T>
+template <arithmetic T>
 matrix4_t<T> matrix4_t<T>::scale(T s)
 {
 	return matrix4_t<T>(matrix3_t<T>::scale(s));
 }
-template <typename T>
+template <arithmetic T>
 matrix4_t<T> matrix4_t<T>::look_at(vector3_t<T> from,
                                    vector3_t<T> to,
                                    direction_t<T> up)
@@ -4510,7 +4851,7 @@ matrix4_t<T> matrix4_t<T>::look_at(vector3_t<T> from,
 	        right->z, true_up->z, forward->z, from->z,
 	        T(0),     T(0),       T(0),       T(1)};
 }
-template <typename T>
+template <arithmetic T>
 matrix4_t<T> matrix4_t<T>::orthographic(T left,
                                         T right,
                                         T top,
@@ -4529,58 +4870,58 @@ matrix4_t<T> matrix4_t<T>::orthographic(T left,
 	    T(0),     T(0),     T(0), T(1),
 	};
 }
-template <typename T>
+template <arithmetic T>
 matrix4_t<T> matrix4_t<T>::rotation_around_x(radian_t<T> angle)
 {
 	return matrix4_t<T>(matrix3_t<T>::rotation_around_x(angle));
 }
-template <typename T>
+template <arithmetic T>
 matrix4_t<T> matrix4_t<T>::rotation_around_y(radian_t<T> angle)
 {
 	return matrix4_t<T>(matrix3_t<T>::rotation_around_y(angle));
 }
-template <typename T>
+template <arithmetic T>
 matrix4_t<T> matrix4_t<T>::rotation_around_z(radian_t<T> angle)
 {
 	return matrix4_t<T>(matrix3_t<T>::rotation_around_z(angle));
 }
-template <typename T>
+template <arithmetic T>
 matrix4_t<T> matrix4_t<T>::rotation_around_x(normalized<complex_t<T>> angle)
 {
 	return matrix4_t<T>(matrix3_t<T>::rotation_around_x(angle));
 }
-template <typename T>
+template <arithmetic T>
 matrix4_t<T> matrix4_t<T>::rotation_around_y(normalized<complex_t<T>> angle)
 {
 	return matrix4_t<T>(matrix3_t<T>::rotation_around_y(angle));
 }
-template <typename T>
+template <arithmetic T>
 matrix4_t<T> matrix4_t<T>::rotation_around_z(normalized<complex_t<T>> angle)
 {
 	return matrix4_t<T>(matrix3_t<T>::rotation_around_z(angle));
 }
-template <typename T>
-template <typename U, U NumeratorT, U DenominatorT>
+template <arithmetic T>
+template <std::signed_integral U, U NumeratorT, U DenominatorT>
 matrix4_t<T> matrix4_t<T>::rotation_around_x(
     static_pi_fraction_t<U, NumeratorT, DenominatorT> angle)
 {
 	return matrix4_t<T>(matrix3_t<T>::rotation_around_x(angle));
 }
-template <typename T>
-template <typename U, U NumeratorT, U DenominatorT>
+template <arithmetic T>
+template <std::signed_integral U, U NumeratorT, U DenominatorT>
 matrix4_t<T> matrix4_t<T>::rotation_around_y(
     static_pi_fraction_t<U, NumeratorT, DenominatorT> angle)
 {
 	return matrix4_t<T>(matrix3_t<T>::rotation_around_y(angle));
 }
-template <typename T>
-template <typename U, U NumeratorT, U DenominatorT>
+template <arithmetic T>
+template <std::signed_integral U, U NumeratorT, U DenominatorT>
 matrix4_t<T> matrix4_t<T>::rotation_around_z(
     static_pi_fraction_t<U, NumeratorT, DenominatorT> angle)
 {
 	return matrix4_t<T>(matrix3_t<T>::rotation_around_z(angle));
 }
-template <typename T>
+template <arithmetic T>
 bool matrix4_t<T>::is_orthogonal() const
 {
 	return nearly_equal(m00 * m01 + m10 * m11 + m20 * m21 + m30 * m31, T(0)) &&
@@ -4594,7 +4935,7 @@ bool matrix4_t<T>::is_orthogonal() const
 	       nearly_equal(m02 * m02 + m12 * m12 + m22 * m22 + m32 * m32, T(1)) &&
 	       nearly_equal(m03 * m03 + m13 * m13 + m23 * m23 + m33 * m33, T(1));
 }
-template <typename T>
+template <arithmetic T>
 bool matrix4_t<T>::is_homogenous() const
 {
 	return nearly_equal(m03, T(0)) &&  //
@@ -4605,7 +4946,7 @@ bool matrix4_t<T>::is_homogenous() const
 	       nearly_equal(m32, T(0)) &&  //
 	       nearly_equal(m33, T(1));
 }
-template <typename T>
+template <arithmetic T>
 T matrix4_t<T>::determinant() const
 {
 	if (is_homogenous())
@@ -4629,7 +4970,7 @@ T matrix4_t<T>::determinant() const
 	return m00 * det1 - m10 * det2 + m20 * det3 - m30 * det4;
 }
 
-template <typename T>
+template <arithmetic T>
 matrix4_t<T> matrix4_t<T>::operator*(T f) const
 {
 	return {
@@ -4639,7 +4980,7 @@ matrix4_t<T> matrix4_t<T>::operator*(T f) const
 	    m00 * f, m10 * f, m20 * f, m30 * f   //
 	};
 }
-template <typename T>
+template <arithmetic T>
 matrix4_t<T> matrix4_t<T>::operator/(T f) const
 {
 	return {
@@ -4649,7 +4990,7 @@ matrix4_t<T> matrix4_t<T>::operator/(T f) const
 	    m00 / f, m10 / f, m20 / f, m30 / f   //
 	};
 }
-template <typename T>
+template <arithmetic T>
 vector4_t<T> matrix4_t<T>::operator*(vector4_t<T> v) const
 {
 	return {
@@ -4659,7 +5000,7 @@ vector4_t<T> matrix4_t<T>::operator*(vector4_t<T> v) const
 	    m03 * v.x + m13 * v.y + m23 * v.z + m33 * v.w   //
 	};
 }
-template <typename T>
+template <arithmetic T>
 matrix4_t<T> matrix4_t<T>::operator*(const matrix4_t<T>& m) const
 {
 	return {m.m00 * m00 + m.m01 * m10 + m.m02 * m20 + m.m03 * m30,
@@ -4683,7 +5024,7 @@ matrix4_t<T> matrix4_t<T>::operator*(const matrix4_t<T>& m) const
 	        m.m30 * m03 + m.m31 * m13 + m.m32 * m23 + m.m33 * m33};
 }
 
-template <typename T>
+template <arithmetic T>
 matrix4_t<T>& matrix4_t<T>::inverse()
 {
 	if (is_orthogonal())
@@ -4788,14 +5129,14 @@ matrix4_t<T>& matrix4_t<T>::inverse()
 
 	return *this;
 }
-template <typename T>
+template <arithmetic T>
 matrix4_t<T> matrix4_t<T>::get_inversed() const
 {
 	matrix4_t<T> m{*this};
 	m.inverse();
 	return m;
 }
-template <typename T>
+template <arithmetic T>
 matrix4_t<T>& matrix4_t<T>::transpose()
 {
 	std::swap(m01, m10);
@@ -4806,7 +5147,7 @@ matrix4_t<T>& matrix4_t<T>::transpose()
 	std::swap(m23, m32);
 	return *this;
 }
-template <typename T>
+template <arithmetic T>
 matrix4_t<T> matrix4_t<T>::get_transposed() const
 {
 	matrix4_t<T> m{*this};
@@ -4814,33 +5155,33 @@ matrix4_t<T> matrix4_t<T>::get_transposed() const
 	return m;
 }
 
-template <typename T>
+template <arithmetic T>
 matrix4_t<T> operator*(const transform3_t<T>& t, const matrix4_t<T>& m)
 {
 	return t.to_matrix4() * m;
 }
-template <typename T>
+template <arithmetic T>
 matrix4_t<T> operator*(const matrix4_t<T>& m, const transform3_t<T>& t)
 {
 	return m * t.to_matrix4();
 }
-template <typename T>
+template <arithmetic T>
 matrix4_t<T> operator*(const uniform_transform3_t<T>& t, const matrix4_t<T>& m)
 {
 	return t.to_matrix4() * m;
 }
-template <typename T>
+template <arithmetic T>
 matrix4_t<T> operator*(const matrix4_t<T>& m, const uniform_transform3_t<T>& t)
 {
 	return m * t.to_matrix4();
 }
-template <typename T>
+template <arithmetic T>
 matrix4_t<T> operator*(const unscaled_transform3_t<T>& t,
                        const matrix4_t<T>& m)
 {
 	return t.to_matrix4() * m;
 }
-template <typename T>
+template <arithmetic T>
 matrix4_t<T> operator*(const matrix4_t<T>& m,
                        const unscaled_transform3_t<T>& t)
 {
@@ -4849,7 +5190,7 @@ matrix4_t<T> operator*(const matrix4_t<T>& m,
 #pragma endregion
 
 #pragma region definition_perspective_t
-template <typename T>
+template <arithmetic T>
 perspective_t<T>::perspective_t(radian_t<T> angle, T ratio, T near, T far)
     : m_angle{angle},
       m_ratio{ratio},
@@ -4859,8 +5200,8 @@ perspective_t<T>::perspective_t(radian_t<T> angle, T ratio, T near, T far)
       m_invTanHalfFovy{T(1) / tan(m_angle / T(2))}
 {
 }
-template <typename T>
-template <typename U, U NumeratorT, U DenominatorT>
+template <arithmetic T>
+template <std::signed_integral U, U NumeratorT, U DenominatorT>
 perspective_t<T>::perspective_t(
     static_pi_fraction_t<U, NumeratorT, DenominatorT> angle,
     T ratio,
@@ -4872,7 +5213,7 @@ perspective_t<T>::perspective_t(
           tan<T>(static_pi_fraction_t<U, NumeratorT, DenominatorT * U(2)>{})}
 {
 }
-template <typename T>
+template <arithmetic T>
 void perspective_t<T>::set(radian_t<T> angle, T ratio, T near, T far)
 {
 	m_angle = angle;
@@ -4882,8 +5223,8 @@ void perspective_t<T>::set(radian_t<T> angle, T ratio, T near, T far)
 	m_far = far;
 	m_invTanHalfFovy = T(1) / tan(m_angle / T(2));
 }
-template <typename T>
-template <typename U, U NumeratorT, U DenominatorT>
+template <arithmetic T>
+template <std::signed_integral U, U NumeratorT, U DenominatorT>
 void perspective_t<T>::set(
     static_pi_fraction_t<U, NumeratorT, DenominatorT> angle,
     T ratio,
@@ -4895,14 +5236,14 @@ void perspective_t<T>::set(
 	    T(1) /
 	    tan<T>(static_pi_fraction_t<U, NumeratorT, DenominatorT * U(2)>{});
 }
-template <typename T>
+template <arithmetic T>
 void perspective_t<T>::set_angle(radian_t<T> angle)
 {
 	m_angle = angle;
 	m_invTanHalfFovy = T(1) / tan(angle / T(2));
 }
-template <typename T>
-template <typename U, U NumeratorT, U DenominatorT>
+template <arithmetic T>
+template <std::signed_integral U, U NumeratorT, U DenominatorT>
 void perspective_t<T>::set_angle(
     static_pi_fraction_t<U, NumeratorT, DenominatorT> angle)
 {
@@ -4911,43 +5252,43 @@ void perspective_t<T>::set_angle(
 	    T(1) /
 	    tan<T>(static_pi_fraction_t<U, NumeratorT, DenominatorT * U(2)>{});
 }
-template <typename T>
+template <arithmetic T>
 radian_t<T> perspective_t<T>::get_angle() const
 {
 	return m_angle;
 }
-template <typename T>
+template <arithmetic T>
 void perspective_t<T>::set_ratio(T ratio)
 {
 	m_ratio = ratio;
 	m_invRatio = T(1) / m_ratio;
 }
-template <typename T>
+template <arithmetic T>
 T perspective_t<T>::get_ratio() const
 {
 	return m_ratio;
 }
-template <typename T>
+template <arithmetic T>
 void perspective_t<T>::set_near(T near_plane_t)
 {
 	m_near = near_plane_t;
 }
-template <typename T>
+template <arithmetic T>
 T perspective_t<T>::get_near() const
 {
 	return m_near;
 }
-template <typename T>
+template <arithmetic T>
 void perspective_t<T>::set_far(T far_plane_t)
 {
 	m_far = far_plane_t;
 }
-template <typename T>
+template <arithmetic T>
 T perspective_t<T>::get_far() const
 {
 	return m_far;
 }
-template <typename T>
+template <arithmetic T>
 matrix4_t<T> perspective_t<T>::to_matrix4() const
 {
 	matrix4_t<T> res{matrix4_t<T>::zero()};
@@ -4971,7 +5312,7 @@ matrix4_t<T> perspective_t<T>::to_matrix4() const
 
 	return res;
 }
-template <typename T>
+template <arithmetic T>
 matrix4_t<T> perspective_t<T>::to_inverse_matrix4() const
 {
 	matrix4_t<T> res{matrix4_t<T>::zero()};
@@ -4989,7 +5330,7 @@ matrix4_t<T> perspective_t<T>::to_inverse_matrix4() const
 	return res;
 }
 
-template <typename T>
+template <arithmetic T>
 matrix4_t<T> operator*(const matrix4_t<T>& m, const perspective_t<T>& p)
 {
 	const T a = p.m_invRatio * p.m_invTanHalfFovy;
@@ -5016,7 +5357,7 @@ matrix4_t<T> operator*(const matrix4_t<T>& m, const perspective_t<T>& p)
 	res.column(3).row(3) = d * m.column(2).row(3);
 	return res;
 }
-template <typename T>
+template <arithmetic T>
 matrix4_t<T> operator*(const perspective_t<T>& p, const matrix4_t<T>& m)
 {
 	const T a = p.m_invRatio * p.m_invTanHalfFovy;
@@ -5043,7 +5384,7 @@ matrix4_t<T> operator*(const perspective_t<T>& p, const matrix4_t<T>& m)
 	res.column(3).row(3) = -m.column(3).row(2);
 	return res;
 }
-template <typename T>
+template <arithmetic T>
 vector4_t<T> operator*(const perspective_t<T>& p, const vector4_t<T>& v)
 {
 	const T a = p.m_invRatio * p.m_invTanHalfFovy;
@@ -5066,7 +5407,7 @@ vector4_t<T> operator*(const perspective_t<T>& p, const vector4_t<T>& v)
 
 	return {a * v.x, b * v.y, c * v.z + d * v.w, -v.z};
 }
-template <typename T>
+template <arithmetic T>
 matrix4_t<T> operator*(const unscaled_transform3_t<T>& t,
                        const perspective_t<T>& p)
 {
@@ -5103,7 +5444,7 @@ matrix4_t<T> operator*(const unscaled_transform3_t<T>& t,
 	        T(-1),
 	        T(0)};
 }
-template <typename T>
+template <arithmetic T>
 matrix4_t<T> operator*(const perspective_t<T>& p,
                        const unscaled_transform3_t<T>& t)
 {
@@ -5147,14 +5488,14 @@ matrix4_t<T> operator*(const perspective_t<T>& p,
 #pragma endregion
 
 #pragma region definition_quaternion_t
-template <typename T>
+template <arithmetic T>
 quaternion_t<T>::quaternion_t(direction_t<T> axis, radian_t<T> angle)
 {
 	vector3_t<T> tmpAxis = *axis * sin(angle / 2.0f);
 	*this = {tmpAxis.x, tmpAxis.y, tmpAxis.z, cos(angle / 2.0f)};
 }
-template <typename T>
-template <typename U, U NumeratorT, U DenominatorT>
+template <arithmetic T>
+template <std::signed_integral U, U NumeratorT, U DenominatorT>
 quaternion_t<T>::quaternion_t(
     direction_t<T> axis,
     static_pi_fraction_t<U, NumeratorT, DenominatorT> angle)
@@ -5165,24 +5506,24 @@ quaternion_t<T>::quaternion_t(
 	*this = {tmpAxis.x, tmpAxis.y, tmpAxis.z, cos<T>(HalfAngle{})};
 }
 
-template <typename T>
+template <arithmetic T>
 quaternion_t<T> quaternion_t<T>::identity()
 {
 	return {T(0), T(0), T(0), T(1)};
 }
 
-template <typename T>
+template <arithmetic T>
 T quaternion_t<T>::norm() const
 {
 	return std::sqrt(norm_squared());
 }
-template <typename T>
+template <arithmetic T>
 T quaternion_t<T>::norm_squared() const
 {
 	return x * x + y * y + z * z + w * w;
 }
 
-template <typename T>
+template <arithmetic T>
 quaternion_t<T>& quaternion_t<T>::inverse()
 {
 	const T n = norm();
@@ -5195,7 +5536,7 @@ quaternion_t<T>& quaternion_t<T>::inverse()
 	w /= n;
 	return *this;
 }
-template <typename T>
+template <arithmetic T>
 quaternion_t<T>& quaternion_t<T>::conjugate()
 {
 	x = -x;
@@ -5203,7 +5544,7 @@ quaternion_t<T>& quaternion_t<T>::conjugate()
 	z = -z;
 	return *this;
 }
-template <typename T>
+template <arithmetic T>
 quaternion_t<T>& quaternion_t<T>::normalize()
 {
 	const T n = norm();
@@ -5213,48 +5554,48 @@ quaternion_t<T>& quaternion_t<T>::normalize()
 	w /= n;
 	return *this;
 }
-template <typename T>
-quaternion_t<T>& quaternion_t<T>::clamp(quaternion_t<T> min,
+template <arithmetic T>
+constexpr quaternion_t<T>& quaternion_t<T>::clamp(quaternion_t<T> min,
                                         quaternion_t<T> max)
 {
-	x = cdm::clamp(x, min.x, max.x);
-	y = cdm::clamp(y, min.y, max.y);
-	z = cdm::clamp(z, min.z, max.z);
-	w = cdm::clamp(w, min.w, max.w);
+	x = std::clamp(x, min.x, max.x);
+	y = std::clamp(y, min.y, max.y);
+	z = std::clamp(z, min.z, max.z);
+	w = std::clamp(w, min.w, max.w);
 	return *this;
 }
 
-template <typename T>
+template <arithmetic T>
 quaternion_t<T> quaternion_t<T>::get_inversed() const
 {
 	quaternion_t<T> res = *this;
 	res.inverse();
 	return res;
 }
-template <typename T>
+template <arithmetic T>
 quaternion_t<T> quaternion_t<T>::get_conjugated() const
 {
 	quaternion_t<T> res = *this;
 	res.conjugate();
 	return res;
 }
-template <typename T>
+template <arithmetic T>
 quaternion_t<T> quaternion_t<T>::get_normalized() const
 {
 	quaternion_t<T> res = *this;
 	res.normalize();
 	return res;
 }
-template <typename T>
-quaternion_t<T> quaternion_t<T>::get_clamped(quaternion_t<T> min,
+template <arithmetic T>
+constexpr quaternion_t<T> quaternion_t<T>::get_clamped(quaternion_t<T> min,
                                              quaternion_t<T> max) const
 {
 	quaternion_t<T> res = *this;
-	clamp(res, min, max);
+	res.clamp(min, max);
 	return res;
 }
 
-template <typename T>
+template <arithmetic T>
 quaternion_t<T> quaternion_t<T>::operator+(quaternion_t<T> q) const
 {
 	return {
@@ -5264,7 +5605,7 @@ quaternion_t<T> quaternion_t<T>::operator+(quaternion_t<T> q) const
 	    w + q.w,
 	};
 }
-template <typename T>
+template <arithmetic T>
 quaternion_t<T> quaternion_t<T>::operator-(quaternion_t<T> q) const
 {
 	return {
@@ -5274,7 +5615,7 @@ quaternion_t<T> quaternion_t<T>::operator-(quaternion_t<T> q) const
 	    w - q.w,
 	};
 }
-template <typename T>
+template <arithmetic T>
 vector3_t<T> quaternion_t<T>::operator*(vector3_t<T> v) const
 {
 	const vector3_t<T> qvec{x, y, z};
@@ -5284,7 +5625,7 @@ vector3_t<T> quaternion_t<T>::operator*(vector3_t<T> v) const
 	uuv = uuv * T(2);
 	return v + uv + uuv;
 }
-template <typename T>
+template <arithmetic T>
 quaternion_t<T> quaternion_t<T>::operator*(quaternion_t<T> q) const
 {
 	return {
@@ -5294,7 +5635,7 @@ quaternion_t<T> quaternion_t<T>::operator*(quaternion_t<T> q) const
 	    -x * q.x - y * q.y - z * q.z + w * q.w,
 	};
 }
-template <typename T>
+template <arithmetic T>
 quaternion_t<T> quaternion_t<T>::operator*(T f) const
 {
 	return {
@@ -5304,7 +5645,7 @@ quaternion_t<T> quaternion_t<T>::operator*(T f) const
 	    w * f,
 	};
 }
-template <typename T>
+template <arithmetic T>
 quaternion_t<T> quaternion_t<T>::operator/(T f) const
 {
 	return {
@@ -5315,38 +5656,38 @@ quaternion_t<T> quaternion_t<T>::operator/(T f) const
 	};
 }
 
-template <typename T>
+template <arithmetic T>
 quaternion_t<T>& quaternion_t<T>::operator+=(quaternion_t<T> q)
 {
 	*this = *this + q;
 	return *this;
 }
-template <typename T>
+template <arithmetic T>
 quaternion_t<T>& quaternion_t<T>::operator-=(quaternion_t<T> q)
 {
 	*this = *this - q;
 	return *this;
 }
-template <typename T>
+template <arithmetic T>
 quaternion_t<T>& quaternion_t<T>::operator*=(quaternion_t<T> q)
 {
 	*this = *this * q;
 	return *this;
 }
-template <typename T>
+template <arithmetic T>
 quaternion_t<T>& quaternion_t<T>::operator*=(T f)
 {
 	*this = *this * f;
 	return *this;
 }
-template <typename T>
+template <arithmetic T>
 quaternion_t<T>& quaternion_t<T>::operator/=(T f)
 {
 	*this = *this / f;
 	return *this;
 }
 
-template <typename T>
+template <arithmetic T>
 quaternion_t<T> quaternion_t<T>::operator-() const
 {
 	return {
@@ -5357,7 +5698,7 @@ quaternion_t<T> quaternion_t<T>::operator-() const
 	};
 }
 
-template <typename T>
+template <arithmetic T>
 bool quaternion_t<T>::operator==(quaternion_t<T> q) const
 {
 	return x == q.x &&  //
@@ -5365,19 +5706,19 @@ bool quaternion_t<T>::operator==(quaternion_t<T> q) const
 	       z == q.z &&  //
 	       w == q.w;    //
 }
-template <typename T>
+template <arithmetic T>
 bool quaternion_t<T>::operator!=(quaternion_t<T> q) const
 {
 	return !operator==(q);
 }
 
-template <typename T>
+template <arithmetic T>
 vector3_t<T> operator*(const normalized<quaternion_t<T>>& q, vector3_t<T> v)
 {
 	return *q * v;
 }
 
-template <typename T>
+template <arithmetic T>
 T dot(quaternion_t<T> lhs, quaternion_t<T> rhs)
 {
 	return lhs.x * rhs.x +  //
@@ -5385,7 +5726,7 @@ T dot(quaternion_t<T> lhs, quaternion_t<T> rhs)
 	       lhs.z * rhs.z +  //
 	       lhs.w * rhs.w;   //
 }
-template <typename T>
+template <arithmetic T>
 quaternion_t<T> cross(quaternion_t<T> lhs, quaternion_t<T> rhs)
 {
 	return {
@@ -5395,17 +5736,17 @@ quaternion_t<T> cross(quaternion_t<T> lhs, quaternion_t<T> rhs)
 	    T(1)                            //
 	};
 }
-template <typename T>
+template <arithmetic T>
 quaternion_t<T> lerp(quaternion_t<T> begin, quaternion_t<T> end, T percent)
 {
 	return (end - begin) * percent + begin;
 }
-template <typename T>
+template <arithmetic T>
 quaternion_t<T> nlerp(quaternion_t<T> begin, quaternion_t<T> end, T percent)
 {
 	return lerp(begin, end, percent).get_normalized();
 }
-template <typename T>
+template <arithmetic T>
 quaternion_t<T> slerp(quaternion_t<T> begin, quaternion_t<T> end, T percent)
 {
 	quaternion_t<T> _end;
@@ -5435,19 +5776,19 @@ quaternion_t<T> slerp(quaternion_t<T> begin, quaternion_t<T> end, T percent)
 #pragma endregion
 
 #pragma region definition_line_t
-template <typename T>
+template <arithmetic T>
 bool are_parallel(line_t<T> l1, line_t<T> l2)
 {
 	return nearly_equal(l1.coefficient, l2.coefficient) ||
 	       nearly_equal(l1.coefficient, -l2.coefficient);
 }
 
-template <typename T>
+template <arithmetic T>
 bool collides(line_t<T> l1, line_t<T> l2)
 {
 	return !line_t<T>::are_parallel(l1, l2);
 }
-template <typename T>
+template <arithmetic T>
 bool collides(line_t<T> l1, line_t<T> l2, vector2_t<T>& intersection)
 {
 	bool collision = collides(l1, l2);
@@ -5465,23 +5806,23 @@ bool collides(line_t<T> l1, line_t<T> l2, vector2_t<T>& intersection)
 
 	return collision;
 }
-template <typename T>
+template <arithmetic T>
 bool collides(line_t<T> l, vector2_t<T> v)
 {
 	return nearly_equal(l.coefficient * v.x + l.offset, v.y);
 }
-template <typename T>
+template <arithmetic T>
 bool collides(vector2_t<T> v, line_t<T> l)
 {
 	return collides(l, v);
 }
 
-template <typename T>
+template <arithmetic T>
 T distance_between(plane_t<T> p, vector3_t<T> v)
 {
 	return -v.x * p.normal->x - v.y * p.normal->y - v.z * p.normal->z;
 }
-template <typename T>
+template <arithmetic T>
 T distance_between(vector3_t<T> v, plane_t<T> p)
 {
 	return distance_between(p, v);
@@ -5489,14 +5830,14 @@ T distance_between(vector3_t<T> v, plane_t<T> p)
 #pragma endregion
 
 #pragma region definition_aa_rect_t
-template <typename T>
+template <arithmetic T>
 bool aa_rect_t<T>::contains(vector2_t<T> v) const
 {
 	return (v.x >= origin.x) && (v.x <= origin.x + dimention.x) &&
 	       (v.y >= origin.y) && (v.y <= origin.y + dimention.y);
 }
 
-template <typename T>
+template <arithmetic T>
 bool collides(aa_rect_t<T> r1, aa_rect_t<T> r2)
 {
 	return collides(r1, r2.origin) ||
@@ -5506,7 +5847,7 @@ bool collides(aa_rect_t<T> r1, aa_rect_t<T> r2)
 }
 
 // https://stackoverflow.com/a/565282
-template <typename T>
+template <arithmetic T>
 bool intersects(segment2_t<T> s0,
                 segment2_t<T> s1,
                 vector2_t<T>& outPoint,
@@ -5568,7 +5909,7 @@ bool intersects(segment2_t<T> s0,
 #pragma endregion
 
 #pragma region definition_segment3_t
-template <typename T>
+template <arithmetic T>
 constexpr bool collides(const segment3_t<T>& seg,
                         const plane_t<T>& plane,
                         T e) noexcept
@@ -5589,7 +5930,7 @@ constexpr bool collides(const segment3_t<T>& seg,
 }
 
 // I feel like there's a simpler and more efficient way to do this...
-template <typename T>
+template <arithmetic T>
 constexpr bool collides(const segment3_t<T>& seg,
                         const plane_t<T>& plane,
                         vector3_t<T>& outPoint,
@@ -5626,20 +5967,20 @@ constexpr bool collides(const segment3_t<T>& seg,
 #pragma endregion
 
 #pragma region definition_plane_t
-template <typename T>
+template <arithmetic T>
 T plane_t<T>::evaluate(vector3_t<T> point) const
 {
 	return normal->x * (point.x - origin.x) +  //
 	       normal->y * (point.y - origin.y) +  //
 	       normal->z * (point.z - origin.z);   //
 }
-template <typename T>
+template <arithmetic T>
 vector3_t<T> plane_t<T>::project3d(vector3_t<T> point) const
 {
 	T distance = evaluate(point);
 	return point - *normal * distance;
 }
-template <typename T>
+template <arithmetic T>
 vector2_t<T> plane_t<T>::project2d(vector3_t<T> point,
                                    direction_t<T> plane_tangent) const
 {
@@ -5652,7 +5993,7 @@ vector2_t<T> plane_t<T>::project2d(vector3_t<T> point,
 
 	return (TBN * plane_space_point).xy();
 }
-template <typename T>
+template <arithmetic T>
 vector3_t<T> plane_t<T>::unproject(vector2_t<T> point,
                                    direction_t<T> plane_tangent) const
 {
@@ -5666,7 +6007,7 @@ vector3_t<T> plane_t<T>::unproject(vector2_t<T> point,
 
 	return (invTBN * plane_space_point) + origin;
 }
-template <typename T>
+template <arithmetic T>
 direction_t<T> plane_t<T>::computeTangent(T epsilon_) const
 {
 	const auto tangent =
@@ -5677,7 +6018,7 @@ direction_t<T> plane_t<T>::computeTangent(T epsilon_) const
 	return direction_t<T>(tangent);
 }
 
-template <typename T>
+template <arithmetic T>
 bool collides(const plane_t<T>& plane,
               ray3_t<T> r,
               vector3_t<T>& collision_point)
@@ -5694,7 +6035,7 @@ bool collides(const plane_t<T>& plane,
 	}
 	return false;
 }
-template <typename T>
+template <arithmetic T>
 bool collides_bidirectional(const plane_t<T>& plane,
                             ray3_t<T> r,
                             vector3_t<T>& collision_point)
@@ -5712,19 +6053,19 @@ bool collides_bidirectional(const plane_t<T>& plane,
 #pragma endregion
 
 #pragma region definition_aabb_t
-template <typename T>
+template <arithmetic T>
 bool aabb_t<T>::contains(vector3_t<T> p) const
 {
 	return p.x >= min.x && p.x <= max.x && p.y >= min.y && p.y <= max.y &&
 	       p.z >= min.z && p.z <= max.z;
 }
-template <typename T>
+template <arithmetic T>
 vector3_t<T> aabb_t<T>::get_center() const
 {
 	return (max + min) / T(2);
 }
 
-template <typename T>
+template <arithmetic T>
 aabb_t<T> aabb_t<T>::operator+(aabb_t<T> rhs) const
 {
 	aabb_t<T> res;
@@ -5738,7 +6079,7 @@ aabb_t<T> aabb_t<T>::operator+(aabb_t<T> rhs) const
 	return res;
 }
 
-template <typename T>
+template <arithmetic T>
 bool collides(aabb_t<T> b, ray3_t<T> r)
 {
 	const vector3_t<T> inv{
@@ -5767,7 +6108,7 @@ bool collides(aabb_t<T> b, ray3_t<T> r)
 
 	return tmax >= tmin;
 }
-template <typename T>
+template <arithmetic T>
 bool collides(aabb_t<T> b1, aabb_t<T> b2)
 {
 	if (b1.contains(b2.min))
@@ -5807,7 +6148,7 @@ bool collides(aabb_t<T> b1, aabb_t<T> b2)
 #pragma endregion
 
 #pragma region definition_transform2_t
-template <typename T>
+template <arithmetic T>
 transform2_t<T> transform2_t<T>::operator*(const transform2_t<T>& t) const
 {
 	transform2_t<T> res;
@@ -5818,7 +6159,7 @@ transform2_t<T> transform2_t<T>::operator*(const transform2_t<T>& t) const
 	res.scale = vector2_t(scale.x * t.scale.x, scale.y * t.scale.y);
 	return res;
 }
-template <typename T>
+template <arithmetic T>
 vector2_t<T> transform2_t<T>::operator*(vector2_t<T> v) const
 {
 	return rotation * vector2_t(scale.x * v.x, scale.y * v.y) + position;
@@ -5826,7 +6167,7 @@ vector2_t<T> transform2_t<T>::operator*(vector2_t<T> v) const
 #pragma endregion
 
 #pragma region definition_transform3_t
-template <typename T>
+template <arithmetic T>
 transform3_t<T> transform3_t<T>::identity()
 {
 	return transform3_t<T>{
@@ -5843,7 +6184,7 @@ transform3_t<T> transform3_t<T>::identity()
 	    },
 	};
 }
-template <typename T>
+template <arithmetic T>
 matrix4_t<T> transform3_t<T>::to_matrix4() const
 {
 	matrix4_t<T> res{matrix4_t<T>::rotation(rotation)};
@@ -5866,26 +6207,26 @@ matrix4_t<T> transform3_t<T>::to_matrix4() const
 
 	return res;
 }
-template <typename T>
+template <arithmetic T>
 transform3_t<T>& transform3_t<T>::translate_absolute(vector3_t<T> t)
 {
 	position += t;
 	return *this;
 }
-template <typename T>
+template <arithmetic T>
 transform3_t<T>& transform3_t<T>::translate_relative(vector3_t<T> t)
 {
 	position += rotation * t;
 	return *this;
 }
-template <typename T>
+template <arithmetic T>
 transform3_t<T>& transform3_t<T>::rotate(quaternion_t<T> r)
 {
 	rotation = r * rotation;
 	return *this;
 }
 
-template <typename T>
+template <arithmetic T>
 transform3_t<T> transform3_t<T>::operator*(const transform3_t<T>& t) const
 {
 	transform3_t<T> res{*this};
@@ -5918,7 +6259,7 @@ transform3_t<T> transform3_t<T>::operator*(const transform3_t<T>& t) const
 
 	return res;
 }
-template <typename T>
+template <arithmetic T>
 vector3_t<T> transform3_t<T>::operator*(vector3_t<T> v) const
 {
 	vector3_t<T> res = rotation * v;
@@ -5927,7 +6268,7 @@ vector3_t<T> transform3_t<T>::operator*(vector3_t<T> v) const
 	res.z *= scale.z;
 	return res + position;
 }
-template <typename T>
+template <arithmetic T>
 quaternion_t<T> transform3_t<T>::operator*(quaternion_t<T> q) const
 {
 	return rotation * q;
@@ -5935,7 +6276,7 @@ quaternion_t<T> transform3_t<T>::operator*(quaternion_t<T> q) const
 #pragma endregion
 
 #pragma region definition_uniform_transform2_t
-template <typename T>
+template <arithmetic T>
 uniform_transform2_t<T> uniform_transform2_t<T>::operator*(
     uniform_transform2_t<T> t) const
 {
@@ -5946,7 +6287,7 @@ uniform_transform2_t<T> uniform_transform2_t<T>::operator*(
 	res.scale = scale * t.scale;
 	return res;
 }
-template <typename T>
+template <arithmetic T>
 vector2_t<T> uniform_transform2_t<T>::operator*(vector2_t<T> v) const
 {
 	matrix2_t r = matrix2_t::rotation(rotation);
@@ -5955,7 +6296,7 @@ vector2_t<T> uniform_transform2_t<T>::operator*(vector2_t<T> v) const
 #pragma endregion
 
 #pragma region definition_uniform_transform3_t
-template <typename T>
+template <arithmetic T>
 matrix4_t<T> uniform_transform3_t<T>::to_matrix4() const
 {
 	matrix4_t<T> res{matrix4_t<T>::rotation(rotation)};
@@ -5978,7 +6319,7 @@ matrix4_t<T> uniform_transform3_t<T>::to_matrix4() const
 
 	return res;
 }
-template <typename T>
+template <arithmetic T>
 uniform_transform3_t<T> uniform_transform3_t<T>::operator*(
     const uniform_transform3_t<T>& t) const
 {
@@ -5988,12 +6329,12 @@ uniform_transform3_t<T> uniform_transform3_t<T>::operator*(
 	res.scale = scale * t.scale;
 	return res;
 }
-template <typename T>
+template <arithmetic T>
 vector3_t<T> uniform_transform3_t<T>::operator*(vector3_t<T> v) const
 {
 	return rotation * (scale * v) + position;
 }
-template <typename T>
+template <arithmetic T>
 quaternion_t<T> uniform_transform3_t<T>::operator*(quaternion_t<T> q) const
 {
 	return rotation * q;
@@ -6001,7 +6342,7 @@ quaternion_t<T> uniform_transform3_t<T>::operator*(quaternion_t<T> q) const
 #pragma endregion
 
 #pragma region definition_unscaled_transform2_t
-template <typename T>
+template <arithmetic T>
 unscaled_transform2_t<T> unscaled_transform2_t<T>::operator*(
     unscaled_transform2_t<T> t) const
 {
@@ -6011,7 +6352,7 @@ unscaled_transform2_t<T> unscaled_transform2_t<T>::operator*(
 	res.rotation = rotation + t.rotation;
 	return res;
 }
-template <typename T>
+template <arithmetic T>
 vector2_t<T> unscaled_transform2_t<T>::operator*(vector2_t<T> v) const
 {
 	matrix2_t<T> r = matrix2_t::rotation(rotation);
@@ -6020,35 +6361,35 @@ vector2_t<T> unscaled_transform2_t<T>::operator*(vector2_t<T> v) const
 #pragma endregion
 
 #pragma region definition_unscaled_transform3_t
-template <typename T>
+template <arithmetic T>
 unscaled_transform3_t<T>& unscaled_transform3_t<T>::translate_absolute(
     vector3_t<T> t)
 {
 	position += t;
 	return *this;
 }
-template <typename T>
+template <arithmetic T>
 unscaled_transform3_t<T>& unscaled_transform3_t<T>::translate_relative(
     vector3_t<T> t)
 {
 	position += rotation * t;
 	return *this;
 }
-template <typename T>
+template <arithmetic T>
 unscaled_transform3_t<T>& unscaled_transform3_t<T>::rotate(quaternion_t<T> r)
 {
 	rotation = r * rotation;
 	return *this;
 }
 
-template <typename T>
+template <arithmetic T>
 unscaled_transform3_t<T>& unscaled_transform3_t<T>::inverse()
 {
 	rotation.inverse();
 	position = rotation * -position;
 	return *this;
 }
-template <typename T>
+template <arithmetic T>
 unscaled_transform3_t<T> unscaled_transform3_t<T>::get_inversed() const
 {
 	unscaled_transform3_t<T> res{*this};
@@ -6056,7 +6397,7 @@ unscaled_transform3_t<T> unscaled_transform3_t<T>::get_inversed() const
 	return res;
 }
 
-template <typename T>
+template <arithmetic T>
 matrix4_t<T> unscaled_transform3_t<T>::to_matrix4() const
 {
 	matrix4_t<T> res{matrix4_t<T>::rotation(rotation)};
@@ -6068,7 +6409,7 @@ matrix4_t<T> unscaled_transform3_t<T>::to_matrix4() const
 	return res;
 }
 
-template <typename T>
+template <arithmetic T>
 unscaled_transform3_t<T> inverse(unscaled_transform3_t<T> t)
 {
 	t.rotation = inverse(t.rotation);
@@ -6076,7 +6417,7 @@ unscaled_transform3_t<T> inverse(unscaled_transform3_t<T> t)
 	return t;
 }
 
-template <typename T>
+template <arithmetic T>
 unscaled_transform3_t<T> unscaled_transform3_t<T>::operator*(
     const unscaled_transform3_t<T>& t) const
 {
@@ -6085,12 +6426,12 @@ unscaled_transform3_t<T> unscaled_transform3_t<T>::operator*(
 	res.rotation = rotation * t.rotation;
 	return res;
 }
-template <typename T>
+template <arithmetic T>
 vector3_t<T> unscaled_transform3_t<T>::operator*(vector3_t<T> v) const
 {
 	return rotation * v + position;
 }
-template <typename T>
+template <arithmetic T>
 quaternion_t<T> unscaled_transform3_t<T>::operator*(quaternion_t<T> q) const
 {
 	return rotation * q;
@@ -6098,10 +6439,10 @@ quaternion_t<T> unscaled_transform3_t<T>::operator*(quaternion_t<T> q) const
 #pragma endregion
 
 #pragma region definition_value_domain
-template <typename T>
+template <typename T> requires arithmetic<T> || vector<T>
 constexpr T value_domain<T>::lerp(normalized_value<T> value) const noexcept
 {
-	return cdm::lerp(lim0(), lim1(), value.value());
+	return element_wise_lerp(lim0(), lim1(), value.value());
 }
 #pragma endregion
 
@@ -6134,46 +6475,46 @@ constexpr unnormalized_value<T>& unnormalized_value<T>::operator=(
 #pragma endregion
 
 #pragma region definition_streams
-template <typename T>
+template <arithmetic T>
 std::ostream& operator<<(std::ostream& o, const radian_t<T>& a)
 {
 	return o << "radian_t(" << static_cast<T>(a) << ")";
 }
-template <typename T>
+template <arithmetic T>
 std::ostream& operator<<(std::ostream& o, const degree_t<T>& a)
 {
 	return o << "degree_t(" << static_cast<T>(a) << ")";
 }
-template <typename T>
+template <arithmetic T>
 std::ostream& operator<<(std::ostream& o, const pi_fraction_t<T>& f)
 {
 	return o << "pi_fraction_t(" << f.numerator << "pi / " << f.denominator
 	         << ")";
 }
-template <typename T, T NumT, T DenT>
+template <arithmetic T, T NumT, T DenT>
 std::ostream& operator<<(std::ostream& o,
                          const static_pi_fraction_t<T, NumT, DenT>& f)
 {
 	return o << "static_pi_fraction_t(" << f.numerator << "pi / "
 	         << f.denominator << ")";
 }
-template <typename T>
+template <arithmetic T>
 std::ostream& operator<<(std::ostream& os, vector2_t<T> v)
 {
 	return os << "vector2_t(" << v.x << ", " << v.y << ")";
 }
-template <typename T>
+template <arithmetic T>
 std::ostream& operator<<(std::ostream& os, vector3_t<T> v)
 {
 	return os << "vector3_t(" << v.x << ", " << v.y << ", " << v.z << ")";
 }
-template <typename T>
+template <arithmetic T>
 std::ostream& operator<<(std::ostream& os, vector4_t<T> v)
 {
 	return os << "vector4_t(" << v.x << ", " << v.y << ", " << v.z << ", "
 	          << v.w << ")";
 }
-template <typename T>
+template <arithmetic T>
 std::ostream& operator<<(std::ostream& os, quaternion_t<T> q)
 {
 	const auto flags = os.flags();
@@ -6185,13 +6526,13 @@ std::ostream& operator<<(std::ostream& os, quaternion_t<T> q)
 	os.setf(flags);
 	return os;
 }
-template <typename T>
+template <arithmetic T>
 std::ostream& operator<<(std::ostream& os, plane_t<T> p)
 {
 	return os << "plane_t(origin = " << p.origin << ", normal = " << p.normal
 	          << ")";
 }
-template <typename T>
+template <arithmetic T>
 std::ostream& operator<<(std::ostream& os, const cdm::matrix2_t<T>& m)
 {
 	const auto flags = os.flags();
@@ -6204,7 +6545,7 @@ std::ostream& operator<<(std::ostream& os, const cdm::matrix2_t<T>& m)
 	os.setf(flags);
 	return os;
 }
-template <typename T>
+template <arithmetic T>
 std::ostream& operator<<(std::ostream& os, const cdm::matrix3_t<T>& m)
 {
 	const auto flags = os.flags();
@@ -6218,7 +6559,7 @@ std::ostream& operator<<(std::ostream& os, const cdm::matrix3_t<T>& m)
 	os.setf(flags);
 	return os;
 }
-template <typename T>
+template <arithmetic T>
 std::ostream& operator<<(std::ostream& os, const cdm::matrix4_t<T>& m)
 {
 	const auto flags = os.flags();
@@ -6233,12 +6574,12 @@ std::ostream& operator<<(std::ostream& os, const cdm::matrix4_t<T>& m)
 	os.setf(flags);
 	return os;
 }
-template <typename T>
+template <arithmetic T>
 std::ostream& operator<<(std::ostream& os, const cdm::normalized<T>& n)
 {
 	return os << *n;
 }
-template <typename T>
+template <arithmetic T>
 std::ostream& operator<<(std::ostream& os, transform3_t<T> t)
 {
 	// clang-format off
@@ -6247,116 +6588,13 @@ std::ostream& operator<<(std::ostream& os, transform3_t<T> t)
 	          << "              scale =    " << t.scale << ")";
 	// clang-format on
 }
-template <typename T>
+template <arithmetic T>
 std::ostream& operator<<(std::ostream& os, segment2_t<T> t)
 {
 	// clang-format off
 	return os << "segment2_t(origin = " << t.origin << ",\n"
 	          << "            end =    " << t.end << ")";
 	// clang-format on
-}
-#pragma endregion
-
-#pragma region definition_misc
-namespace detail
-{
-template <unsigned char x, unsigned char y, typename T>
-T get_quaternion_t_matrix_element(quaternion_t<T> q)
-{
-	static_assert(x < 3, "x must be [0;2]");
-	static_assert(y < 3, "y must be [0;2]");
-	if constexpr (y == 0)
-	{
-		if constexpr (x == 0)
-			return T(1) - T(2) * (q.y * q.y + q.z * q.z);
-		if constexpr (x == 1)
-			return T(2) * (q.x * q.y - q.z * q.w);
-		else
-			return T(2) * (q.x * q.z + q.y * q.w);
-	}
-	if constexpr (y == 1)
-	{
-		if constexpr (x == 0)
-			return T(2) * (q.x * q.y + q.z * q.w);
-		if constexpr (x == 1)
-			return T(1) - T(2) * (q.x * q.x + q.z * q.z);
-		else
-			return T(2) * (q.y * q.z - q.x * q.w);
-	}
-	else
-	{
-		if constexpr (x == 0)
-			return T(2) * (q.x * q.z - q.y * q.w);
-		if constexpr (x == 1)
-			return T(2) * (q.y * q.z + q.x * q.w);
-		else
-			return T(1) - T(2) * (q.x * q.x + q.y * q.y);
-	}
-}
-}  // namespace detail
-
-template <typename Functor, typename T>
-std::vector<vector3_t<T>> function2D_sampler(const Functor& functor,
-                                             T min,
-                                             T max,
-                                             T step)
-{
-	std::vector<vector3_t<T>> res;
-
-	if (min > max)
-		std::swap(min, max);
-
-	if (step < epsilon)
-		step = epsilon;
-
-	for (T f = min; f < max; f += step)
-	{
-		res.push_back(functor(f));
-	}
-
-	return res;
-}
-
-template <typename Functor, typename T>
-std::vector<std::vector<vector3_t<T>>> function3D_sampler(
-    const Functor& functor,
-    vector2_t<T> min,
-    vector2_t<T> max,
-    vector2_t<T> step)
-{
-	std::vector<std::vector<vector3_t<T>>> res;
-
-	if (min.x > max.x)
-		std::swap(min.x, max.x);
-	if (min.y > max.y)
-		std::swap(min.y, max.y);
-
-	if (step.x < epsilon)
-		step.x = epsilon;
-	if (step.y < epsilon)
-		step.y = epsilon;
-
-	size_t xCount = 0;
-	size_t yCount = 0;
-
-	for (T x = min.x; x < max.x; x += step.x)
-		xCount++;
-	for (T y = min.y; y < max.y; y += step.y)
-		yCount++;
-	res.reserve(yCount);
-
-	for (T y = min.y; y < max.y; y += step.y)
-	{
-		std::vector<vector3_t<T>> row;
-		row.reserve(xCount);
-		for (T x = min.x; x < max.x; x += step.x)
-		{
-			row.push_back(functor(x, y));
-		}
-		res.push_back(std::move(row));
-	}
-
-	return res;
 }
 #pragma endregion
 
@@ -6422,9 +6660,9 @@ using radian = radian_t<float>;
 using radiand = radian_t<double>;
 using degree = degree_t<float>;
 using degreed = degree_t<double>;
-using pi_fraction = pi_fraction_t<int>;
-template <int NumT, int DenT>
-using static_pi_fraction = static_pi_fraction_t<int, NumT, DenT>;
+using pi_fraction = pi_fraction_t<int32_t>;
+template <int32_t NumT, int32_t DenT>
+using static_pi_fraction = static_pi_fraction_t<int32_t, NumT, DenT>;
 using vector2 = vector2_t<float>;
 using vector2d = vector2_t<double>;
 using vector3 = vector3_t<float>;

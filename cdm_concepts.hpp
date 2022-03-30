@@ -1,4 +1,4 @@
-/* cdm_concepts - v0.1.0 - utility concepts - https://github.com/WubiCookie/cdm
+/* cdm_concepts - v0.1.0 - C++20 utility concepts - https://github.com/WubiCookie/cdm
    no warranty implied; use at your own risk
 
 LICENSE
@@ -27,6 +27,7 @@ Written by Charles Seizilles de Mazancourt
 #define CDM_CONCEPTS_HPP
 
 #include <concepts>
+#include <type_traits>
 
 namespace cdm
 {
@@ -35,6 +36,15 @@ concept resizable = requires(T& t)
 {
 	t.resize(0);
 };
+
+template <typename T>
+concept trivial = std::is_trivial_v<T>;
+
+template <typename T>
+concept standard_layout = std::is_standard_layout_v<T>;
+
+template <typename T>
+concept arithmetic = std::integral<T> || std::floating_point<T>;
 }  // namespace cdm
 
 #endif  // CDM_CONCEPTS_HPP

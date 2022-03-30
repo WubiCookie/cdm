@@ -41,14 +41,16 @@ local tests = {
 	"static_pi_fraction_sin",
 	"static_pi_fraction_tan",
 	"transform3",
-	"un__normalized_value",
+	"transform3__multiplication",
+	"transform3__rotation",
+	"transform3__translation",
 	"value_domain",
 	"vector2",
 	"vector3",
 	"vector4",
 }
 
-for k,v in pairs(tests) do
+for _,v in pairs(tests) do
 	target("cdm_test_"..v)
 		set_kind("binary")
 		set_languages("c++20")

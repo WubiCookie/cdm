@@ -1,4 +1,4 @@
-/* cdm_ranges - v0.1.0 - ranges utility - https://github.com/WubiCookie/cdm
+/* cdm_ranges - v0.1.0 - C++20 ranges utility - https://github.com/WubiCookie/cdm
    no warranty implied; use at your own risk
 
 LICENSE

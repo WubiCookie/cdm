@@ -1,4 +1,6 @@
-/* cdm_concepts - v0.1.0 - C++20 utility concepts - https://github.com/WubiCookie/cdm
+/* cdm_concepts v0.1.0
+   C++20 utility concepts
+   https://github.com/WubiCookie/cdm
    no warranty implied; use at your own risk
 
 LICENSE

@@ -1,5 +1,7 @@
-/* cdm_curve - v0.0 - c++ splines and curves library -
-https://github.com/WubiCookie/cdm no warranty implied; use at your own risk
+/* cdm_curve v0.0
+   C++ splines and curves library
+   https://github.com/WubiCookie/cdm
+   no warranty implied; use at your own risk
 
 LICENSE
 
@@ -24,7 +26,7 @@ Written by Charles Seizilles de Mazancourt
 */
 
 #ifndef CDM_CURVE_HPP
-#define CDM_CURVE_HPP
+#define CDM_CURVE_HPP 1
 
 namespace cdm
 {

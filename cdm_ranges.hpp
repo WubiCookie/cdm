@@ -1,4 +1,6 @@
-/* cdm_ranges - v0.1.0 - C++20 ranges utility - https://github.com/WubiCookie/cdm
+/* cdm_ranges v0.1.0
+   C++20 ranges utility
+   https://github.com/WubiCookie/cdm
    no warranty implied; use at your own risk
 
 LICENSE
@@ -24,7 +26,7 @@ Written by Charles Seizilles de Mazancourt
 */
 
 #ifndef CDM_RANGES_HPP
-#define CDM_RANGES_HPP
+#define CDM_RANGES_HPP 1
 
 #include <ranges>
 

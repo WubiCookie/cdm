@@ -1,4 +1,6 @@
-/* cdm_maths - v2.0.0 - C++20 geometric library - https://github.com/WubiCookie/cdm
+/* cdm_maths v2.0.0
+   C++20 geometric library
+   https://github.com/WubiCookie/cdm
    no warranty implied; use at your own risk
 
 LICENSE
@@ -24,7 +26,7 @@ Written by Charles Seizilles de Mazancourt
 */
 
 #ifndef CDM_MATHS_HPP
-#define CDM_MATHS_HPP
+#define CDM_MATHS_HPP 1
 
 #include <cdm_concepts.hpp>
 

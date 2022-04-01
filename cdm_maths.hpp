@@ -119,8 +119,6 @@ struct matrix3_t;
 template <arithmetic T>
 struct matrix4_t;
 template <arithmetic T>
-struct matrix4_t;
-template <arithmetic T>
 struct perspective_t;
 template <arithmetic T>
 struct euler_angles_t;
@@ -157,7 +155,8 @@ struct unscaled_transform2_t;
 template <arithmetic T>
 struct unscaled_transform3_t;
 template <typename T>
-requires arithmetic<T> || vector<T> class value_domain;
+requires arithmetic<T> || vector<T>
+class value_domain;
 template <typename T>
 class unnormalized_value;
 template <typename T>
@@ -269,11 +268,11 @@ std::vector<std::vector<vector3_t<T>>> function3D_sampler(
 	return res;
 }
 
-//template <arithmetic T>
-//constexpr T lerp(T begin, T end, T percent)
+// template <arithmetic T>
+// constexpr T lerp(T begin, T end, T percent)
 //{
 //	return std::lerp(begin, end, percent);
-//}
+// }
 
 template <typename T>
 requires arithmetic<T> || vector<T>
@@ -1730,6 +1729,8 @@ public:
 	{
 		using proxy<IsConstT>::proxy;
 		using proxy<IsConstT>::operator=;
+		using proxy<IsConstT>::x;
+		using proxy<IsConstT>::y;
 		constexpr proxy<IsConstT>::Type& row(int i)
 		{
 			return proxy<IsConstT>::vector(i);
@@ -1744,6 +1745,8 @@ public:
 	{
 		using proxy<IsConstT>::proxy;
 		using proxy<IsConstT>::operator=;
+		using proxy<IsConstT>::x;
+		using proxy<IsConstT>::y;
 		constexpr proxy<IsConstT>::Type& column(int i)
 		{
 			return proxy<IsConstT>::vector(i);
@@ -1969,6 +1972,9 @@ public:
 	{
 		using proxy<IsConstT>::proxy;
 		using proxy<IsConstT>::operator=;
+		using proxy<IsConstT>::x;
+		using proxy<IsConstT>::y;
+		using proxy<IsConstT>::z;
 		constexpr proxy<IsConstT>::Type& row(int i)
 		{
 			return proxy<IsConstT>::vector(i);
@@ -1983,6 +1989,9 @@ public:
 	{
 		using proxy<IsConstT>::proxy;
 		using proxy<IsConstT>::operator=;
+		using proxy<IsConstT>::x;
+		using proxy<IsConstT>::y;
+		using proxy<IsConstT>::z;
 		constexpr proxy<IsConstT>::Type& column(int i)
 		{
 			return proxy<IsConstT>::vector(i);
@@ -2273,6 +2282,10 @@ public:
 	{
 		using proxy<IsConstT>::proxy;
 		using proxy<IsConstT>::operator=;
+		using proxy<IsConstT>::x;
+		using proxy<IsConstT>::y;
+		using proxy<IsConstT>::z;
+		using proxy<IsConstT>::w;
 		constexpr proxy<IsConstT>::Type& row(int i)
 		{
 			return proxy<IsConstT>::vector(i);
@@ -2287,6 +2300,10 @@ public:
 	{
 		using proxy<IsConstT>::proxy;
 		using proxy<IsConstT>::operator=;
+		using proxy<IsConstT>::x;
+		using proxy<IsConstT>::y;
+		using proxy<IsConstT>::z;
+		using proxy<IsConstT>::w;
 		constexpr proxy<IsConstT>::Type& column(int i)
 		{
 			return proxy<IsConstT>::vector(i);

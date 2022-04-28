@@ -5510,8 +5510,8 @@ matrix4_t<T> operator*(const perspective_t<T>& p,
 template <arithmetic T>
 quaternion_t<T>::quaternion_t(direction_t<T> axis, radian_t<T> angle)
 {
-	vector3_t<T> tmpAxis = *axis * sin(angle / 2.0f);
-	*this = {tmpAxis.x, tmpAxis.y, tmpAxis.z, cos(angle / 2.0f)};
+	vector3_t<T> tmpAxis = *axis * sin(angle / T(2.0));
+	*this = {tmpAxis.x, tmpAxis.y, tmpAxis.z, cos(angle / T(2.0))};
 }
 template <arithmetic T>
 template <std::signed_integral U, U NumeratorT, U DenominatorT>

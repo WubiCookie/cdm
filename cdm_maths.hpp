@@ -6548,7 +6548,7 @@ std::ostream& operator<<(std::ostream& os, quaternion_t<T> q)
 template <arithmetic T>
 std::ostream& operator<<(std::ostream& os, plane_t<T> p)
 {
-	return os << "plane_t(origin = " << p.origin << ", normal = " << p.normal
+	return os << "plane_t(origin = " << p.origin << ", normal = " << *p.normal
 	          << ")";
 }
 template <arithmetic T>

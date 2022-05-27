@@ -59,6 +59,10 @@ namespace cdm
 {
 #pragma region constants declarations
 // clang-format off
+constexpr uint64_t VERSION_MAJOR = 2;
+constexpr uint64_t VERSION_MINOR = 0;
+constexpr uint64_t VERSION_PATCH = 0;
+
 constexpr double pi = 3.1415926535897932384626433832795028841971693993751058209749445923;
 constexpr double deg_to_rad = pi / 180.0;
 constexpr double rad_to_deg = 180.0 / pi;

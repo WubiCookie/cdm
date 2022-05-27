@@ -16,6 +16,7 @@ jobs:
         os: [windows-latest]
         arch: [x64]
         mode: [release, releasedbg, debug]
+        test: [cdm_test_direction, cdm_test_matrix3, cdm_test_matrix4, cdm_test_perspective, cdm_test_plane, cdm_test_quaternion, cdm_test_segment3, cdm_test_static_pi_fraction_cos, cdm_test_static_pi_fraction_sin, cdm_test_static_pi_fraction_tan, cdm_test_transform3, cdm_test_transform3__multiplication, cdm_test_transform3__rotation, cdm_test_transform3__translation, cdm_test_value_domain, cdm_test_vector2, cdm_test_vector3, cdm_test_vector4]
 
     runs-on: ${{ matrix.os }}
     if: "!contains(github.event.head_commit.message, 'ci skip')"
@@ -58,8 +59,8 @@ jobs:
 
     # Build the tests
     - name: Build cdm tests
-      run: xmake.exe build testCdm
+      run: xmake.exe build ${{ matrix.test }}
 
     # Run the tests
     - name: Run cdm tests
-      run: xmake.exe run testCdm
+      run: xmake.exe run ${{ matrix.test }}

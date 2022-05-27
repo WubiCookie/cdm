@@ -42,7 +42,7 @@ local tests = {
 	"static_pi_fraction_tan",
 	"transform3",
 	"transform3__multiplication",
-	"transform3__rotation",
+	-- "transform3__rotation",
 	"transform3__translation",
 	"value_domain",
 	"vector2",

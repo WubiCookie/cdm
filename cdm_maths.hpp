@@ -4410,22 +4410,22 @@ template <arithmetic T>
 matrix3_t<T> matrix3_t<T>::rotation(euler_angles_t<T> r)
 {
 	matrix3_t<T> RX = matrix3_t<T>::identity();
-	RX.m11 = cos(r.x);
-	RX.m12 = -sin(r.x);
-	RX.m21 = sin(r.x);
-	RX.m22 = cos(r.x);
+	RX.m11 = cos(-r.x);
+	RX.m12 = -sin(-r.x);
+	RX.m21 = sin(-r.x);
+	RX.m22 = cos(-r.x);
 
 	matrix3_t<T> RY = matrix3_t<T>::identity();
-	RY.m00 = cos(r.y);
-	RY.m02 = sin(r.y);
-	RY.m20 = -sin(r.y);
-	RY.m22 = cos(r.y);
+	RY.m00 = cos(-r.y);
+	RY.m02 = sin(-r.y);
+	RY.m20 = -sin(-r.y);
+	RY.m22 = cos(-r.y);
 
 	matrix3_t<T> RZ = matrix3_t<T>::identity();
-	RZ.m00 = cos(r.z);
-	RZ.m01 = -sin(r.z);
-	RZ.m10 = sin(r.z);
-	RZ.m11 = cos(r.z);
+	RZ.m00 = cos(-r.z);
+	RZ.m01 = -sin(-r.z);
+	RZ.m10 = sin(-r.z);
+	RZ.m11 = cos(-r.z);
 
 	return RY * RX * RZ;
 }

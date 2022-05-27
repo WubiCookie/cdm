@@ -190,31 +190,106 @@ TEST_CASE("matrix3::to_array() and matrix3::matrix3(array)",
 	REQUIRE_FALSE(m1.to_array() == m2.to_array());
 }
 
-TEST_CASE("matrix3::rotation(euler_angles)", "[working][unittest][matrix3]")
+TEST_CASE("matrix3::rotation(euler_angles)_X", "[working][unittest][matrix3]")
 {
-	const euler_angles r{radian(float(pi / 2.0)), 0_rad, 0_rad};
+	const auto angle = radian(float(pi / 2.0));
 
-	const matrix3 m2 = matrix3::rotation(r);
-	const matrix3 m4 = matrix3(matrix3::rotation(r));
-	const std::array<float, 9> a = m2.to_array();
-	const std::array<float, 9> g = m4.to_array();
+	const euler_angles r{angle, 0_rad, 0_rad};
 
-	CHECK(a == g);
+	const matrix3 m = matrix3::rotation(r);
+	const std::array<float, 9> a = m.to_array();
 
-	const matrix3 RX =
-	    matrix3(std::array<float, 9>{1.0f, 0.0f, 0.0f, 0.0f, cos(r.x),
-	                                 sin(r.x), 0.0f, -sin(r.x), cos(r.x)});
-	const matrix3 RY =
-	    matrix3(std::array<float, 9>{cos(r.y), 0.0f, -sin(r.y), 0.0f, 1.0f,
-	                                 0.0f, sin(r.y), 0.0f, cos(r.y)});
-	const matrix3 RZ =
-	    matrix3(std::array<float, 9>{cos(r.z), sin(r.z), 0.0f, -sin(r.z),
-	                                 cos(r.z), 0.0f, 0.0f, 0.0f, 1.0f});
-	const matrix3 m5 = RY * RX * RZ;
-	const matrix3 m6 = matrix3(m5);
-	const std::array<float, 9> m = m6.to_array();
-	for (size_t i = 0; i < a.size(); i++)
-		REQUIRE(a[i] == Approx(m[i]).epsilon(0.1));
+	{
+		const matrix4 m4 = matrix4::rotation(r);
+
+		const matrix3 m3 =
+		    m3.rows(m4.row(0).xyz(), m4.row(1).xyz(), m4.row(2).xyz());
+
+		const std::array<float, 9> b = m3.to_array();
+
+		REQUIRE(a == b);
+	}
+
+	const auto rotx = m * vector3(1.0f, 0.0f, 0.0f);
+	CHECK_THAT(rotx, Vector3Matcher({1.0f, 0.0f, 0.0f}));
+	const auto roty = m * vector3(0.0f, 1.0f, 0.0f);
+	CHECK_THAT(roty, Vector3Matcher({0.0f, 0.0f, 1.0f}));
+	const auto rotz = m * vector3(0.0f, 0.0f, 1.0f);
+	CHECK_THAT(rotz, Vector3Matcher({0.0f, -1.0f, 0.0f}));
+
+	{
+		const matrix3 m2 = matrix3::rotation_around_x(angle);
+
+		CHECK_THAT(m, Matrix3Matcher(m2));
+	}
+}
+
+TEST_CASE("matrix3::rotation(euler_angles)_Y", "[working][unittest][matrix3]")
+{
+	const auto angle = radian(float(pi / 2.0));
+
+	const euler_angles r{0_rad, angle, 0_rad};
+
+	const matrix3 m = matrix3::rotation(r);
+	const std::array<float, 9> a = m.to_array();
+
+	{
+		const matrix4 m4 = matrix4::rotation(r);
+
+		const matrix3 m3 =
+		    m3.rows(m4.row(0).xyz(), m4.row(1).xyz(), m4.row(2).xyz());
+
+		const std::array<float, 9> b = m3.to_array();
+
+		REQUIRE(a == b);
+	}
+
+	const auto rotx = m * vector3(1.0f, 0.0f, 0.0f);
+	CHECK_THAT(rotx, Vector3Matcher({0.0f, 0.0f, -1.0f}));
+	const auto roty = m * vector3(0.0f, 1.0f, 0.0f);
+	CHECK_THAT(roty, Vector3Matcher({0.0f, 1.0f, 0.0f}));
+	const auto rotz = m * vector3(0.0f, 0.0f, 1.0f);
+	CHECK_THAT(rotz, Vector3Matcher({1.0f, 0.0f, 0.0f}));
+
+	{
+		const matrix3 m2 = matrix3::rotation_around_y(angle);
+
+		CHECK_THAT(m, Matrix3Matcher(m2));
+	}
+}
+
+TEST_CASE("matrix3::rotation(euler_angles)_Z", "[working][unittest][matrix3]")
+{
+	const auto angle = radian(float(pi / 2.0));
+
+	const euler_angles r{0_rad, 0_rad, angle};
+
+	const matrix3 m = matrix3::rotation(r);
+	const std::array<float, 9> a = m.to_array();
+
+	{
+		const matrix4 m4 = matrix4::rotation(r);
+
+		const matrix3 m3 =
+		    m3.rows(m4.row(0).xyz(), m4.row(1).xyz(), m4.row(2).xyz());
+
+		const std::array<float, 9> b = m3.to_array();
+
+		REQUIRE(a == b);
+	}
+
+	const auto rotx = m * vector3(1.0f, 0.0f, 0.0f);
+	CHECK_THAT(rotx, Vector3Matcher({0.0f, 1.0f, 0.0f}));
+	const auto roty = m * vector3(0.0f, 1.0f, 0.0f);
+	CHECK_THAT(roty, Vector3Matcher({-1.0f, 0.0f, 0.0f}));
+	const auto rotz = m * vector3(0.0f, 0.0f, 1.0f);
+	CHECK_THAT(rotz, Vector3Matcher({0.0f, 0.0f, 1.0f}));
+
+	{
+		const matrix3 m2 = matrix3::rotation_around_z(angle);
+
+		CHECK_THAT(m, Matrix3Matcher(m2));
+	}
 }
 
 TEST_CASE("matrix3::rotation(quaternion)", "[working][unittest][matrix3]")
@@ -223,10 +298,17 @@ TEST_CASE("matrix3::rotation(quaternion)", "[working][unittest][matrix3]")
 	q.normalize();
 
 	const matrix3 m2 = matrix3::rotation(q);
-	const matrix3 m4 = matrix3(matrix3::rotation(q));
+	const matrix4 m4 = matrix4::rotation(q);
+
+	matrix3 m3;
+	m3.row(0) = m4.row(0).xyz();
+	m3.row(1) = m4.row(1).xyz();
+	m3.row(2) = m4.row(2).xyz();
+
 	const std::array<float, 9> a = m2.to_array();
-	const std::array<float, 9> g = m4.to_array();
-	CHECK(a == g);
+	const std::array<float, 9> b = m3.to_array();
+
+	REQUIRE(a == b);
 }
 
 TEST_CASE("matrix3::scale(vector3)", "[working][unittest][matrix3]")

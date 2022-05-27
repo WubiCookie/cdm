@@ -1,3 +1,4 @@
+/*
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch.hpp>
 
@@ -66,3 +67,4 @@ TEST_CASE("transform3::rotate(quaternion)",
 		//           1), 1.0e-5));
 	}
 }
+//*/

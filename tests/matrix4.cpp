@@ -252,25 +252,6 @@ TEST_CASE("matrix4::rotation(euler_angles)", "[working][unittest][matrix4]")
 	const matrix4 m4 = matrix4(matrix3::rotation(r));
 
 	CHECK_THAT(m2, Matrix4Matcher(m4));
-
-	const matrix3 RX = matrix3(std::array<float, 9>{
-	    1.0f, 0.0f, 0.0f,           //
-	    0.0f, cos(r.x), sin(r.x),   //
-	    0.0f, -sin(r.x), cos(r.x),  //
-	});
-	const matrix3 RY = matrix3(std::array<float, 9>{
-	    cos(r.y), 0.0f, -sin(r.y),  //
-	    0.0f, 1.0f, 0.0f,           //
-	    sin(r.y), 0.0f, cos(r.y),   //
-	});
-	const matrix3 RZ = matrix3(std::array<float, 9>{
-	    cos(r.z), sin(r.z), 0.0f,   //
-	    -sin(r.z), cos(r.z), 0.0f,  //
-	    0.0f, 0.0f, 1.0f,           //
-	});
-	const matrix3 m5 = RY * RX * RZ;
-	const matrix4 m6 = matrix4(m5);
-	CHECK_THAT(m2, Matrix4Matcher(m6, 0.1));
 }
 
 TEST_CASE("matrix4::rotation(quaternion)", "[working][unittest][matrix4]")

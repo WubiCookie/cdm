@@ -15,7 +15,7 @@ jobs:
       matrix:
         os: [windows-latest]
         arch: [x64]
-        mode: [release, releasedbg, debug]
+        mode: [release]
         test: [cdm_test_direction, cdm_test_matrix3, cdm_test_matrix4, cdm_test_perspective, cdm_test_plane, cdm_test_quaternion, cdm_test_segment3, cdm_test_static_pi_fraction_cos, cdm_test_static_pi_fraction_sin, cdm_test_static_pi_fraction_tan, cdm_test_transform3, cdm_test_transform3__multiplication, cdm_test_transform3__rotation, cdm_test_transform3__translation, cdm_test_value_domain, cdm_test_vector2, cdm_test_vector3, cdm_test_vector4]
 
     runs-on: ${{ matrix.os }}

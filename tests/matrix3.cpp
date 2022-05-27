@@ -199,17 +199,6 @@ TEST_CASE("matrix3::rotation(euler_angles)_X", "[working][unittest][matrix3]")
 	const matrix3 m = matrix3::rotation(r);
 	const std::array<float, 9> a = m.to_array();
 
-	{
-		const matrix4 m4 = matrix4::rotation(r);
-
-		const matrix3 m3 =
-		    m3.rows(m4.row(0).xyz(), m4.row(1).xyz(), m4.row(2).xyz());
-
-		const std::array<float, 9> b = m3.to_array();
-
-		REQUIRE(a == b);
-	}
-
 	const auto rotx = m * vector3(1.0f, 0.0f, 0.0f);
 	CHECK_THAT(rotx, Vector3Matcher({1.0f, 0.0f, 0.0f}));
 	const auto roty = m * vector3(0.0f, 1.0f, 0.0f);
@@ -233,17 +222,6 @@ TEST_CASE("matrix3::rotation(euler_angles)_Y", "[working][unittest][matrix3]")
 	const matrix3 m = matrix3::rotation(r);
 	const std::array<float, 9> a = m.to_array();
 
-	{
-		const matrix4 m4 = matrix4::rotation(r);
-
-		const matrix3 m3 =
-		    m3.rows(m4.row(0).xyz(), m4.row(1).xyz(), m4.row(2).xyz());
-
-		const std::array<float, 9> b = m3.to_array();
-
-		REQUIRE(a == b);
-	}
-
 	const auto rotx = m * vector3(1.0f, 0.0f, 0.0f);
 	CHECK_THAT(rotx, Vector3Matcher({0.0f, 0.0f, -1.0f}));
 	const auto roty = m * vector3(0.0f, 1.0f, 0.0f);
@@ -266,17 +244,6 @@ TEST_CASE("matrix3::rotation(euler_angles)_Z", "[working][unittest][matrix3]")
 
 	const matrix3 m = matrix3::rotation(r);
 	const std::array<float, 9> a = m.to_array();
-
-	{
-		const matrix4 m4 = matrix4::rotation(r);
-
-		const matrix3 m3 =
-		    m3.rows(m4.row(0).xyz(), m4.row(1).xyz(), m4.row(2).xyz());
-
-		const std::array<float, 9> b = m3.to_array();
-
-		REQUIRE(a == b);
-	}
 
 	const auto rotx = m * vector3(1.0f, 0.0f, 0.0f);
 	CHECK_THAT(rotx, Vector3Matcher({0.0f, 1.0f, 0.0f}));

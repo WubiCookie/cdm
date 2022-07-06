@@ -1,4 +1,4 @@
-/* cdm_maths v2.0.0
+/* cdm_maths v2.0.1
    C++20 geometric library
    https://github.com/WubiCookie/cdm
    no warranty implied; use at your own risk
@@ -184,7 +184,7 @@ T get_quaternion_t_matrix_element(quaternion_t<T> q)
 			return T(1) - T(2) * (q.y * q.y + q.z * q.z);
 		if constexpr (x == 1)
 			return T(2) * (q.x * q.y - q.z * q.w);
-		else
+		if constexpr (x == 2)
 			return T(2) * (q.x * q.z + q.y * q.w);
 	}
 	if constexpr (y == 1)
@@ -193,16 +193,16 @@ T get_quaternion_t_matrix_element(quaternion_t<T> q)
 			return T(2) * (q.x * q.y + q.z * q.w);
 		if constexpr (x == 1)
 			return T(1) - T(2) * (q.x * q.x + q.z * q.z);
-		else
+		if constexpr (x == 2)
 			return T(2) * (q.y * q.z - q.x * q.w);
 	}
-	else
+	if constexpr (y == 2)
 	{
 		if constexpr (x == 0)
 			return T(2) * (q.x * q.z - q.y * q.w);
 		if constexpr (x == 1)
 			return T(2) * (q.y * q.z + q.x * q.w);
-		else
+		if constexpr (x == 2)
 			return T(1) - T(2) * (q.x * q.x + q.y * q.y);
 	}
 }
@@ -1009,9 +1009,11 @@ U sin(static_pi_fraction_t<T, NumeratorT, DenominatorT> d)
 		return U(1);
 	else if constexpr (d == static_pi_fraction_t<T, T(-3), T(4)>{})
 		return U(-inv_sqrt2);
-
-	constexpr radian_t<U> r = d;
-	return sin(r);
+	else
+	{
+		constexpr radian_t<U> r = d;
+		return sin(r);
+	}
 }
 template <arithmetic U, std::signed_integral T, T NumeratorT, T DenominatorT>
 U cos(static_pi_fraction_t<T, NumeratorT, DenominatorT> d)
@@ -1045,9 +1047,11 @@ U cos(static_pi_fraction_t<T, NumeratorT, DenominatorT> d)
 		else if constexpr (d.denominator == T(4))
 			return U(-inv_sqrt2);
 	}
-
-	constexpr radian_t<U> r = d;
-	return cos(r);
+	else
+	{
+		constexpr radian_t<U> r = d;
+		return cos(r);
+	}
 }
 template <arithmetic U, arithmetic T, T NumeratorT, T DenominatorT>
 U tan(static_pi_fraction_t<T, NumeratorT, DenominatorT> d)
@@ -1100,9 +1104,11 @@ U tan(static_pi_fraction_t<T, NumeratorT, DenominatorT> d)
 		if constexpr (d.denominator == T(4))
 			return U(1);
 	}
-
-	constexpr radian_t<U> r = d;
-	return tan(r);
+	else
+	{
+		constexpr radian_t<U> r = d;
+		return tan(r);
+	}
 }
 template <arithmetic U, arithmetic T, T NumeratorT, T DenominatorT>
 U asin(static_pi_fraction_t<T, NumeratorT, DenominatorT> d)

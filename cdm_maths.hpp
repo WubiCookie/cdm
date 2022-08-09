@@ -1,4 +1,4 @@
-/* cdm_maths v2.0.1
+/* cdm_maths v2.0.2
    C++20 geometric library
    https://github.com/WubiCookie/cdm
    no warranty implied; use at your own risk
@@ -2240,6 +2240,10 @@ public:
 	matrix4_t& transpose();
 	matrix4_t get_transposed() const;
 	T determinant() const;
+
+	vector3_t<T> transform_position(vector3_t<T> pos) const;
+	vector3_t<T> transform_direction(vector3_t<T> dir) const;
+	vector3_t<T> transform_position_perspective(vector3_t<T> pos) const;
 
 	template <bool IsConstT>
 	struct proxy
@@ -4997,6 +5001,27 @@ T matrix4_t<T>::determinant() const
 	               m11 * (m02 * m23 - m22 * m03) +
 	               m21 * (m02 * m13 - m12 * m03);
 	return m00 * det1 - m10 * det2 + m20 * det3 - m30 * det4;
+}
+
+template <arithmetic T>
+vector3_t<T> matrix4_t<T>::transform_position(vector3_t<T> pos) const
+{
+	return (*this * vector4_t<T>(pos, T(1))).xyz();
+}
+template <arithmetic T>
+vector3_t<T> matrix4_t<T>::transform_direction(vector3_t<T> dir) const
+{
+	return (*this * vector4_t<T>(dir, T(0))).xyz();
+}
+template <arithmetic T>
+vector3_t<T> matrix4_t<T>::transform_position_perspective(vector3_t<T> pos) const
+{
+	const vector4_t<T> tmp = *this * vector4_t<T>(pos, T(1));
+	return {
+		tmp.x / tmp.w,
+		tmp.y / tmp.w,
+		tmp.z / tmp.w,
+	};
 }
 
 template <arithmetic T>

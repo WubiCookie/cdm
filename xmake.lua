@@ -1,5 +1,5 @@
 add_rules("mode.release", "mode.debug", "mode.releasedbg")
-add_requires("catch2")
+add_requires("catch2 2.13.9")
 
 set_arch("x64")
 set_plat("windows")
@@ -31,8 +31,10 @@ task_end()
 
 local tests = {
 	"direction",
+	"line",
 	"matrix3",
 	"matrix4",
+	"misc",
 	"perspective",
 	"plane",
 	"quaternion",

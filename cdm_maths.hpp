@@ -1,4 +1,4 @@
-/* cdm_maths v2.0.2
+/* cdm_maths v2.1.0
    C++20 geometric library
    https://github.com/WubiCookie/cdm
    no warranty implied; use at your own risk
@@ -128,7 +128,15 @@ template <arithmetic T>
 struct euler_angles_t;
 template <arithmetic T>
 struct quaternion_t;
-template <arithmetic T>
+enum class line_representation
+{
+	SlopeIntercept,
+	Points,
+	PointAngleDegree,
+	PointAngleRadian,
+	PointAnglePiFraction,
+};
+template <arithmetic T, line_representation representation>
 struct line_t;
 template <arithmetic T>
 struct segment2_t;
@@ -2592,24 +2600,52 @@ quaternion_t<T> slerp(quaternion_t<T> begin, quaternion_t<T> end, T percent);
 #pragma endregion
 
 #pragma region declaration_line_t
-template <arithmetic T>
-struct line_t
-{
-	T coefficient;
-	T offset;
+template <arithmetic T, line_representation representation>
+struct line_t {};
 
-	static line_t from(vector2_t<T> v);
+#pragma region slope_intercept
+template <arithmetic T>
+struct line_t<T, line_representation::SlopeIntercept>
+{
+	T slope;
+	T y_intercept;
+
+	line_t() = default;
+	line_t(T s, T yi);
+	line_t(vector2_t<T> direction, T e = T(epsilon));
+	line_t(vector2_t<T> point1, vector2_t<T> point2);
+
+	vector2_t<T> resolve_for_x(T x) const;
+	vector2_t<T> resolve_for_y(T y) const;
 
 	using underlying_type = std::remove_cv_t<T>;
 };
+#pragma endregion
 
+#pragma region points
 template <arithmetic T>
-bool are_parallel(line_t<T> l1, line_t<T> l2);
+struct line_t<T, line_representation::Points>
+{
+	vector2_t<T> p1;
+	vector2_t<T> p2;
 
-template <arithmetic T>
-bool collides(line_t<T> l1, line_t<T> l2);
-template <arithmetic T>
-bool collides(line_t<T> l1, line_t<T> l2, vector2_t<T>& intersection);
+	line_t() = default;
+	line_t(vector2_t<T> point1, vector2_t<T> point2);
+
+	//vector2_t<T> resolve_for_x(T x) const;
+	//vector2_t<T> resolve_for_y(T y) const;
+
+	using underlying_type = std::remove_cv_t<T>;
+};
+#pragma endregion
+
+//template <arithmetic T, line_representation representation1, line_representation representation2>
+//bool are_parallel(line_t<T, representation1> l1, line_t<T, representation2> l2, T e = T(epsilon));
+//
+//template <arithmetic T, line_representation representation1, line_representation representation2>
+//bool collides(line_t<T, representation1> l1, line_t<T, representation2> l2);
+//template <arithmetic T, line_representation representation1, line_representation representation2>
+//bool collides(line_t<T, representation1> l1, line_t<T, representation2> l2, vector2_t<T>& intersection);
 #pragma endregion
 
 #pragma region declaration_segment2_t
@@ -2716,16 +2752,16 @@ std::size_t collides(aa_rect_t<T> r1,
                      aa_rect_t<T> r2,
                      vector2_t<T>* intersection1,
                      vector2_t<T>* insersection2);
-template <arithmetic T>
-std::size_t collides(aa_rect_t<T> r,
-                     line_t<T> l,
-                     vector2_t<T>* intersection1,
-                     vector2_t<T>* insersection2);
-template <arithmetic T>
-std::size_t collides(line_t<T> l,
-                     aa_rect_t<T> r,
-                     vector2_t<T>* intersection1,
-                     vector2_t<T>* insersection2);
+//template <arithmetic T>
+//std::size_t collides(aa_rect_t<T> r,
+//                     line_t<T> l,
+//                     vector2_t<T>* intersection1,
+//                     vector2_t<T>* insersection2);
+//template <arithmetic T>
+//std::size_t collides(line_t<T> l,
+//                     aa_rect_t<T> r,
+//                     vector2_t<T>* intersection1,
+//                     vector2_t<T>* insersection2);
 #pragma endregion
 
 #pragma region declaration_circle_t
@@ -2738,6 +2774,10 @@ struct circle_t
 	using underlying_type = std::remove_cv_t<T>;
 };
 
+template <arithmetic T>
+bool collides(circle_t<T> c, vector2_t<T> p);
+template <arithmetic T>
+bool collides(vector2_t<T> p, circle_t<T> c);
 template <arithmetic T>
 std::size_t collides(circle_t<T> c1,
                      circle_t<T> c2,
@@ -2753,16 +2793,16 @@ std::size_t collides(aa_rect_t<T> r,
                      circle_t<T> c,
                      vector2_t<T>* intersection1,
                      vector2_t<T>* insersection2);
-template <arithmetic T>
-std::size_t collides(circle_t<T> c,
-                     line_t<T> l,
-                     vector2_t<T>* intersection1,
-                     vector2_t<T>* insersection2);
-template <arithmetic T>
-std::size_t collides(line_t<T> l,
-                     circle_t<T> c,
-                     vector2_t<T>* intersection1,
-                     vector2_t<T>* insersection2);
+//template <arithmetic T>
+//std::size_t collides(circle_t<T> c,
+//                     line_t<T> l,
+//                     vector2_t<T>* intersection1,
+//                     vector2_t<T>* insersection2);
+//template <arithmetic T>
+//std::size_t collides(line_t<T> l,
+//                     circle_t<T> c,
+//                     vector2_t<T>* intersection1,
+//                     vector2_t<T>* insersection2);
 
 template <arithmetic T>
 bool collides(ray3_t<T> r, plane_t<T> p);
@@ -3736,7 +3776,7 @@ vector2_t<T> from_to(vector2_t<T> from, vector2_t<T> to)
 template <arithmetic T>
 radian_t<T> angle_between(vector2_t<T> v1, vector2_t<T> v2)
 {
-	return radian_t{atan2f(v2.y, v2.x) - atan2f(v1.y, v1.x)};
+	return radian_t{atan2(v2.y, v2.x) - atan2(v1.y, v1.x)};
 }
 template <arithmetic T>
 bool nearly_equal(vector2_t<T> v1, vector2_t<T> v2, T e)
@@ -3948,7 +3988,7 @@ radian_t<T> angle_between(vector3_t<T> v1, vector3_t<T> v2)
 		return radian_t<T>{T(0)};
 
 	T alpha = dot(v1, v2) / divisor;
-	return radian_t<T>(std::acosf(cdm::clamp(alpha, T(-1), T(1))));
+	return radian_t<T>(std::acos(cdm::clamp(alpha, T(-1), T(1))));
 }
 template <arithmetic T>
 bool nearly_equal(vector3_t<T> v1, vector3_t<T> v2, T e)
@@ -3999,7 +4039,7 @@ radian_t<T> angle_around_axis(vector3_t<T> v0,
                               direction_t<T> axis)
 {
 	vector3_t<T> c = cross(v0, v1);
-	T angle = atan2f(norm(c), dot(v0, v1));
+	T angle = atan2(norm(c), dot(v0, v1));
 	return radian_t<T>{dot(c, *axis) < T(0) ? -angle : angle};
 }
 #pragma endregion
@@ -5818,32 +5858,102 @@ quaternion_t<T> slerp(quaternion_t<T> begin, quaternion_t<T> end, T percent)
 
 	percent = cdm::clamp(percent, T(0), T(1));
 	d = cdm::clamp(d, T(-1), T(1));
-	T theta = acosf(d) * percent;
+	T theta = acos(d) * percent;
 
 	quaternion_t<T> res = begin * d;
 	res = _end - res;
 
-	res = begin * cosf(theta) + res * sinf(theta);
+	res = begin * cos(theta) + res * sin(theta);
 
 	return res;
 }
 #pragma endregion
 
 #pragma region definition_line_t
+#pragma region slope_intercept
 template <arithmetic T>
-bool are_parallel(line_t<T> l1, line_t<T> l2)
+line_t<T, line_representation::SlopeIntercept>::line_t(T s, T yi) : slope(s), y_intercept(yi) {}
+template <arithmetic T>
+line_t<T, line_representation::SlopeIntercept>::line_t(vector2_t<T> direction, T e) : y_intercept(T(0))
 {
-	return nearly_equal(l1.coefficient, l2.coefficient) ||
-	       nearly_equal(l1.coefficient, -l2.coefficient);
+	direction.normalize();
+	
+	if (nearly_equal(direction.y, T(1), e) || nearly_equal(direction.y, T(-1), e))
+		throw std::runtime_error("this line can not be represented with this structure");
+
+	// project the direction on the X axis
+	const T d = dot(direction, vector2_t<T>(T(1), T(0)));
+
+	// clang-format off
+	//                       
+	//   |                   
+	//   |             +     
+	//   |             |     
+	//   |           /       
+	//   |             |     
+	//   |         /         
+	//   |             |     
+	//   |       /           
+	//   |             |     
+	//   |   v /             
+	//   |    +        |     
+	//   |   /|              
+	//   |  /          |     
+	//   | /  |              
+	//   |/            |     
+	// --+----+--------+---- 
+	//   |0    d        1    
+	// / |                   
+	//   |                   
+	//
+	// clang-format on
+
+	// adjust the vector's length so that x == 1
+	direction = direction / d;
+	// y is now the coefficient
+
+	slope = direction.y;
+}
+template <arithmetic T>
+line_t<T, line_representation::SlopeIntercept>::line_t(vector2_t<T> point1,
+                                                       vector2_t<T> point2)
+{
+	slope = (point2.y - point1.y) / (point2.x - point1.x);
+	y_intercept = slope * (-point1.x) + point1.y;
 }
 
 template <arithmetic T>
-bool collides(line_t<T> l1, line_t<T> l2)
+vector2_t<T> line_t<T, line_representation::SlopeIntercept>::resolve_for_x(
+    T x) const
 {
-	return !line_t<T>::are_parallel(l1, l2);
+	return {x, slope * x + y_intercept};
 }
 template <arithmetic T>
-bool collides(line_t<T> l1, line_t<T> l2, vector2_t<T>& intersection)
+vector2_t<T> line_t<T, line_representation::SlopeIntercept>::resolve_for_y(
+    T y) const
+{
+	return {(y - y_intercept) / slope, y};
+}
+
+template <arithmetic T>
+bool are_parallel(line_t<T, line_representation::SlopeIntercept> l1,
+                  line_t<T, line_representation::SlopeIntercept> l2,
+                  T e)
+{
+	return nearly_equal(l1.coefficient, l2.coefficient, e);
+}
+
+template <arithmetic T>
+bool collides(line_t<T, line_representation::SlopeIntercept> l1,
+              line_t<T, line_representation::SlopeIntercept> l2)
+{
+	return !are_parallel(l1, l2);
+}
+
+template <arithmetic T>
+bool collides(line_t<T, line_representation::SlopeIntercept> l1,
+              line_t<T, line_representation::SlopeIntercept> l2,
+              vector2_t<T>& intersection)
 {
 	bool collision = collides(l1, l2);
 
@@ -5854,27 +5964,66 @@ bool collides(line_t<T> l1, line_t<T> l2, vector2_t<T>& intersection)
 		intersection.x = b / a;
 		intersection.y = l1.coefficient * intersection.x + l1.offset;
 
-		// assert(intersection.y == (l2.coefficient * intersection.x +
-		// l2.offset));
+		assert(intersection.y ==
+		       (l2.coefficient * intersection.x + l2.offset));
 	}
 
 	return collision;
 }
+#pragma endregion
+
+#pragma region points
 template <arithmetic T>
-bool collides(line_t<T> l, vector2_t<T> v)
+line_t<T, line_representation::Points>::line_t(vector2_t<T> point1,
+                                               vector2_t<T> point2)
+    : p1(point1), p2(point2)
 {
-	return nearly_equal(l.coefficient * v.x + l.offset, v.y);
-}
-template <arithmetic T>
-bool collides(vector2_t<T> v, line_t<T> l)
-{
-	return collides(l, v);
 }
 
+// template <arithmetic T>
+// vector2_t<T> line_t<T, line_representation::Points>::resolve_for_x(T x)
+// const
+//{
+//	const auto direction = from_to(p1, p2).get_normalized();
+//
+//
+// }
+// template <arithmetic T>
+// vector2_t<T> line_t<T, line_representation::Points>::resolve_for_y(T y)
+// const
+//{
+// }
+
 template <arithmetic T>
-T distance_between(plane_t<T> p, vector3_t<T> v)
+void collides(line_t<T, line_representation::Points> l1,
+              line_t<T, line_representation::Points> l2,
+              vector2_t<T>& intersection)
 {
-	return -v.x * p.normal->x - v.y * p.normal->y - v.z * p.normal->z;
+	const T x1 = l1.p1.x;
+	const T x2 = l1.p2.x;
+	const T x3 = l2.p1.x;
+	const T x4 = l2.p2.x;
+	const T y1 = l1.p1.y;
+	const T y2 = l1.p2.y;
+	const T y3 = l2.p1.y;
+	const T y4 = l2.p2.y;
+
+	return {
+	    ((x1 * y1 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * x4 - y3 * x4)) /
+	        ((x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4)),
+	    ((x1 * y1 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * x4 - y3 * x4)) /
+	        ((x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4))};
+}
+#pragma endregion
+
+template <arithmetic T>
+T distance_between(plane_t<T> p, vector3_t<T> point)
+{
+	// clang-format off
+	return -point.x * p.normal->x
+	       -point.y * p.normal->y
+	       -point.z * p.normal->z;
+	// clang-format on
 }
 template <arithmetic T>
 T distance_between(vector3_t<T> v, plane_t<T> p)
@@ -6103,6 +6252,19 @@ bool collides_bidirectional(const plane_t<T>& plane,
 		return true;
 	}
 	return false;
+}
+#pragma endregion
+
+#pragma region definition_circle_t
+template <arithmetic T>
+bool collides(circle_t<T> c, vector2_t<T> p)
+{
+	return distance_between(c.origin, p) <= c.radius;
+}
+template <arithmetic T>
+bool collides(vector2_t<T> p, circle_t<T> c)
+{
+	return collides(c, p);
 }
 #pragma endregion
 
@@ -6493,7 +6655,8 @@ quaternion_t<T> unscaled_transform3_t<T>::operator*(quaternion_t<T> q) const
 #pragma endregion
 
 #pragma region definition_value_domain
-template <typename T> requires arithmetic<T> || vector<T>
+template <typename T>
+requires arithmetic<T> || vector<T>
 constexpr T value_domain<T>::lerp(normalized_value<T> value) const noexcept
 {
 	return element_wise_lerp(lim0(), lim1(), value.value());
@@ -6735,8 +6898,10 @@ using euler_angles = euler_angles_t<float>;
 using euler_anglesd = euler_angles_t<double>;
 using quaternion = quaternion_t<float>;
 using quaterniond = quaternion_t<double>;
-using line = line_t<float>;
-using lined = line_t<double>;
+template <line_representation representation>
+using line = line_t<float, representation>;
+template <line_representation representation>
+using lined = line_t<double, representation>;
 using segment2 = segment2_t<float>;
 using segment2d = segment2_t<double>;
 using segment3 = segment3_t<float>;

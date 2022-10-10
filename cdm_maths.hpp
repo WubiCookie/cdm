@@ -1,4 +1,4 @@
-/* cdm_maths v2.1.0
+/* cdm_maths v2.1.1
    C++20 geometric library
    https://github.com/WubiCookie/cdm
    no warranty implied; use at your own risk
@@ -404,6 +404,8 @@ struct complex_t
 	complex_t& operator+=(complex_t c);
 	complex_t& operator-=(complex_t c);
 	complex_t& operator*=(complex_t c);
+
+	static complex_t identity();
 
 	using underlying_type = std::remove_cv_t<T>;
 };
@@ -2850,6 +2852,8 @@ struct transform2_t
 	transform2_t operator*(const transform2_t& t) const;
 	vector2_t<T> operator*(vector2_t<T> v) const;
 
+	static transform2_t identity();
+
 	using underlying_type = std::remove_cv_t<T>;
 };
 #pragma endregion
@@ -2862,8 +2866,6 @@ struct transform3_t
 	quaternion_t<T> rotation;
 	vector3_t<T> scale;
 
-	static transform3_t identity();
-
 	transform3_t& translate_absolute(vector3_t<T> t);
 	transform3_t& translate_relative(vector3_t<T> t);
 	transform3_t& rotate(quaternion_t<T> r);
@@ -2873,6 +2875,8 @@ struct transform3_t
 	transform3_t operator*(const transform3_t& t) const;
 	vector3_t<T> operator*(vector3_t<T> v) const;
 	quaternion_t<T> operator*(quaternion_t<T> q) const;
+
+	static transform3_t identity();
 
 	using underlying_type = std::remove_cv_t<T>;
 };
@@ -2888,6 +2892,8 @@ struct uniform_transform2_t
 
 	uniform_transform2_t operator*(uniform_transform2_t t) const;
 	vector2_t<T> operator*(vector2_t<T> v) const;
+
+	static uniform_transform2_t identity();
 
 	using underlying_type = std::remove_cv_t<T>;
 };
@@ -2907,6 +2913,8 @@ struct uniform_transform3_t
 	vector3_t<T> operator*(vector3_t<T> v) const;
 	quaternion_t<T> operator*(quaternion_t<T> q) const;
 
+	static uniform_transform3_t identity();
+
 	using underlying_type = std::remove_cv_t<T>;
 };
 #pragma endregion
@@ -2920,6 +2928,8 @@ struct unscaled_transform2_t
 
 	unscaled_transform2_t operator*(unscaled_transform2_t t) const;
 	vector2_t<T> operator*(vector2_t<T> v) const;
+
+	static unscaled_transform2_t identity();
 
 	using underlying_type = std::remove_cv_t<T>;
 };
@@ -2944,6 +2954,8 @@ struct unscaled_transform3_t
 	unscaled_transform3_t operator*(const unscaled_transform3_t& t) const;
 	vector3_t<T> operator*(vector3_t<T> v) const;
 	quaternion_t<T> operator*(quaternion_t<T> q) const;
+
+	static unscaled_transform3_t identity();
 
 	using underlying_type = std::remove_cv_t<T>;
 };
@@ -3178,6 +3190,9 @@ complex_t<T>& complex_t<T>::operator*=(complex_t<T> c)
 {
 	return *this = *this * c;
 }
+
+template <arithmetic T>
+complex_t<T> complex_t<T>::identity() { return {T(1), T(0)}; }
 
 template <arithmetic T>
 complex_t<T> operator*(complex_t<T> c1, complex_t<T> c2)
@@ -6380,26 +6395,20 @@ vector2_t<T> transform2_t<T>::operator*(vector2_t<T> v) const
 {
 	return rotation * vector2_t(scale.x * v.x, scale.y * v.y) + position;
 }
+
+template <arithmetic T>
+transform2_t<T> transform2_t<T>::identity()
+{
+	return {
+	    .position = vector2_t<T>::zero(),
+	    .rotation = normalized<complex_t<T>>::already_normalized(
+	        complex_t<T>::identity()),
+	    .scale = vector2_t<T>::one(),
+	};
+}
 #pragma endregion
 
 #pragma region definition_transform3_t
-template <arithmetic T>
-transform3_t<T> transform3_t<T>::identity()
-{
-	return transform3_t<T>{
-	    .position{
-	        T(0),
-	        T(0),
-	        T(0),
-	    },
-	    .rotation{quaternion_t<T>::identity()},
-	    .scale{
-	        T(1),
-	        T(1),
-	        T(1),
-	    },
-	};
-}
 template <arithmetic T>
 matrix4_t<T> transform3_t<T>::to_matrix4() const
 {
@@ -6489,6 +6498,16 @@ quaternion_t<T> transform3_t<T>::operator*(quaternion_t<T> q) const
 {
 	return rotation * q;
 }
+
+template <arithmetic T>
+transform3_t<T> transform3_t<T>::identity()
+{
+	return {
+	    .position = vector3_t<T>::zero(),
+	    .rotation = quaternion_t<T>::identity(),
+	    .scale = vector3_t<T>::one(),
+	};
+}
 #pragma endregion
 
 #pragma region definition_uniform_transform2_t
@@ -6508,6 +6527,17 @@ vector2_t<T> uniform_transform2_t<T>::operator*(vector2_t<T> v) const
 {
 	matrix2_t r = matrix2_t::rotation(rotation);
 	return r * (scale * v) + position;
+}
+
+template <arithmetic T>
+uniform_transform2_t<T> uniform_transform2_t<T>::identity()
+{
+	return {
+	    .position = vector2_t<T>::zero(),
+	    .rotation = normalized<complex_t<T>>::already_normalized(
+	        complex_t<T>::identity()),
+	    .scale = T(1),
+	};
 }
 #pragma endregion
 
@@ -6555,6 +6585,16 @@ quaternion_t<T> uniform_transform3_t<T>::operator*(quaternion_t<T> q) const
 {
 	return rotation * q;
 }
+
+template <arithmetic T>
+uniform_transform3_t<T> uniform_transform3_t<T>::identity()
+{
+	return {
+	    .position = vector3_t<T>::zero(),
+	    .rotation = quaternion_t<T>::identity(),
+	    .scale = T(1),
+	};
+}
 #pragma endregion
 
 #pragma region definition_unscaled_transform2_t
@@ -6573,6 +6613,16 @@ vector2_t<T> unscaled_transform2_t<T>::operator*(vector2_t<T> v) const
 {
 	matrix2_t<T> r = matrix2_t::rotation(rotation);
 	return r * v + position;
+}
+
+template <arithmetic T>
+unscaled_transform2_t<T> unscaled_transform2_t<T>::identity()
+{
+	return {
+	    .position = vector2_t<T>::zero(),
+	    .rotation = normalized<complex_t<T>>::already_normalized(
+	        complex_t<T>::identity()),
+	};
 }
 #pragma endregion
 
@@ -6651,6 +6701,15 @@ template <arithmetic T>
 quaternion_t<T> unscaled_transform3_t<T>::operator*(quaternion_t<T> q) const
 {
 	return rotation * q;
+}
+
+template <arithmetic T>
+unscaled_transform3_t<T> unscaled_transform3_t<T>::identity()
+{
+	return {
+	    .position = vector3_t<T>::zero(),
+	    .rotation = quaternion_t<T>::identity(),
+	};
 }
 #pragma endregion
 

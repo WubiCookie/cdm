@@ -36,21 +36,38 @@ TEST_CASE("operator*(perspective, vector4), perspective::to_inverse_matrix",
 	CHECK((pim * v) == (ipm * v));
 }
 
+TEST_CASE("perspective::set_near(float)", "[working][unittest][perspective]")
+{
+	perspective p{1_pi / 2.0f, 1.0f, 0.01f, 100.0f};
+
+	auto v0 = p * vector4{0, 0, -0.01f, 1};
+	v0 /= v0.w;
+
+	CHECK_THAT(v0, Vector4Matcher({0, 0, 1, 1}, 0.001));
+
+	p.set_near(42.666f);
+	
+	v0 = p * vector4{0, 0, -42.666f, 1};
+	v0 /= v0.w;
+
+	CHECK_THAT(v0, Vector4Matcher({0, 0, 1, 1}, 0.001));
+}
+
 TEST_CASE("perspective::set_far(float)", "[working][unittest][perspective]")
 {
 	perspective p{1_pi / 2.0f, 1.0f, 0.01f, 100.0f};
 
-	auto v0 = p * vector4{0, 0, 100, 1};
+	auto v0 = p * vector4{0, 0, -100, 1};
 	v0 /= v0.w;
 
-	CHECK_THAT(v0, Vector4Matcher({0, 0, 1, 1}, 0.001));
+	CHECK_THAT(v0, Vector4Matcher({0, 0, 0, 1}, 0.001));
 
 	p.set_far(42.666f);
 	
-	v0 = p * vector4{0, 0, 42.666f, 1};
+	v0 = p * vector4{0, 0, -42.666f, 1};
 	v0 /= v0.w;
 
-	CHECK_THAT(v0, Vector4Matcher({0, 0, 1, 1}, 0.001));
+	CHECK_THAT(v0, Vector4Matcher({0, 0, 0, 1}, 0.001));
 }
 
 TEST_CASE("operator*(perspective, matrix4), perspective::to_inverse_matrix",

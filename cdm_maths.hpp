@@ -1,4 +1,4 @@
-/* cdm_maths v2.1.0
+/* cdm_maths v2.1.2
    C++20 geometric library
    https://github.com/WubiCookie/cdm
    no warranty implied; use at your own risk
@@ -144,6 +144,8 @@ template <arithmetic T>
 struct segment3_t;
 template <arithmetic T>
 struct plane_t;
+template <arithmetic T>
+struct oriented_plane_t;
 template <arithmetic T>
 struct aa_rect_t;
 template <arithmetic T>
@@ -374,6 +376,7 @@ template <typename T> struct is_matrix<matrix4_t<T>> : std::true_type {};
 //  clang-format on
 #pragma endregion
 
+#pragma region declarations
 #pragma region declaration_complex_t
 template <arithmetic T>
 struct complex_t
@@ -1277,9 +1280,9 @@ template <arithmetic T>
 vector2_t<T>& operator/=(vector2_t<T>& v, T f);
 
 template <arithmetic T>
-T dot(vector2_t<T> lhs, vector2_t<T> rhs);
+constexpr T dot(vector2_t<T> lhs, vector2_t<T> rhs);
 template <arithmetic T>
-T cross(vector2_t<T> lhs, vector2_t<T> rhs);
+constexpr T cross(vector2_t<T> lhs, vector2_t<T> rhs);
 //template <arithmetic T>
 //constexpr vector2_t<T> clamp(vector2_t<T> v,
 //                             vector2_t<T> min,
@@ -1411,9 +1414,9 @@ vector3_t<T> normalize(vector3_t<T> v);
 //                             vector3_t<T> min,
 //                             vector3_t<T> max);
 template <arithmetic T>
-T dot(vector3_t<T> lhs, vector3_t<T> rhs);
+constexpr T dot(vector3_t<T> lhs, vector3_t<T> rhs);
 template <arithmetic T>
-vector3_t<T> cross(vector3_t<T> lhs, vector3_t<T> rhs);
+constexpr vector3_t<T> cross(vector3_t<T> lhs, vector3_t<T> rhs);
 template <arithmetic T>
 vector3_t<T> lerp(vector3_t<T> begin, vector3_t<T> end, T percent);
 template <arithmetic T>
@@ -1617,6 +1620,12 @@ public:
 		assert(t.norm_squared() != T(0));
 	}
 	normalized(T x, T y, T z) : normalized{vector3_t<T>{x, y, z}} {}
+	
+	template <arithmetic U>
+	explicit operator normalized<vector3_t<U>>() const
+	{
+		return normalized<vector3_t<U>>::already_normalized(vector3_t<U>(vector));
+	}
 
 	static normalized already_normalized(vector3_t<T> t)
 	{
@@ -1659,6 +1668,20 @@ public:
 
 	using underlying_type = std::remove_cv_t<T>;
 };
+
+template <arithmetic T>
+vector3_t<T> cross(normalized<vector3_t<T>> lhs, normalized<vector3_t<T>> rhs);
+template <arithmetic T>
+vector3_t<T> cross(vector3_t<T> lhs, normalized<vector3_t<T>> rhs);
+template <arithmetic T>
+vector3_t<T> cross(normalized<vector3_t<T>> lhs, vector3_t<T> rhs);
+
+template <arithmetic T>
+T dot(normalized<vector3_t<T>> lhs, normalized<vector3_t<T>> rhs);
+template <arithmetic T>
+T dot(vector3_t<T> lhs, normalized<vector3_t<T>> rhs);
+template <arithmetic T>
+T dot(normalized<vector3_t<T>> lhs, vector3_t<T> rhs);
 #pragma endregion
 
 #pragma region declaration_matrix2_t
@@ -2453,7 +2476,7 @@ private:
 	T m_invRatio;
 	T m_near;
 	T m_far;
-	T m_invTanHalfFovy;
+	T m_focalLength;
 
 public:
 	perspective_t(radian_t<T> angle, T ratio, T near, T far);
@@ -2548,6 +2571,8 @@ struct quaternion_t
 	}
 
 	static quaternion_t identity();
+	static quaternion_t from_rotation_matrix(const matrix3_t<T>& m);
+	static quaternion_t look_at(direction_t<T> forward, direction_t<T> upward = direction_t<T>::posY());
 
 	T norm() const;
 	T norm_squared() const;
@@ -2588,9 +2613,9 @@ struct quaternion_t
 };
 
 template <arithmetic T>
-T dot(quaternion_t<T> lhs, quaternion_t<T> rhs);
+constexpr T dot(quaternion_t<T> lhs, quaternion_t<T> rhs);
 template <arithmetic T>
-quaternion_t<T> cross(quaternion_t<T> lhs, quaternion_t<T> rhs);
+constexpr quaternion_t<T> cross(quaternion_t<T> lhs, quaternion_t<T> rhs);
 template <arithmetic T>
 quaternion_t<T> lerp(quaternion_t<T> begin, quaternion_t<T> end, T percent);
 template <arithmetic T>
@@ -2655,14 +2680,20 @@ struct segment2_t
 	vector2_t<T> origin;
 	vector2_t<T> end;
 
+	T length() const;
+	T length_squared() const;
+
+	segment2_t& invert();
+
 	using underlying_type = std::remove_cv_t<T>;
 };
 
 template <arithmetic T>
-bool collides(const segment2_t<T>& s0,
-              const segment2_t<T>& s1,
-              vector2_t<T>& outPoint,
-              T e = T(epsilon));
+int collides(const segment2_t<T>& s0,
+             const segment2_t<T>& s1,
+             vector2_t<T>& outPoint0,
+             vector2_t<T>& outPoint1,
+             T e = T(epsilon));
 #pragma endregion
 
 #pragma region declaration_segment3_t
@@ -2697,7 +2728,7 @@ struct plane_t
 	explicit operator plane_t<U>() const
 	{
 		return plane_t<U>{static_cast<vector3_t<U>>(origin),
-		                  direction_t<U>(static_cast<vector3_t<U>>(*normal))};
+		                  static_cast<direction_t<U>>(normal)};
 	}
 
 	T evaluate(vector3_t<T> point) const;
@@ -2708,6 +2739,42 @@ struct plane_t
 	                       direction_t<T> plane_tangent) const;
 
 	direction_t<T> computeTangent(T epsilon_ = T(epsilon)) const;
+
+	using underlying_type = std::remove_cv_t<T>;
+};
+#pragma endregion
+
+#pragma region declaration_oriented_plane_t
+template <arithmetic T>
+struct oriented_plane_t
+{
+	vector3_t<T> origin;
+	direction_t<T> normal;
+	direction_t<T> tangent;
+
+	oriented_plane_t() = default;
+	oriented_plane_t(const oriented_plane_t&) = default;
+	oriented_plane_t(oriented_plane_t&&) = default;
+	oriented_plane_t& operator=(const oriented_plane_t&) = default;
+	oriented_plane_t& operator=(oriented_plane_t&&) = default;
+
+	constexpr oriented_plane_t(vector3_t<T> origin_, direction_t<T> normal_, direction_t<T> tangent_);
+	constexpr oriented_plane_t(plane_t<T> plane, direction_t<T> tangent_);
+
+	template <arithmetic U>
+	explicit operator oriented_plane_t<U>() const
+	{
+		return oriented_plane_t<U>{
+		    static_cast<vector3_t<U>>(origin),
+		    static_cast<direction_t<U>>(normal),
+		    static_cast<direction_t<U>>(tangent),
+		};
+	}
+
+	T evaluate(vector3_t<T> point) const;
+	vector3_t<T> project3d(vector3_t<T> point) const;
+	vector2_t<T> project2d(vector3_t<T> point) const;
+	vector3_t<T> unproject(vector2_t<T> point) const;
 
 	using underlying_type = std::remove_cv_t<T>;
 };
@@ -3102,9 +3169,11 @@ constexpr T domain_transfer(cdm::value_domain<T> from,
 	const cdm::unnormalized_value<T> valueTo{to, norm};
 	return valueTo.value();
 }
+#pragma endregion
 
 // ==========================================================================
 
+#pragma region definitions
 #pragma region definition_complex_t
 template <arithmetic T>
 complex_t<T>::complex_t(radian_t<T> angle) : r{cos(angle)}, i{sin(angle)}
@@ -3722,12 +3791,12 @@ vector2_t<T> normalize(vector2_t<T> v)
 //	return v;
 //}
 template <arithmetic T>
-T dot(vector2_t<T> lhs, vector2_t<T> rhs)
+constexpr T dot(vector2_t<T> lhs, vector2_t<T> rhs)
 {
 	return lhs.x * rhs.x + lhs.y * rhs.y;
 }
 template <arithmetic T>
-T cross(vector2_t<T> lhs, vector2_t<T> rhs)
+constexpr T cross(vector2_t<T> lhs, vector2_t<T> rhs)
 {
 	return lhs.x * rhs.y - lhs.y * rhs.x;
 }
@@ -3942,12 +4011,12 @@ vector3_t<T> normalize(vector3_t<T> v)
 //	return v;
 //}
 template <arithmetic T>
-T dot(vector3_t<T> lhs, vector3_t<T> rhs)
+constexpr T dot(vector3_t<T> lhs, vector3_t<T> rhs)
 {
 	return lhs.x * rhs.x + lhs.y * rhs.y + lhs.z * rhs.z;
 }
 template <arithmetic T>
-vector3_t<T> cross(vector3_t<T> lhs, vector3_t<T> rhs)
+constexpr vector3_t<T> cross(vector3_t<T> lhs, vector3_t<T> rhs)
 {
 	return {
 	    lhs.y * rhs.z - lhs.z * rhs.y,
@@ -4292,6 +4361,38 @@ template <normalizable T>
 bool normalized<T>::operator!=(const T& v) const
 {
 	return vector != v;
+}
+
+template <arithmetic T>
+vector3_t<T> cross(normalized<vector3_t<T>> lhs, normalized<vector3_t<T>> rhs)
+{
+	return cross(*lhs, *rhs);
+}
+template <arithmetic T>
+vector3_t<T> cross(vector3_t<T> lhs, normalized<vector3_t<T>> rhs)
+{
+	return cross(lhs, *rhs);
+}
+template <arithmetic T>
+vector3_t<T> cross(normalized<vector3_t<T>> lhs, vector3_t<T> rhs)
+{
+	return cross(*lhs, rhs);
+}
+
+template <arithmetic T>
+T dot(normalized<vector3_t<T>> lhs, normalized<vector3_t<T>> rhs)
+{
+	return dot(*lhs, *rhs);
+}
+template <arithmetic T>
+T dot(vector3_t<T> lhs, normalized<vector3_t<T>> rhs)
+{
+	return dot(lhs, *rhs);
+}
+template <arithmetic T>
+T dot(normalized<vector3_t<T>> lhs, vector3_t<T> rhs)
+{
+	return dot(*lhs, rhs);
 }
 #pragma endregion
 
@@ -5291,7 +5392,7 @@ perspective_t<T>::perspective_t(radian_t<T> angle, T ratio, T near, T far)
       m_invRatio{T(1) / m_ratio},
       m_near{near},
       m_far{far},
-      m_invTanHalfFovy{T(1) / tan(m_angle / T(2))}
+      m_focalLength{T(1) / tan(m_angle / T(2))}
 {
 }
 template <arithmetic T>
@@ -5302,7 +5403,7 @@ perspective_t<T>::perspective_t(
     T near,
     T far)
     : perspective_t(angle, ratio, near, far),
-      m_invTanHalfFovy{
+      m_focalLength{
           T(1) /
           tan<T>(static_pi_fraction_t<U, NumeratorT, DenominatorT * U(2)>{})}
 {
@@ -5315,7 +5416,7 @@ void perspective_t<T>::set(radian_t<T> angle, T ratio, T near, T far)
 	m_invRatio = T(1) / m_ratio;
 	m_near = near;
 	m_far = far;
-	m_invTanHalfFovy = T(1) / tan(m_angle / T(2));
+	m_focalLength = T(1) / tan(m_angle / T(2));
 }
 template <arithmetic T>
 template <std::signed_integral U, U NumeratorT, U DenominatorT>
@@ -5326,7 +5427,7 @@ void perspective_t<T>::set(
     T far)
 {
 	set(angle, ratio, near, far);
-	m_invTanHalfFovy =
+	m_focalLength =
 	    T(1) /
 	    tan<T>(static_pi_fraction_t<U, NumeratorT, DenominatorT * U(2)>{});
 }
@@ -5334,7 +5435,7 @@ template <arithmetic T>
 void perspective_t<T>::set_angle(radian_t<T> angle)
 {
 	m_angle = angle;
-	m_invTanHalfFovy = T(1) / tan(angle / T(2));
+	m_focalLength = T(1) / tan(angle / T(2));
 }
 template <arithmetic T>
 template <std::signed_integral U, U NumeratorT, U DenominatorT>
@@ -5342,7 +5443,7 @@ void perspective_t<T>::set_angle(
     static_pi_fraction_t<U, NumeratorT, DenominatorT> angle)
 {
 	m_angle = angle;
-	m_invTanHalfFovy =
+	m_focalLength =
 	    T(1) /
 	    tan<T>(static_pi_fraction_t<U, NumeratorT, DenominatorT * U(2)>{});
 }
@@ -5386,10 +5487,13 @@ template <arithmetic T>
 matrix4_t<T> perspective_t<T>::to_matrix4() const
 {
 	matrix4_t<T> res{matrix4_t<T>::zero()};
-	const T a = m_invRatio * m_invTanHalfFovy;
-	const T b = -m_invTanHalfFovy;
-	const T c = m_far / (m_near - m_far);
-	const T d = -(m_far * m_near) / (m_far - m_near);
+	const T a = m_focalLength * m_invRatio;
+	const T b = m_focalLength;
+	const T farMinusNear = m_far - m_near;
+	const T invFarMinusNear = T(1) / farMinusNear;
+	const T c = m_near * invFarMinusNear;
+	const T d = m_far * c;
+
 	res.column(0).row(0) = a;
 	res.column(1).row(1) = b;
 	res.column(2).row(2) = c;
@@ -5410,16 +5514,26 @@ template <arithmetic T>
 matrix4_t<T> perspective_t<T>::to_inverse_matrix4() const
 {
 	matrix4_t<T> res{matrix4_t<T>::zero()};
-	const T a = m_invRatio * m_invTanHalfFovy;
-	const T b = -m_invTanHalfFovy;
-	const T c = m_far / (m_near - m_far);
-	const T d = -(m_far * m_near) / (m_far - m_near);
+	const T a = m_focalLength * m_invRatio;
+	const T b = m_focalLength;
+	const T farMinusNear = m_far - m_near;
+	const T invFarMinusNear = T(1) / farMinusNear;
+	const T c = m_near * invFarMinusNear;
+	const T d = m_far * c;
 
 	res.column(0).row(0) = T(1) / a;
 	res.column(1).row(1) = T(1) / b;
 	res.column(3).row(2) = T(-1);
 	res.column(2).row(3) = T(1) / d;
 	res.column(3).row(3) = c / d;
+	
+	//      0   1   2   3
+	//   +-----------------+
+	// 0 | 1/a  0   0   0  |
+	// 1 |  0  1/b  0   0  |
+	// 2 |  0   0   0  -1  |
+	// 3 |  0   0  1/d c/d |
+	//   +-----------------+
 
 	return res;
 }
@@ -5427,10 +5541,12 @@ matrix4_t<T> perspective_t<T>::to_inverse_matrix4() const
 template <arithmetic T>
 matrix4_t<T> operator*(const matrix4_t<T>& m, const perspective_t<T>& p)
 {
-	const T a = p.m_invRatio * p.m_invTanHalfFovy;
-	const T b = -p.m_invTanHalfFovy;
-	const T c = p.m_far / (p.m_near - p.m_far);
-	const T d = -(p.m_far * p.m_near) / (p.m_far - p.m_near);
+	const T a = p.m_focalLength * p.m_invRatio;
+	const T b = p.m_focalLength;
+	const T farMinusNear = p.m_far - p.m_near;
+	const T invFarMinusNear = T(1) / farMinusNear;
+	const T c = p.m_near * invFarMinusNear;
+	const T d = p.m_far * c;
 
 	matrix4_t<T> res;
 	res.column(0).row(0) = a * m.column(0).row(0);
@@ -5454,10 +5570,12 @@ matrix4_t<T> operator*(const matrix4_t<T>& m, const perspective_t<T>& p)
 template <arithmetic T>
 matrix4_t<T> operator*(const perspective_t<T>& p, const matrix4_t<T>& m)
 {
-	const T a = p.m_invRatio * p.m_invTanHalfFovy;
-	const T b = -p.m_invTanHalfFovy;
-	const T c = p.m_far / (p.m_near - p.m_far);
-	const T d = -(p.m_far * p.m_near) / (p.m_far - p.m_near);
+	const T a = p.m_focalLength * p.m_invRatio;
+	const T b = p.m_focalLength;
+	const T farMinusNear = p.m_far - p.m_near;
+	const T invFarMinusNear = T(1) / farMinusNear;
+	const T c = p.m_near * invFarMinusNear;
+	const T d = p.m_far * c;
 
 	matrix4_t<T> res;
 	res.column(0).row(0) = m.column(0).row(0) * a;
@@ -5481,10 +5599,12 @@ matrix4_t<T> operator*(const perspective_t<T>& p, const matrix4_t<T>& m)
 template <arithmetic T>
 vector4_t<T> operator*(const perspective_t<T>& p, const vector4_t<T>& v)
 {
-	const T a = p.m_invRatio * p.m_invTanHalfFovy;
-	const T b = -p.m_invTanHalfFovy;
-	const T c = p.m_far / (p.m_near - p.m_far);
-	const T d = -(p.m_far * p.m_near) / (p.m_far - p.m_near);
+	const T a = p.m_focalLength * p.m_invRatio;
+	const T b = p.m_focalLength;
+	const T farMinusNear = p.m_far - p.m_near;
+	const T invFarMinusNear = T(1) / farMinusNear;
+	const T c = p.m_near * invFarMinusNear;
+	const T d = p.m_far * c;
 
 	//                       +---+
 	//                       | x |
@@ -5499,16 +5619,23 @@ vector4_t<T> operator*(const perspective_t<T>& p, const vector4_t<T>& v)
 	// 3 |  0   0  -1   0  |
 	//   +-----------------+
 
-	return {a * v.x, b * v.y, c * v.z + d * v.w, -v.z};
+	return {
+	    a * v.x,
+	    b * v.y,
+	    c * v.z + d * v.w,
+	    -v.z,
+	};
 }
 template <arithmetic T>
 matrix4_t<T> operator*(const unscaled_transform3_t<T>& t,
                        const perspective_t<T>& p)
 {
-	const T a = p.m_invRatio * p.m_invTanHalfFovy;
-	const T b = -p.m_invTanHalfFovy;
-	const T c = p.m_far / (p.m_near - p.m_far);
-	const T d = -(p.m_far * p.m_near) / (p.m_far - p.m_near);
+	const T a = p.m_focalLength * p.m_invRatio;
+	const T b = p.m_focalLength;
+	const T farMinusNear = p.m_far - p.m_near;
+	const T invFarMinusNear = T(1) / farMinusNear;
+	const T c = p.m_near * invFarMinusNear;
+	const T d = p.m_far * c;
 	const T xx = t.rotation.x * t.rotation.x;
 	const T yy = t.rotation.y * t.rotation.y;
 	const T zz = t.rotation.z * t.rotation.z;
@@ -5518,34 +5645,39 @@ matrix4_t<T> operator*(const unscaled_transform3_t<T>& t,
 	const T xy = t.rotation.x * t.rotation.y;
 	const T xz = t.rotation.x * t.rotation.z;
 	const T yz = t.rotation.y * t.rotation.z;
-	return {a * (T(1) - T(2) * (yy + zz)),
-	        b * (T(2) * (xy - wz)),
-	        c * (T(2) * (xz + wy)) - t.position.x,
-	        d * (T(2) * (xz + wy)),
 
-	        a * (T(2) * (xy + wz)),
-	        b * (T(1) - T(2) * (xx + zz)),
-	        c * (T(2) * (yz - wx)) - t.position.y,
-	        d * (T(2) * (yz - wx)),
+	return {
+	    a * (T(1) - T(2) * (yy + zz)),
+	    b * (T(2) * (xy - wz)),
+	    c * (T(2) * (xz + wy)) - t.position.x,
+	    d * (T(2) * (xz + wy)),
 
-	        a * (T(2) * (xz - wy)),
-	        b * (T(2) * (yz + wx)),
-	        c * (T(1) - T(2) * (xx + yy)) - t.position.z,
-	        d * (T(1) - T(2) * (xx + yy)),
+	    a * (T(2) * (xy + wz)),
+	    b * (T(1) - T(2) * (xx + zz)),
+	    c * (T(2) * (yz - wx)) - t.position.y,
+	    d * (T(2) * (yz - wx)),
 
-	        T(0),
-	        T(0),
-	        T(-1),
-	        T(0)};
+	    a * (T(2) * (xz - wy)),
+	    b * (T(2) * (yz + wx)),
+	    c * (T(1) - T(2) * (xx + yy)) - t.position.z,
+	    d * (T(1) - T(2) * (xx + yy)),
+
+	    T(0),
+	    T(0),
+	    T(-1),
+	    T(0),
+	};
 }
 template <arithmetic T>
 matrix4_t<T> operator*(const perspective_t<T>& p,
                        const unscaled_transform3_t<T>& t)
 {
-	const T a = p.m_invRatio * p.m_invTanHalfFovy;
-	const T b = -p.m_invTanHalfFovy;
-	const T c = p.m_far / (p.m_near - p.m_far);
-	const T d = -(p.m_far * p.m_near) / (p.m_far - p.m_near);
+	const T a = p.m_focalLength * p.m_invRatio;
+	const T b = p.m_focalLength;
+	const T farMinusNear = p.m_far - p.m_near;
+	const T invFarMinusNear = T(1) / farMinusNear;
+	const T c = p.m_near * invFarMinusNear;
+	const T d = p.m_far * c;
 	const T xx = t.rotation.x * t.rotation.x;
 	const T yy = t.rotation.y * t.rotation.y;
 	const T zz = t.rotation.z * t.rotation.z;
@@ -5557,6 +5689,7 @@ matrix4_t<T> operator*(const perspective_t<T>& p,
 	const T yz = t.rotation.y * t.rotation.z;
 
 	matrix4_t<T> res;
+
 	res.row(0).column(0) = (T(1) - T(2) * (yy + zz)) * a;
 	res.row(0).column(1) = (T(2) * (xy - wz)) * a;
 	res.row(0).column(2) = (T(2) * (xz + wy)) * a;
@@ -5604,6 +5737,93 @@ template <arithmetic T>
 quaternion_t<T> quaternion_t<T>::identity()
 {
 	return {T(0), T(0), T(0), T(1)};
+}
+
+template <arithmetic T>
+quaternion_t<T> quaternion_t<T>::from_rotation_matrix(const matrix3_t<T>& m)
+{
+	const auto diag = m.diag();
+
+	const T fourXSquaredMinus1 = diag.x - diag.y - diag.z;
+	const T fourYSquaredMinus1 = diag.y - diag.x - diag.z;
+	const T fourZSquaredMinus1 = diag.z - diag.x - diag.y;
+	const T fourWSquaredMinus1 = diag.x + diag.y + diag.z;
+
+	int biggestIndex = 0;
+	T fourBiggestSquaredMinus1 = fourWSquaredMinus1;
+	if (fourXSquaredMinus1 > fourBiggestSquaredMinus1)
+	{
+		fourBiggestSquaredMinus1 = fourXSquaredMinus1;
+		biggestIndex = 1;
+	}
+	if (fourYSquaredMinus1 > fourBiggestSquaredMinus1)
+	{
+		fourBiggestSquaredMinus1 = fourYSquaredMinus1;
+		biggestIndex = 2;
+	}
+	if (fourZSquaredMinus1 > fourBiggestSquaredMinus1)
+	{
+		fourBiggestSquaredMinus1 = fourZSquaredMinus1;
+		biggestIndex = 3;
+	}
+
+	const T biggestVal =
+		std::sqrt(fourBiggestSquaredMinus1 + T(1)) *
+		T(0.5);
+	const T mult = T(0.25) / biggestVal;
+
+	switch (biggestIndex)
+	{
+	case 0:
+		return {
+			(m.column(1).row(2) - m.column(2).row(1)) * mult,
+			(m.column(2).row(0) - m.column(0).row(2)) * mult,
+			(m.column(0).row(1) - m.column(1).row(0)) * mult,
+			biggestVal,
+		};
+	case 1:
+		return {
+			biggestVal,
+			(m.column(0).row(1) + m.column(1).row(0)) * mult,
+			(m.column(2).row(0) + m.column(0).row(2)) * mult,
+			(m.column(1).row(2) - m.column(2).row(1)) * mult,
+		};
+	case 2:
+		return {
+			(m.column(0).row(1) + m.column(1).row(0)) * mult,
+			biggestVal,
+			(m.column(1).row(2) + m.column(2).row(1)) * mult,
+			(m.column(2).row(0) - m.column(0).row(2)) * mult,
+		};
+	case 3:
+		return {
+			(m.column(2).row(0) + m.column(0).row(2)) * mult,
+			(m.column(1).row(2) + m.column(2).row(1)) * mult,
+			biggestVal,
+			(m.column(0).row(1) - m.column(1).row(0)) * mult,
+		};
+
+	default:
+		assert(false);
+		return {
+			T(0),
+			T(0),
+			T(0),
+			T(1),
+		};
+	}
+}
+
+template <arithmetic T>
+quaternion_t<T> quaternion_t<T>::look_at(direction_t<T> forward, direction_t<T> upward)
+{
+	const direction_t<T> backward = -forward;
+	const direction_t<T> rightward = direction_t<T>(cross(upward, backward));
+	upward = direction_t<T>(cross(backward, rightward));
+	
+	const matrix3_t<T> rotMat = matrix3_t<T>::columns(rightward, upward, backward);
+
+	return from_rotation_matrix(rotMat);
 }
 
 template <arithmetic T>
@@ -5813,7 +6033,7 @@ vector3_t<T> operator*(const normalized<quaternion_t<T>>& q, vector3_t<T> v)
 }
 
 template <arithmetic T>
-T dot(quaternion_t<T> lhs, quaternion_t<T> rhs)
+constexpr T dot(quaternion_t<T> lhs, quaternion_t<T> rhs)
 {
 	return lhs.x * rhs.x +  //
 	       lhs.y * rhs.y +  //
@@ -5821,7 +6041,7 @@ T dot(quaternion_t<T> lhs, quaternion_t<T> rhs)
 	       lhs.w * rhs.w;   //
 }
 template <arithmetic T>
-quaternion_t<T> cross(quaternion_t<T> lhs, quaternion_t<T> rhs)
+constexpr quaternion_t<T> cross(quaternion_t<T> lhs, quaternion_t<T> rhs)
 {
 	return {
 	    lhs.y * rhs.z - lhs.z * rhs.y,  //
@@ -6111,6 +6331,123 @@ bool intersects(segment2_t<T> s0,
 }
 #pragma endregion
 
+#pragma region definition_segment2_t
+template <arithmetic T>
+T segment2_t<T>::length() const
+{
+	return distance_between(origin, end);
+}
+template <arithmetic T>
+T segment2_t<T>::length_squared() const
+{
+	return distance_squared_between(origin, end);
+}
+
+template <arithmetic T>
+segment2_t<T>& segment2_t<T>::invert()
+{
+	std::swap(origin, end);
+	return *this;
+	;
+}
+
+template <arithmetic T>
+int collides(const segment2_t<T>& s0,
+             const segment2_t<T>& s1,
+             vector2_t<T>& outPoint0,
+             vector2_t<T>& outPoint1,
+             T e)
+{
+	auto det = [](T a, T b, T c, T d) -> T { return a * d - b * c; };
+
+	auto betw = [&](T l, T r, T x) -> T
+	{ return std::min(l, r) <= x + e && x <= std::max(l, r) + e; };
+
+	auto intersect_1d = [&](T a, T b, T c, T d) -> bool
+	{
+		if (a > b)
+			std::swap(a, b);
+		if (c > d)
+			std::swap(c, d);
+		return std::max(a, c) <= std::min(b, d) + e;
+	};
+
+	auto compareP = [&](const cdm::vector2_t<T>& l,
+	                    const cdm::vector2_t<T>& r) -> bool
+	{ return l.x < r.x - e || (std::abs(l.x - r.x) < e && l.y < r.y - e); };
+
+	vector2_t<T>& a = s0.origin;
+	vector2_t<T>& b = s0.end;
+	vector2_t<T>& c = s1.origin;
+	vector2_t<T>& d = s1.end;
+	if (!intersect_1d(a.x, b.x, c.x, d.x) || !intersect_1d(a.y, b.y, c.y, d.y))
+		return 0;
+
+	struct line
+	{
+		T a, b, c;
+
+		line() = default;
+		line(const cdm::vector2_t<T>& p, const cdm::vector2_t<T>& q)
+		{
+			a = p.y - q.y;
+			b = q.x - p.x;
+			c = -a * p.x - b * p.y;
+			norm();
+		}
+
+		void norm()
+		{
+			T z = sqrt(a * a + b * b);
+			if (nearly_equal(std::abs(z), T(0)))
+			{
+				a /= z;
+				b /= z;
+				c /= z;
+			}
+		}
+
+		T dist(const cdm::vector2_t<T>& p) const
+		{
+			return a * p.x + b * p.y + c;
+		}
+	};
+
+	line m(a, b);
+	line n(c, d);
+	T zn = det(m.a, m.b, n.a, n.b);
+	if (abs(zn) < e)
+	{
+		if (abs(m.dist(c)) > e || abs(n.dist(a)) > e)
+			return 0;
+		if (compareP(b, a))
+			std::swap(a, b);
+		if (compareP(d, c))
+			std::swap(c, d);
+
+		if (compareP(a, c))
+			outPoint0 = c;
+		else
+			outPoint0 = a;
+
+		if (compareP(b, d))
+			outPoint1 = b;
+		else
+			outPoint1 = d;
+
+		return outPoint0 == outPoint1 ? 1 : 2;
+	}
+	else
+	{
+		outPoint0.x = outPoint1.x = -det(m.c, m.b, n.c, n.b) / zn;
+		outPoint0.y = outPoint1.y = -det(m.a, m.c, n.a, n.c) / zn;
+		return int(betw(a.x, b.x, outPoint0.x) &&
+		           betw(a.y, b.y, outPoint0.y) &&
+		           betw(c.x, d.x, outPoint0.x) && betw(c.y, d.y, outPoint0.y));
+	}
+}
+#pragma endregion
+
 #pragma region definition_segment3_t
 template <arithmetic T>
 constexpr bool collides(const segment3_t<T>& seg,
@@ -6240,6 +6577,94 @@ bool collides(const plane_t<T>& plane,
 }
 template <arithmetic T>
 bool collides_bidirectional(const plane_t<T>& plane,
+                            ray3_t<T> r,
+                            vector3_t<T>& collision_point)
+{
+	const T denom = dot(*plane.normal, *r.direction);
+	if (abs(denom) > T(0.0001))
+	{
+		const T t = -dot(plane.origin - r.origin, *plane.normal) / denom;
+
+		collision_point = r.origin + *r.direction * t;
+		return true;
+	}
+	return false;
+}
+#pragma endregion
+
+#pragma region definition_oriented_plane_t
+template <arithmetic T>
+constexpr oriented_plane_t<T>::oriented_plane_t(vector3_t<T> origin_,
+                                                direction_t<T> normal_,
+                                                direction_t<T> tangent_)
+    : origin(origin_), normal(normal_)
+{
+	const auto bitangent = direction_t<T>(cross(*normal, *tangent_));
+	tangent = direction_t<T>(cross(*bitangent, *normal));
+}
+template <arithmetic T>
+constexpr oriented_plane_t<T>::oriented_plane_t(plane_t<T> plane,
+                                                direction_t<T> tangent_)
+    : oriented_plane_t(plane.origin, plane.normal, tangent_)
+{
+}
+
+template <arithmetic T>
+T oriented_plane_t<T>::evaluate(vector3_t<T> point) const
+{
+	return normal->x * (point.x - origin.x) +  //
+	       normal->y * (point.y - origin.y) +  //
+	       normal->z * (point.z - origin.z);   //
+}
+template <arithmetic T>
+vector3_t<T> oriented_plane_t<T>::project3d(vector3_t<T> point) const
+{
+	T distance = evaluate(point);
+	return point - *normal * distance;
+}
+template <arithmetic T>
+vector2_t<T> oriented_plane_t<T>::project2d(vector3_t<T> point) const
+{
+	const auto bitangent = direction_t<T>(cross(*normal, *tangent));
+
+	const auto TBN = matrix3_t<T>::rows(*tangent, *bitangent, *normal);
+
+	const vector3_t<T> pointInPlaneSpace = point - origin;
+
+	return (TBN * pointInPlaneSpace).xy();
+}
+template <arithmetic T>
+vector3_t<T> oriented_plane_t<T>::unproject(vector2_t<T> point) const
+{
+	const auto bitangent = direction_t<T>(cross(*normal, *tangent));
+
+	const auto invTBN =
+	    matrix3_t<T>::rows(*tangent, *bitangent, *normal).get_inversed();
+
+	const auto pointInPlaneSpace = vector3_t<T>{point, T(0)};
+
+	return (invTBN * pointInPlaneSpace) + origin;
+}
+
+template <arithmetic T>
+bool collides(const oriented_plane_t<T>& plane,
+              ray3_t<T> r,
+              vector3_t<T>& collision_point)
+{
+	const T denom = dot(*plane.normal, r.direction);
+	if (abs(denom) > T(0.0001))
+	{
+		const T t = -dot(plane.origin - r.origin, plane.normal) / denom;
+		if (t >= T(0))
+		{
+			collision_point = r.origin + r.direction * t;
+			return true;
+		}
+	}
+	return false;
+}
+template <arithmetic T>
+bool collides_bidirectional(const oriented_plane_t<T>& plane,
                             ray3_t<T> r,
                             vector3_t<T>& collision_point)
 {
@@ -6750,6 +7175,16 @@ std::ostream& operator<<(std::ostream& os, plane_t<T> p)
 	          << ")";
 }
 template <arithmetic T>
+std::ostream& operator<<(std::ostream& os, oriented_plane_t<T> p)
+{
+	// clang-format off
+	return os << "oriented_plane_t(origin = " << p.origin
+	                         << ", normal = " << *p.normal
+	                         << ", tangent = " << *p.tangent
+	                         << ")";
+	// clang-format on
+}
+template <arithmetic T>
 std::ostream& operator<<(std::ostream& os, const cdm::matrix2_t<T>& m)
 {
 	const auto flags = os.flags();
@@ -6801,8 +7236,8 @@ std::ostream& operator<<(std::ostream& os, transform3_t<T> t)
 {
 	// clang-format off
 	return os << "transform3_t(position = " << t.position << ",\n"
-	          << "              rotation = " << t.rotation << ",\n"
-	          << "              scale =    " << t.scale << ")";
+	          << "             rotation = " << t.rotation << ",\n"
+	          << "             scale =    " << t.scale << ")";
 	// clang-format on
 }
 template <arithmetic T>
@@ -6810,9 +7245,18 @@ std::ostream& operator<<(std::ostream& os, segment2_t<T> t)
 {
 	// clang-format off
 	return os << "segment2_t(origin = " << t.origin << ",\n"
-	          << "            end =    " << t.end << ")";
+	          << "           end =    " << t.end << ")";
 	// clang-format on
 }
+template <arithmetic T>
+std::ostream& operator<<(std::ostream& os, segment3_t<T> t)
+{
+	// clang-format off
+	return os << "segment3_t(origin = " << t.origin << ",\n"
+	          << "           end =    " << t.end << ")";
+	// clang-format on
+}
+#pragma endregion
 #pragma endregion
 
 namespace literals
@@ -6908,6 +7352,8 @@ using segment3 = segment3_t<float>;
 using segment3d = segment3_t<double>;
 using plane = plane_t<float>;
 using planed = plane_t<double>;
+using oriented_plane = oriented_plane_t<float>;
+using oriented_planed = oriented_plane_t<double>;
 using aa_rect = aa_rect_t<float>;
 using aa_rectd = aa_rect_t<double>;
 using circle = circle_t<float>;
@@ -6933,5 +7379,10 @@ using unscaled_transform3d = unscaled_transform3_t<double>;
 using direction = direction_t<float>;
 using directiond = direction_t<double>;
 }  // namespace cdm
+
+namespace cdm_literals
+{
+using namespace cdm::literals;
+}
 
 #endif  // CDM_MATHS_HPP

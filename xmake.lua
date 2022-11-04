@@ -38,6 +38,7 @@ local tests = {
 	"perspective",
 	"plane",
 	"quaternion",
+	"segment2",
 	"segment3",
 	"static_pi_fraction_cos",
 	"static_pi_fraction_sin",

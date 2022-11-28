@@ -62,5 +62,6 @@ for _,v in pairs(tests) do
 		add_headerfiles("tests/*.hpp")
 		add_packages("catch2")
 		add_includedirs(".", "tests")
+		set_group("test")
 	target_end()
 end

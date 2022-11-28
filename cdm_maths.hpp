@@ -1,4 +1,4 @@
-/* cdm_maths v2.1.2
+/* cdm_maths v2.1.3
    C++20 geometric library
    https://github.com/WubiCookie/cdm
    no warranty implied; use at your own risk
@@ -1022,11 +1022,9 @@ U sin(static_pi_fraction_t<T, NumeratorT, DenominatorT> d)
 		return U(1);
 	else if constexpr (d == static_pi_fraction_t<T, T(-3), T(4)>{})
 		return U(-inv_sqrt2);
-	else
-	{
-		constexpr radian_t<U> r = d;
-		return sin(r);
-	}
+	
+	constexpr radian_t<U> r = d;
+	return sin(r);
 }
 template <arithmetic U, std::signed_integral T, T NumeratorT, T DenominatorT>
 U cos(static_pi_fraction_t<T, NumeratorT, DenominatorT> d)
@@ -1060,11 +1058,9 @@ U cos(static_pi_fraction_t<T, NumeratorT, DenominatorT> d)
 		else if constexpr (d.denominator == T(4))
 			return U(-inv_sqrt2);
 	}
-	else
-	{
-		constexpr radian_t<U> r = d;
-		return cos(r);
-	}
+
+	constexpr radian_t<U> r = d;
+	return cos(r);
 }
 template <arithmetic U, arithmetic T, T NumeratorT, T DenominatorT>
 U tan(static_pi_fraction_t<T, NumeratorT, DenominatorT> d)
@@ -1117,11 +1113,9 @@ U tan(static_pi_fraction_t<T, NumeratorT, DenominatorT> d)
 		if constexpr (d.denominator == T(4))
 			return U(1);
 	}
-	else
-	{
-		constexpr radian_t<U> r = d;
-		return tan(r);
-	}
+	
+	constexpr radian_t<U> r = d;
+	return tan(r);
 }
 template <arithmetic U, arithmetic T, T NumeratorT, T DenominatorT>
 U asin(static_pi_fraction_t<T, NumeratorT, DenominatorT> d)
@@ -2274,8 +2268,11 @@ public:
 	matrix4_t get_transposed() const;
 	T determinant() const;
 
+	matrix3_t<T> extractRotationMatrix() const;
+
 	vector3_t<T> transform_position(vector3_t<T> pos) const;
 	vector3_t<T> transform_direction(vector3_t<T> dir) const;
+	direction_t<T> transform_direction(direction_t<T> dir) const;
 	vector3_t<T> transform_position_perspective(vector3_t<T> pos) const;
 
 	template <bool IsConstT>
@@ -5160,6 +5157,26 @@ T matrix4_t<T>::determinant() const
 }
 
 template <arithmetic T>
+matrix3_t<T> matrix4_t<T>::extractRotationMatrix() const
+{
+	const T sx = column(0).xyz().norm();
+	const T sy = column(1).xyz().norm();
+	const T sz = column(2).xyz().norm();
+
+	return matrix3_t<T>::rows(
+		vector3_t<T>(row(0).column(0) / sx,
+		             row(0).column(1) / sy,
+		             row(0).column(2) / sz),
+		vector3_t<T>(row(1).column(0) / sx,
+                     row(1).column(1) / sy,
+                     row(1).column(2) / sz),
+		vector3_t<T>(row(2).column(0) / sx,
+                     row(2).column(1) / sy,
+                     row(2).column(2) / sz)
+	);
+}
+
+template <arithmetic T>
 vector3_t<T> matrix4_t<T>::transform_position(vector3_t<T> pos) const
 {
 	return (*this * vector4_t<T>(pos, T(1))).xyz();
@@ -5168,6 +5185,11 @@ template <arithmetic T>
 vector3_t<T> matrix4_t<T>::transform_direction(vector3_t<T> dir) const
 {
 	return (*this * vector4_t<T>(dir, T(0))).xyz();
+}
+template <arithmetic T>
+direction_t<T> matrix4_t<T>::transform_direction(direction_t<T> dir) const
+{
+	return direction_t<T>((*this * vector4_t<T>(*dir, T(0))).xyz());
 }
 template <arithmetic T>
 vector3_t<T> matrix4_t<T>::transform_position_perspective(vector3_t<T> pos) const
@@ -6391,10 +6413,10 @@ int collides(const segment2_t<T>& s0,
 	                    const cdm::vector2_t<T>& r) -> bool
 	{ return l.x < r.x - e || (std::abs(l.x - r.x) < e && l.y < r.y - e); };
 
-	vector2_t<T>& a = s0.origin;
-	vector2_t<T>& b = s0.end;
-	vector2_t<T>& c = s1.origin;
-	vector2_t<T>& d = s1.end;
+	vector2_t<T> a = s0.origin;
+	vector2_t<T> b = s0.end;
+	vector2_t<T> c = s1.origin;
+	vector2_t<T> d = s1.end;
 	if (!intersect_1d(a.x, b.x, c.x, d.x) || !intersect_1d(a.y, b.y, c.y, d.y))
 		return 0;
 

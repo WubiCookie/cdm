@@ -424,13 +424,13 @@ TEST_CASE("vector3::vector3::operator!=()", "[working][unittest][vector3]")
 
 TEST_CASE("vector3::dot(vector3, vector3)", "[working][unittest][vector3]")
 {
-	CHECK(dot(vector3{0, 0, 0}, {0, 0, 0}) == 0);
-	CHECK(dot(vector3{1, 0, 0}, {0, 1, 0}) == 0);
-	CHECK(dot(vector3{1, 0, 0}, {1, 0, 0}) == 1);
-	CHECK(dot(vector3{0, 1, 0}, {0, 1, 0}) == 1);
-	CHECK(dot(vector3{1, 1, 0}, {1, 0, 0}) == 1);
-	CHECK(dot(vector3{0.5f, 1, 0}, {1, 0, 0}) == 0.5f);
-	CHECK(dot(vector3{1, 0, 0}, {0.5f, 1, 0}) == 0.5f);
+	CHECK(dot(vector3{0, 0, 0}, vector3{0, 0, 0}) == 0);
+	CHECK(dot(vector3{1, 0, 0}, vector3{0, 1, 0}) == 0);
+	CHECK(dot(vector3{1, 0, 0}, vector3{1, 0, 0}) == 1);
+	CHECK(dot(vector3{0, 1, 0}, vector3{0, 1, 0}) == 1);
+	CHECK(dot(vector3{1, 1, 0}, vector3{1, 0, 0}) == 1);
+	CHECK(dot(vector3{0.5f, 1, 0}, vector3{1, 0, 0}) == 0.5f);
+	CHECK(dot(vector3{1, 0, 0}, vector3{0.5f, 1, 0}) == 0.5f);
 }
 
 TEST_CASE("vector3::cross(vector3, vector3)", "[working][unittest][vector3]")

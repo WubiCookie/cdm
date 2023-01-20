@@ -1,3 +1,9 @@
+def sendSlack_notification(failed_stage)
+{
+  def name=powershell(returnStdout: true, script: "git log -1 --pretty=format:'%an'") 
+  def url= env.BUILD_URL.replace("localhost","10.37.0.121")
+  slackSend (color: "danger", channel: '#ci', message: "Build failed on stage ${failed_stage}: author: ${name} repository: ${env.GIT_URL} commit: ${env.GIT_COMMIT} see error at: ${url}console")
+}
 pipeline{
   agent any
   stages{
@@ -8,11 +14,7 @@ pipeline{
           try{
             powershell "xmake -y"         
           }catch(e){
-            def name=powershell(returnStdout: true, script: "git log -1 --pretty=format:'%an'") 
-            def job_name = env.JOB_NAME
-            def table = job_name.split("/")
-            def folder=table[0]
-            slackSend channel: '#ci', message: "Build failed on stage build: Author: ${name} repository: ${env.GIT_URL} commit: ${env.GIT_COMMIT} see error at: http://10.37.0.121:2020/job/${folder}/job/${env.GIT_BRANCH}/${env.BUILD_ID}/console"
+            sendSlack_notification("build")
             throw e
           }
         }  
@@ -25,11 +27,7 @@ pipeline{
           try{
             powershell "xmake run"
           }catch(e){
-            def name=powershell(returnStdout: true, script: "git log -1 --pretty=format:'%an'") 
-            def job_name = env.JOB_NAME
-            def table = job_name.split("/")
-            def folder=table[0]
-            slackSend channel: '#ci', message: "Build failed on stage test: Author: ${name} repository: ${env.GIT_URL} commit: ${env.GIT_COMMIT} see error at: http://10.37.0.121:2020/job/${folder}/job/${env.GIT_BRANCH}/${env.BUILD_ID}/console"
+            sendSlack_notification("test")
             throw e
           }
         }  

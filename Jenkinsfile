@@ -6,6 +6,9 @@ def sendSlack_notification(failed_stage)
 }
 pipeline{
   agent any
+  triggers {
+    pollSCM('0 23 * * *')
+  }
   stages{
   stage('build'){
       steps
@@ -14,7 +17,7 @@ pipeline{
           try{
             powershell "xmake -y"         
           }catch(e){
-            sendSlack_notification("build")
+            sendSlack_notification(env.STAGE_NAME)
             throw e
           }
         }  
@@ -27,7 +30,7 @@ pipeline{
           try{
             powershell "xmake run"
           }catch(e){
-            sendSlack_notification("test")
+            sendSlack_notification(env.STAGE_NAME)
             throw e
           }
         }  

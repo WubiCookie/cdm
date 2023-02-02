@@ -1,4 +1,4 @@
-/* cdm_maths v2.1.3
+/* cdm_maths v2.1.4
    C++20 geometric library
    https://github.com/WubiCookie/cdm
    no warranty implied; use at your own risk
@@ -60,8 +60,8 @@ namespace cdm
 #pragma region constants declarations
 // clang-format off
 constexpr uint64_t VERSION_MAJOR = 2;
-constexpr uint64_t VERSION_MINOR = 0;
-constexpr uint64_t VERSION_PATCH = 0;
+constexpr uint64_t VERSION_MINOR = 1;
+constexpr uint64_t VERSION_PATCH = 4;
 
 constexpr double pi = 3.1415926535897932384626433832795028841971693993751058209749445923;
 constexpr double deg_to_rad = pi / 180.0;
@@ -4717,6 +4717,8 @@ matrix3_t<T>& matrix3_t<T>::inverse()
 	}
 
 	const T det = determinant();
+	assert(std::abs(det) > std::numeric_limits<T>::epsilon());
+
 	const T invDet = T(1) / det;
 	const T recM00 = m00;
 	const T recM10 = m10;
@@ -5265,6 +5267,8 @@ matrix4_t<T>& matrix4_t<T>::inverse()
 	}
 
 	const T det = determinant();
+	assert(std::abs(det) > std::numeric_limits<T>::epsilon());
+
 	const T invDet = T(1) / det;
 	const T recM00 = m00;
 	const T recM10 = m10;

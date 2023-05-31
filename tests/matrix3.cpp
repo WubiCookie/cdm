@@ -342,7 +342,7 @@ TEST_CASE("matrix3::rotation_around_x(radian)", "[working][unittest][matrix3]")
 {
 	using ::Catch::Matchers::WithinAbs;
 
-	const direction axis = direction::posX();
+	const direction3 axis = direction3::posX();
 
 	const vector3 v0{0.0f, 1.0f, 0.0f};
 	const vector3 vE{0.0f, 0.0f, 1.0f};
@@ -454,7 +454,7 @@ TEST_CASE("matrix3::rotation_around_y(radian)", "[working][unittest][matrix3]")
 		CHECK_THAT(v1, Vector3Matcher(vE));
 
 		matrix3 m2 = matrix3::rotation(
-		    quaternion{direction::posY(), static_pi_fraction<1, 2>{}});
+		    quaternion{direction3::posY(), static_pi_fraction<1, 2>{}});
 		CHECK_THAT(m, Matrix3Matcher(m2));
 	}
 
@@ -487,7 +487,7 @@ TEST_CASE("matrix3::rotation_around_z(radian)", "[working][unittest][matrix3]")
 		CHECK_THAT(v1, Vector3Matcher(vE));
 
 		const matrix3 m2 = matrix3::rotation(
-		    quaternion{direction::posZ(), static_pi_fraction<1, 2>{}});
+		    quaternion{direction3::posZ(), static_pi_fraction<1, 2>{}});
 		const vector3 v2 = m2 * v0;
 		CHECK_THAT(v2, Vector3Matcher(vE));
 
@@ -525,7 +525,7 @@ TEST_CASE("matrix3::rotation_around_z(complex)",
 		CHECK(std::abs(v1.z) == almost_0);
 
 		matrix3 m2 = matrix3::rotation(
-		    quaternion{direction::posZ(), static_pi_fraction<1, 2>{}});
+		    quaternion{direction3::posZ(), static_pi_fraction<1, 2>{}});
 		REQUIRE_THAT(m, Matrix3Matcher(m2));
 	}
 

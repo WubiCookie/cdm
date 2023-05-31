@@ -8,7 +8,7 @@ TEST_CASE("plane::evaluate(vector3)", "[working][unittest][plane]")
 	{
 		const plane p{
 		    {0, 0, 0},
-		    direction::posY(),
+		    direction3::posY(),
 		};
 
 		CHECK(p.evaluate({0, 0, 0}) == 0.0f);
@@ -21,7 +21,7 @@ TEST_CASE("plane::evaluate(vector3)", "[working][unittest][plane]")
 	{
 		const plane p{
 		    {0, 0, 0},
-		    direction::negY(),
+		    direction3::negY(),
 		};
 
 		CHECK(p.evaluate({0, 0, 0}) == 0.0f);
@@ -34,7 +34,7 @@ TEST_CASE("plane::evaluate(vector3)", "[working][unittest][plane]")
 	{
 		const plane p{
 		    {0, 1, 0},
-		    direction::posY(),
+		    direction3::posY(),
 		};
 
 		CHECK(p.evaluate({0, 0, 0}) == -1.0f);
@@ -56,7 +56,7 @@ TEST_CASE("plane::project3d(vector3)", "[working][unittest][plane]")
 	        GENERATE(range(-1.0f, 1.0f, 0.2f)),
 	        GENERATE(range(-1.0f, 1.0f, 0.2f)),
 	    },
-	    direction::posY(),
+	    direction3::posY(),
 	};
 
 	const vector3 v{
@@ -75,9 +75,9 @@ TEST_CASE("plane::project2d(vector3, direction)", "[working][unittest][plane]")
 
 	const plane p{
 	    {0, 0, 0},
-	    direction::posZ(),
+	    direction3::posZ(),
 	};
-	const direction tangent = direction::posX();
+	const direction3 tangent = direction3::posX();
 
 	const float x = GENERATE(range(-2.0f, 2.0f, 0.1f));
 	const float y = GENERATE(range(-2.0f, 2.0f, 0.1f));
@@ -96,9 +96,9 @@ TEST_CASE("plane::unproject(vector2, direction)", "[working][unittest][plane]")
 	        0.0f,
 	        GENERATE(range(-2.0f, 2.0f, 0.1f)),
 	    },
-	    direction::posZ(),
+	    direction3::posZ(),
 	};
-	const direction tangent = direction::posX();
+	const direction3 tangent = direction3::posX();
 
 	const float x = GENERATE(range(-2.0f, 2.0f, 0.1f));
 	const float y = GENERATE(range(-2.0f, 2.0f, 0.1f));

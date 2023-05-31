@@ -7,7 +7,7 @@ TEST_CASE("collides(segment3, plane)", "[working][unittest][segment3]")
 {
 	cdm::plane p{
 	    {0.0f, 0.0f, 0.0f},
-	    cdm::direction::already_normalized(0.0f, 1.0f, 0.0f),
+	    cdm::direction3::already_normalized(0.0f, 1.0f, 0.0f),
 	};
 
 	{
@@ -45,7 +45,7 @@ TEST_CASE("collides(segment3, plane, vector3)",
 {
 	cdm::plane p{
 	    {0.0f, 0.0f, 0.0f},
-	    cdm::direction::already_normalized(0.0f, 1.0f, 0.0f),
+	    cdm::direction3::already_normalized(0.0f, 1.0f, 0.0f),
 	};
 
 	{

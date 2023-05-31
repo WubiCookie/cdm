@@ -414,13 +414,13 @@ TEST_CASE("vector2::operator!=()", "[working][unittest][vector2]")
 
 TEST_CASE("dot(vector2, vector2)", "[working][unittest][vector2]")
 {
-	CHECK(dot(vector2{0, 0}, {0, 0}) == 0);
-	CHECK(dot(vector2{1, 0}, {0, 1}) == 0);
-	CHECK(dot(vector2{1, 0}, {1, 0}) == 1);
-	CHECK(dot(vector2{0, 1}, {0, 1}) == 1);
-	CHECK(dot(vector2{1, 1}, {1, 0}) == 1);
-	CHECK(dot(vector2{0.5f, 1}, {1, 0}) == 0.5f);
-	CHECK(dot(vector2{1, 0}, {0.5f, 1}) == 0.5f);
+	CHECK(dot(vector2{0, 0}, vector2{0, 0}) == 0);
+	CHECK(dot(vector2{1, 0}, vector2{0, 1}) == 0);
+	CHECK(dot(vector2{1, 0}, vector2{1, 0}) == 1);
+	CHECK(dot(vector2{0, 1}, vector2{0, 1}) == 1);
+	CHECK(dot(vector2{1, 1}, vector2{1, 0}) == 1);
+	CHECK(dot(vector2{0.5f, 1}, vector2{1, 0}) == 0.5f);
+	CHECK(dot(vector2{1, 0}, vector2{0.5f, 1}) == 0.5f);
 }
 
 TEST_CASE("cross(vector2, vector2)", "[working][unittest][vector2]")

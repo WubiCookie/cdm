@@ -152,7 +152,7 @@ TEST_CASE("transform3::to_matrix()", "[working][unittest][transform3]")
 		                        ),
 		    .rotation =
 		        quaternion{
-		            direction(dx, dy, dz),
+		            direction3(dx, dy, dz),
 		            GENERATE(-180_deg, -145_deg, -90_deg, -0_deg, 0_deg,
 		                     15_deg, 45_deg, 90_deg, 180_deg, 360_deg),
 		        },

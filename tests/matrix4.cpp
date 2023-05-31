@@ -410,7 +410,7 @@ TEST_CASE("matrix4::rotation_around_x(radian)", "[working][unittest][matrix4]")
 {
 	using ::Catch::Matchers::WithinAbs;
 
-	const direction axis = direction::posX();
+	const direction3 axis = direction3::posX();
 
 	const vector4 v0{0.0f, 1.0f, 0.0f, 0.0f};
 	const vector4 vE{0.0f, 0.0f, 1.0f, 0.0f};
@@ -522,7 +522,7 @@ TEST_CASE("matrix4::rotation_around_y(radian)", "[working][unittest][matrix4]")
 		CHECK_THAT(v1, Vector4Matcher(vE));
 
 		matrix4 m2 = matrix4::rotation(
-		    quaternion{direction::posY(), static_pi_fraction<1, 2>{}});
+		    quaternion{direction3::posY(), static_pi_fraction<1, 2>{}});
 		CHECK_THAT(m, Matrix4Matcher(m2));
 	}
 
@@ -555,7 +555,7 @@ TEST_CASE("matrix4::rotation_around_z(radian)", "[working][unittest][matrix4]")
 		CHECK_THAT(v1, Vector4Matcher(vE));
 
 		const matrix4 m2 = matrix4::rotation(
-		    quaternion{direction::posZ(), static_pi_fraction<1, 2>{}});
+		    quaternion{direction3::posZ(), static_pi_fraction<1, 2>{}});
 		const vector4 v2 = m2 * v0;
 		CHECK_THAT(v2, Vector4Matcher(vE));
 
@@ -594,7 +594,7 @@ TEST_CASE("matrix4::rotation_around_z(complex)",
 		CHECK(std::abs(v1.w) == almost_0);
 
 		matrix4 m2 = matrix4::rotation(
-		    quaternion{direction::posZ(), static_pi_fraction<1, 2>{}});
+		    quaternion{direction3::posZ(), static_pi_fraction<1, 2>{}});
 		REQUIRE_THAT(m, Matrix4Matcher(m2));
 	}
 

@@ -9,11 +9,11 @@
 	          "[working][unittest][static_pi_fraction]")              \
 	{                                                                 \
 		static_pi_fraction<NUMERATOR, DENOMINATOR> f;                 \
-		radian_t<T> r0 = f;                                           \
-		radian_t<T> r1{(pi * T(NUMERATOR)) / T(DENOMINATOR)};         \
-		degree_t<T> d0 = f;                                           \
-		degree_t<T> d1{r0};                                           \
-		degree_t<T> d2{r1};                                           \
+		radian_T<T> r0 = f;                                           \
+		radian_T<T> r1{(pi * T(NUMERATOR)) / T(DENOMINATOR)};         \
+		degree_T<T> d0 = f;                                           \
+		degree_T<T> d1{r0};                                           \
+		degree_T<T> d2{r1};                                           \
                                                                       \
 		CHECK(cdm::sin<T>(f) == Approx(cdm::sin(r0)).margin(1.0e-6)); \
 		CHECK(cdm::sin<T>(f) == Approx(cdm::sin(r1)).margin(1.0e-6)); \

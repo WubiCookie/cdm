@@ -27,12 +27,9 @@ TEST_CASE("collides(segment2, segment2)", "[working][unittest][segment2]")
 		    .end{0.0f, 1.0f},
 		};
 
-		vector2 p0;
-		vector2 p1;
-		int colCount = collides(s0, s1, p0, p1);
+		auto [p0, p1] = collides(s0, s1);
 
-		CHECK(colCount == 1);
-		CHECK(p0 == p1);
-		CHECK(p0 == vector2{0.0f, 0.0f});
+		REQUIRE(p0.has_value());
+		CHECK(p0.value() == vector2{0.0f, 0.0f});
 	}
 }

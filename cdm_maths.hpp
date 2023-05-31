@@ -2734,14 +2734,6 @@ struct line_T<T, line_representation::Points>
 	using underlying_type = T;
 };
 #pragma endregion
-
-//template <arithmetic T, line_representation representation1, line_representation representation2>
-//bool are_parallel(line_T<T, representation1> l1, line_T<T, representation2> l2, T e = T(epsilon));
-//
-//template <arithmetic T, line_representation representation1, line_representation representation2>
-//bool collides(line_T<T, representation1> l1, line_T<T, representation2> l2);
-//template <arithmetic T, line_representation representation1, line_representation representation2>
-//bool collides(line_T<T, representation1> l1, line_T<T, representation2> l2, vector2_T<T>& intersection);
 #pragma endregion
 
 #pragma region declaration_segment2_t
@@ -2758,13 +2750,6 @@ struct segment2_T
 
 	using underlying_type = T;
 };
-
-template <arithmetic T>
-int collides(const segment2_T<T>& s0,
-             const segment2_T<T>& s1,
-             vector2_T<T>& outPoint0,
-             vector2_T<T>& outPoint1,
-             T e = T(epsilon));
 #pragma endregion
 
 #pragma region declaration_segment3_t
@@ -2776,16 +2761,6 @@ struct segment3_T
 
 	using underlying_type = T;
 };
-
-template <arithmetic T>
-constexpr bool collides(const segment3_T<T>& s,
-                        const plane_T<T>& p,
-                        T e = T(epsilon)) noexcept;
-template <arithmetic T>
-constexpr bool collides(const segment3_T<T>& s,
-                        const plane_T<T>& p,
-                        vector3_T<T>& outPoint,
-                        T e = T(epsilon)) noexcept;
 #pragma endregion
 
 #pragma region declaration_plane_t
@@ -2819,10 +2794,10 @@ struct plane_T
 
 #pragma region declaration_oriented_plane_t
 template <arithmetic T>
-struct oriented_plane_T
+struct oriented_plane_T : public plane_T<T>
 {
-	vector3_T<T> origin;
-	direction3_T<T> normal;
+	using plane_T<T>::origin;
+	using plane_T<T>::normal;
 	direction3_T<T> tangent;
 
 	oriented_plane_T() = default;
@@ -2844,14 +2819,15 @@ struct oriented_plane_T
 		};
 	}
 
-	constexpr T evaluate(const vector3_T<T>& point) const;
-	constexpr vector3_T<T> project3d(const vector3_T<T>& point) const;
 	constexpr vector2_T<T> project2d(const vector3_T<T>& point) const;
 	constexpr vector3_T<T> unproject(const vector2_T<T>& point) const;
 
-	constexpr vector3_T<T> symmetry(const vector3_T<T>& point) const;
-
 	using underlying_type = T;
+
+private:
+	using plane_T<T>::project2d;
+	using plane_T<T>::unproject;
+	using plane_T<T>::computeTangent;
 };
 #pragma endregion
 
@@ -2864,13 +2840,6 @@ struct ray2_T
 
 	using underlying_type = T;
 };
-
-template <arithmetic T>
-constexpr bool collides(const ray2_T<T>& r, const segment2_T<T>& s);
-
-template <arithmetic T>
-constexpr std::optional<vector2_T<T>> intersection(const ray2_T<T>& r,
-                                                  const segment2_T<T>& s);
 #pragma endregion
 
 #pragma region declaration_ray3_t
@@ -2890,26 +2859,11 @@ struct circle_T
 {
 	vector2_T<T> origin;
 	T radius;
+	
+	constexpr bool contains(vector2_T<T> p) const;
 
 	using underlying_type = T;
 };
-
-template <arithmetic T>
-bool collides(circle_T<T> c, vector2_T<T> p);
-template <arithmetic T>
-bool collides(vector2_T<T> p, circle_T<T> c);
-template <arithmetic T>
-bool collides(ray3_T<T> r, plane_T<T> p);
-template <arithmetic T>
-bool collides(ray3_T<T> r, plane_T<T> p, vector3_T<T>& intersection);
-template <arithmetic T>
-bool collides(plane_T<T> p, ray3_T<T> r);
-template <arithmetic T>
-bool collides(plane_T<T> p, ray3_T<T> r, vector3_T<T>& intersection);
-template <arithmetic T>
-bool collides_bidirectional(const plane_T<T>& plane,
-                            ray3_T<T> r,
-                            vector3_T<T>& collision_point);
 #pragma endregion
 
 #pragma region declaration_aabb2_t
@@ -2942,9 +2896,6 @@ struct aabb2_T
 
 template <arithmetic T>
 constexpr aabb2_T<T> operator+(vector2_T<T> lhs, const aabb2_T<T>& rhs);
-
-template <arithmetic T>
-constexpr bool collides(const aabb2_T<T>& b0, const aabb2_T<T>& b1);
 #pragma endregion
 
 #pragma region declaration_aabb3_t
@@ -2977,15 +2928,6 @@ struct aabb3_T
 
 template <arithmetic T>
 constexpr aabb3_T<T> operator+(vector3_T<T> lhs, const aabb3_T<T>& rhs);
-
-template <arithmetic T>
-constexpr bool collides(const aabb3_T<T>& b, const ray3_T<T>& r);
-template <arithmetic T>
-constexpr bool collides(const aabb3_T<T>& b, const plane_T<T>& p);
-template <arithmetic T>
-constexpr bool collides(const aabb3_T<T>& b, const oriented_plane_T<T>& p);
-template <arithmetic T>
-constexpr bool collides(const aabb3_T<T>& b0, const aabb3_T<T>& b1);
 #pragma endregion
 
 #pragma region declaration_transform2_T
@@ -3261,6 +3203,37 @@ constexpr T domain_transfer(cdm::value_domain_T<T> from,
 	const cdm::unnormalized_value_T<T> valueTo{to, norm};
 	return valueTo.value();
 }
+
+#pragma region declaration collisions
+// clang-format on
+template <arithmetic T>
+constexpr std::pair<std::optional<vector2_T<T>>, std::optional<vector2_T<T>>>
+collides(const segment2_T<T>& s0, const segment2_T<T>& s1, T e = T(epsilon));
+
+template <arithmetic T>
+constexpr std::optional<vector3_T<T>> collides(const segment3_T<T>& s,
+                                               const plane_T<T>& p,
+                                               T e = T(epsilon)) noexcept;
+
+template <arithmetic T>
+constexpr std::optional<vector3_T<T>> collides(const plane_T<T>& p,
+                                               ray3_T<T> r,
+                                               T e = T(epsilon));
+
+template <arithmetic T>
+constexpr std::optional<vector3_T<T>>
+collides_bidirectional(const plane_T<T>& plane, ray3_T<T> r, T e = T(epsilon));
+
+template <arithmetic T>
+constexpr std::optional<vector2_T<T>> intersection(const ray2_T<T>& r,
+                                                   const segment2_T<T>& s);
+
+template <arithmetic T>
+constexpr bool collides(const aabb3_T<T>& b, const plane_T<T>& p);
+
+template <arithmetic T>
+constexpr bool collides(const aabb3_T<T>& b, const ray3_T<T>& r);
+#pragma endregion
 #pragma endregion
 
 // ==========================================================================
@@ -3341,7 +3314,10 @@ complex_T<T>& complex_T<T>::operator*=(complex_T<T> c)
 }
 
 template <arithmetic T>
-complex_T<T> complex_T<T>::identity() { return {T(1), T(0)}; }
+complex_T<T> complex_T<T>::identity()
+{
+	return {T(1), T(0)};
+}
 
 template <arithmetic T>
 complex_T<T> operator*(complex_T<T> c1, complex_T<T> c2)
@@ -3791,7 +3767,10 @@ T atanh(degree_T<T> d)
 
 #pragma region definition_vector2_t
 template <arithmetic T>
-constexpr vector2_T<T>::vector2_T(const direction2_T<T>& d) : vector2_T(d.x(), d.y()){}
+constexpr vector2_T<T>::vector2_T(const direction2_T<T>& d)
+    : vector2_T(d.x(), d.y())
+{
+}
 
 template <arithmetic T>
 vector2_T<T> vector2_T<T>::operator+(vector2_T<T> v) const
@@ -3880,14 +3859,14 @@ vector2_T<T> normalize(vector2_T<T> v)
 	v.y /= n;
 	return v;
 }
-//template <arithmetic T>
-//constexpr vector2_T<T> clamp(vector2_T<T> v,
-//                             vector2_T<T> min,
-//                             vector2_T<T> max)
+// template <arithmetic T>
+// constexpr vector2_T<T> clamp(vector2_T<T> v,
+//                              vector2_T<T> min,
+//                              vector2_T<T> max)
 //{
 //	v.clamp(min, max);
 //	return v;
-//}
+// }
 template <arithmetic T>
 constexpr T dot(vector2_T<T> lhs, vector2_T<T> rhs)
 {
@@ -3901,10 +3880,10 @@ constexpr T cross(vector2_T<T> lhs, vector2_T<T> rhs)
 template <arithmetic T>
 constexpr vector2_T<T> lerp(vector2_T<T> begin, vector2_T<T> end, T percent)
 {
-	//return (end - begin) * percent + begin;
+	// return (end - begin) * percent + begin;
 	return {
-		std::lerp(begin.x, end.x, percent),
-		std::lerp(begin.y, end.y, percent),
+	    std::lerp(begin.x, end.x, percent),
+	    std::lerp(begin.y, end.y, percent),
 	};
 }
 template <arithmetic T>
@@ -3976,18 +3955,23 @@ constexpr vector2_T<T> element_wise_abs(vector2_T<T> v)
 	};
 }
 template <arithmetic T>
-constexpr vector2_T<T> element_wise_lerp(vector2_T<T> begin, vector2_T<T> end, vector2_T<T> percent)
+constexpr vector2_T<T> element_wise_lerp(vector2_T<T> begin,
+                                         vector2_T<T> end,
+                                         vector2_T<T> percent)
 {
 	return {
-		std::lerp(begin.x, end.x, percent.x),
-		std::lerp(begin.y, end.y, percent.y),
+	    std::lerp(begin.x, end.x, percent.x),
+	    std::lerp(begin.y, end.y, percent.y),
 	};
 }
 #pragma endregion
 
 #pragma region definition_vector3_t
 template <arithmetic T>
-constexpr vector3_T<T>::vector3_T(const direction3_T<T>& d) : vector3_T(d.x(), d.y(), d.z()){}
+constexpr vector3_T<T>::vector3_T(const direction3_T<T>& d)
+    : vector3_T(d.x(), d.y(), d.z())
+{
+}
 
 template <arithmetic T>
 vector2_T<T> vector3_T<T>::xy() const
@@ -4103,14 +4087,14 @@ vector3_T<T> normalize(vector3_T<T> v)
 	v.z /= n;
 	return v;
 }
-//template <arithmetic T>
-//constexpr vector3_T<T> clamp(vector3_T<T> v,
-//                             vector3_T<T> min,
-//                             vector3_T<T> max)
+// template <arithmetic T>
+// constexpr vector3_T<T> clamp(vector3_T<T> v,
+//                              vector3_T<T> min,
+//                              vector3_T<T> max)
 //{
 //	v.clamp(min, max);
 //	return v;
-//}
+// }
 template <arithmetic T>
 constexpr T dot(vector3_T<T> lhs, vector3_T<T> rhs)
 {
@@ -4194,12 +4178,14 @@ constexpr vector3_T<T> element_wise_abs(vector3_T<T> v)
 	};
 }
 template <arithmetic T>
-constexpr vector3_T<T> element_wise_lerp(vector3_T<T> begin, vector3_T<T> end, vector3_T<T> percent)
+constexpr vector3_T<T> element_wise_lerp(vector3_T<T> begin,
+                                         vector3_T<T> end,
+                                         vector3_T<T> percent)
 {
 	return {
-		std::lerp(begin.x, end.x, percent.x),
-		std::lerp(begin.y, end.y, percent.y),
-		std::lerp(begin.z, end.z, percent.z),
+	    std::lerp(begin.x, end.x, percent.x),
+	    std::lerp(begin.y, end.y, percent.y),
+	    std::lerp(begin.z, end.z, percent.z),
 	};
 }
 
@@ -4311,14 +4297,14 @@ vector4_T<T> normalize(vector4_T<T> v)
 	v.normalize();
 	return v;
 }
-//template <arithmetic T>
-//constexpr vector4_T<T> clamp(vector4_T<T> v,
-//                             vector4_T<T> min,
-//                             vector4_T<T> max)
+// template <arithmetic T>
+// constexpr vector4_T<T> clamp(vector4_T<T> v,
+//                              vector4_T<T> min,
+//                              vector4_T<T> max)
 //{
 //	v.clamp(min, max);
 //	return v;
-//}
+// }
 template <arithmetic T>
 T dot(vector4_T<T> lhs, vector4_T<T> rhs)
 {
@@ -4386,13 +4372,15 @@ constexpr vector4_T<T> element_wise_abs(vector4_T<T> v)
 	};
 }
 template <arithmetic T>
-constexpr vector4_T<T> element_wise_lerp(vector4_T<T> begin, vector4_T<T> end, vector4_T<T> percent)
+constexpr vector4_T<T> element_wise_lerp(vector4_T<T> begin,
+                                         vector4_T<T> end,
+                                         vector4_T<T> percent)
 {
 	return {
-		std::lerp(begin.x, end.x, percent.x),
-		std::lerp(begin.y, end.y, percent.y),
-		std::lerp(begin.z, end.z, percent.z),
-		std::lerp(begin.w, end.w, percent.w),
+	    std::lerp(begin.x, end.x, percent.x),
+	    std::lerp(begin.y, end.y, percent.y),
+	    std::lerp(begin.z, end.z, percent.z),
+	    std::lerp(begin.w, end.w, percent.w),
 	};
 }
 #pragma endregion
@@ -5262,16 +5250,12 @@ matrix3_T<T> matrix4_T<T>::extractRotationMatrix() const
 	const T sz = column(2).xyz().norm();
 
 	return matrix3_T<T>::rows(
-		vector3_T<T>(row(0).column(0) / sx,
-		             row(0).column(1) / sy,
-		             row(0).column(2) / sz),
-		vector3_T<T>(row(1).column(0) / sx,
-                     row(1).column(1) / sy,
-                     row(1).column(2) / sz),
-		vector3_T<T>(row(2).column(0) / sx,
-                     row(2).column(1) / sy,
-                     row(2).column(2) / sz)
-	);
+	    vector3_T<T>(row(0).column(0) / sx, row(0).column(1) / sy,
+	                 row(0).column(2) / sz),
+	    vector3_T<T>(row(1).column(0) / sx, row(1).column(1) / sy,
+	                 row(1).column(2) / sz),
+	    vector3_T<T>(row(2).column(0) / sx, row(2).column(1) / sy,
+	                 row(2).column(2) / sz));
 }
 
 template <arithmetic T>
@@ -5290,13 +5274,14 @@ direction3_T<T> matrix4_T<T>::transform_direction(direction3_T<T> dir) const
 	return direction3_T<T>((*this * vector4_T<T>(*dir, T(0))).xyz());
 }
 template <arithmetic T>
-vector3_T<T> matrix4_T<T>::transform_position_perspective(vector3_T<T> pos) const
+vector3_T<T> matrix4_T<T>::transform_position_perspective(
+    vector3_T<T> pos) const
 {
 	const vector4_T<T> tmp = *this * vector4_T<T>(pos, T(1));
 	return {
-		tmp.x / tmp.w,
-		tmp.y / tmp.w,
-		tmp.z / tmp.w,
+	    tmp.x / tmp.w,
+	    tmp.y / tmp.w,
+	    tmp.z / tmp.w,
 	};
 }
 
@@ -6277,61 +6262,61 @@ quaternion_T<T> quaternion_T<T>::from_rotation_matrix(const matrix3_T<T>& m)
 		biggestIndex = 3;
 	}
 
-	const T biggestVal =
-		std::sqrt(fourBiggestSquaredMinus1 + T(1)) *
-		T(0.5);
+	const T biggestVal = std::sqrt(fourBiggestSquaredMinus1 + T(1)) * T(0.5);
 	const T mult = T(0.25) / biggestVal;
 
 	switch (biggestIndex)
 	{
 	case 0:
 		return {
-			(m.column(1).row(2) - m.column(2).row(1)) * mult,
-			(m.column(2).row(0) - m.column(0).row(2)) * mult,
-			(m.column(0).row(1) - m.column(1).row(0)) * mult,
-			biggestVal,
+		    (m.column(1).row(2) - m.column(2).row(1)) * mult,
+		    (m.column(2).row(0) - m.column(0).row(2)) * mult,
+		    (m.column(0).row(1) - m.column(1).row(0)) * mult,
+		    biggestVal,
 		};
 	case 1:
 		return {
-			biggestVal,
-			(m.column(0).row(1) + m.column(1).row(0)) * mult,
-			(m.column(2).row(0) + m.column(0).row(2)) * mult,
-			(m.column(1).row(2) - m.column(2).row(1)) * mult,
+		    biggestVal,
+		    (m.column(0).row(1) + m.column(1).row(0)) * mult,
+		    (m.column(2).row(0) + m.column(0).row(2)) * mult,
+		    (m.column(1).row(2) - m.column(2).row(1)) * mult,
 		};
 	case 2:
 		return {
-			(m.column(0).row(1) + m.column(1).row(0)) * mult,
-			biggestVal,
-			(m.column(1).row(2) + m.column(2).row(1)) * mult,
-			(m.column(2).row(0) - m.column(0).row(2)) * mult,
+		    (m.column(0).row(1) + m.column(1).row(0)) * mult,
+		    biggestVal,
+		    (m.column(1).row(2) + m.column(2).row(1)) * mult,
+		    (m.column(2).row(0) - m.column(0).row(2)) * mult,
 		};
 	case 3:
 		return {
-			(m.column(2).row(0) + m.column(0).row(2)) * mult,
-			(m.column(1).row(2) + m.column(2).row(1)) * mult,
-			biggestVal,
-			(m.column(0).row(1) - m.column(1).row(0)) * mult,
+		    (m.column(2).row(0) + m.column(0).row(2)) * mult,
+		    (m.column(1).row(2) + m.column(2).row(1)) * mult,
+		    biggestVal,
+		    (m.column(0).row(1) - m.column(1).row(0)) * mult,
 		};
 
 	default:
 		assert(false);
 		return {
-			T(0),
-			T(0),
-			T(0),
-			T(1),
+		    T(0),
+		    T(0),
+		    T(0),
+		    T(1),
 		};
 	}
 }
 
 template <arithmetic T>
-quaternion_T<T> quaternion_T<T>::look_at(direction3_T<T> forward, direction3_T<T> upward)
+quaternion_T<T> quaternion_T<T>::look_at(direction3_T<T> forward,
+                                         direction3_T<T> upward)
 {
 	const direction3_T<T> backward = -forward;
 	const direction3_T<T> rightward = direction3_T<T>(cross(upward, backward));
 	upward = direction3_T<T>(cross(backward, rightward));
 
-	const matrix3_T<T> rotMat = matrix3_T<T>::columns(rightward, upward, backward);
+	const matrix3_T<T> rotMat =
+	    matrix3_T<T>::columns(rightward, upward, backward);
 
 	return from_rotation_matrix(rotMat);
 }
@@ -6380,7 +6365,7 @@ quaternion_T<T>& quaternion_T<T>::normalize()
 }
 template <arithmetic T>
 constexpr quaternion_T<T>& quaternion_T<T>::clamp(quaternion_T<T> min,
-                                        quaternion_T<T> max)
+                                                  quaternion_T<T> max)
 {
 	x = std::clamp(x, min.x, max.x);
 	y = std::clamp(y, min.y, max.y);
@@ -6411,8 +6396,9 @@ quaternion_T<T> quaternion_T<T>::get_normalized() const
 	return res;
 }
 template <arithmetic T>
-constexpr quaternion_T<T> quaternion_T<T>::get_clamped(quaternion_T<T> min,
-                                             quaternion_T<T> max) const
+constexpr quaternion_T<T> quaternion_T<T>::get_clamped(
+    quaternion_T<T> min,
+    quaternion_T<T> max) const
 {
 	quaternion_T<T> res = *this;
 	res.clamp(min, max);
@@ -6614,14 +6600,21 @@ quaternion_T<T> slerp(quaternion_T<T> begin, quaternion_T<T> end, T percent)
 #pragma region definition_line_t
 #pragma region slope_intercept
 template <arithmetic T>
-line_T<T, line_representation::SlopeIntercept>::line_T(T s, T yi) : slope(s), y_intercept(yi) {}
+line_T<T, line_representation::SlopeIntercept>::line_T(T s, T yi)
+    : slope(s), y_intercept(yi)
+{
+}
 template <arithmetic T>
-line_T<T, line_representation::SlopeIntercept>::line_T(vector2_T<T> direction, T e) : y_intercept(T(0))
+line_T<T, line_representation::SlopeIntercept>::line_T(vector2_T<T> direction,
+                                                       T e)
+    : y_intercept(T(0))
 {
 	direction.normalize();
 
-	if (nearly_equal(direction.y, T(1), e) || nearly_equal(direction.y, T(-1), e))
-		throw std::runtime_error("this line can not be represented with this structure");
+	if (nearly_equal(direction.y, T(1), e) ||
+	    nearly_equal(direction.y, T(-1), e))
+		throw std::runtime_error(
+		    "this line can not be represented with this structure");
 
 	// project the direction on the X axis
 	const T d = dot(direction, vector2_T<T>(T(1), T(0)));
@@ -6793,160 +6786,6 @@ segment2_T<T>& segment2_T<T>::invert()
 	return *this;
 	;
 }
-
-template <arithmetic T>
-int collides(const segment2_T<T>& s0,
-             const segment2_T<T>& s1,
-             vector2_T<T>& outPoint0,
-             vector2_T<T>& outPoint1,
-             T e)
-{
-	auto det = [](T a, T b, T c, T d) -> T { return a * d - b * c; };
-
-	auto betw = [&](T l, T r, T x) -> T
-	{ return std::min(l, r) <= x + e && x <= std::max(l, r) + e; };
-
-	auto intersect_1d = [&](T a, T b, T c, T d) -> bool
-	{
-		if (a > b)
-			std::swap(a, b);
-		if (c > d)
-			std::swap(c, d);
-		return std::max(a, c) <= std::min(b, d) + e;
-	};
-
-	auto compareP = [&](const cdm::vector2_T<T>& l,
-	                    const cdm::vector2_T<T>& r) -> bool
-	{ return l.x < r.x - e || (std::abs(l.x - r.x) < e && l.y < r.y - e); };
-
-	vector2_T<T> a = s0.origin;
-	vector2_T<T> b = s0.end;
-	vector2_T<T> c = s1.origin;
-	vector2_T<T> d = s1.end;
-	if (!intersect_1d(a.x, b.x, c.x, d.x) || !intersect_1d(a.y, b.y, c.y, d.y))
-		return 0;
-
-	struct line
-	{
-		T a, b, c;
-
-		line() = default;
-		line(const cdm::vector2_T<T>& p, const cdm::vector2_T<T>& q)
-		{
-			a = p.y - q.y;
-			b = q.x - p.x;
-			c = -a * p.x - b * p.y;
-			norm();
-		}
-
-		void norm()
-		{
-			T z = sqrt(a * a + b * b);
-			if (nearly_equal(std::abs(z), T(0)))
-			{
-				a /= z;
-				b /= z;
-				c /= z;
-			}
-		}
-
-		T dist(const cdm::vector2_T<T>& p) const
-		{
-			return a * p.x + b * p.y + c;
-		}
-	};
-
-	line m(a, b);
-	line n(c, d);
-	T zn = det(m.a, m.b, n.a, n.b);
-	if (abs(zn) < e)
-	{
-		if (abs(m.dist(c)) > e || abs(n.dist(a)) > e)
-			return 0;
-		if (compareP(b, a))
-			std::swap(a, b);
-		if (compareP(d, c))
-			std::swap(c, d);
-
-		if (compareP(a, c))
-			outPoint0 = c;
-		else
-			outPoint0 = a;
-
-		if (compareP(b, d))
-			outPoint1 = b;
-		else
-			outPoint1 = d;
-
-		return outPoint0 == outPoint1 ? 1 : 2;
-	}
-	else
-	{
-		outPoint0.x = outPoint1.x = -det(m.c, m.b, n.c, n.b) / zn;
-		outPoint0.y = outPoint1.y = -det(m.a, m.c, n.a, n.c) / zn;
-		return int(betw(a.x, b.x, outPoint0.x) &&
-		           betw(a.y, b.y, outPoint0.y) &&
-		           betw(c.x, d.x, outPoint0.x) && betw(c.y, d.y, outPoint0.y));
-	}
-}
-#pragma endregion
-
-#pragma region definition_segment3_t
-template <arithmetic T>
-constexpr bool collides(const segment3_T<T>& seg,
-                        const plane_T<T>& plane,
-                        T e) noexcept
-{
-	// distances to point
-	const T p0 = plane.evaluate(seg.origin);
-	const T p1 = plane.evaluate(seg.end);
-
-	// are considered on the plane
-	if (nearly_equal(p0, T(0), e) || nearly_equal(p1, T(0), e))
-		return true;
-
-	// if both points are on the same side of the plane
-	if ((p0 > T(0) && p1 > T(0)) || (p0 < T(0) && p1 < T(0)))
-		return false;  // no collision
-
-	return true;
-}
-
-// I feel like there's a simpler and more efficient way to do this...
-template <arithmetic T>
-constexpr bool collides(const segment3_T<T>& seg,
-                        const plane_T<T>& plane,
-                        vector3_T<T>& outPoint,
-                        T e) noexcept
-{
-	// distances to point
-	const T p0 = plane.evaluate(seg.origin);
-	const T p1 = plane.evaluate(seg.end);
-
-	// are considered on the plane
-	if (nearly_equal(p0, T(0), e))
-	{
-		outPoint = seg.origin;
-		return true;
-	}
-	if (nearly_equal(p1, T(0), e))
-	{
-		outPoint = seg.end;
-		return true;
-	}
-
-	// if both points are on the same side of the plane
-	if ((p0 > T(0) && p1 > T(0)) || (p0 < T(0) && p1 < T(0)))
-		return false;  // no collision
-
-	const value_domain_T<T> d{p0, p1};
-	const unnormalized_value_T<T> v{d, T(0)};
-	const normalized_value_T<T> n{v};
-
-	outPoint = lerp(seg.origin, seg.end, n.value());
-
-	return true;
-}
 #pragma endregion
 
 #pragma region definition_plane_t
@@ -6973,9 +6812,9 @@ constexpr vector2_T<T> plane_T<T>::project2d(
 
 	const auto TBN = matrix3_T<T>::rows(tangent, bitangent, normal);
 
-	const vector3_T<T> plane_space_point = point - origin;
+	const vector3_T<T> pointInPlaneSpace = point - origin;
 
-	return (TBN * plane_space_point).xy();
+	return (TBN * pointInPlaneSpace).xy();
 }
 template <arithmetic T>
 constexpr vector3_T<T> plane_T<T>::unproject(
@@ -6988,9 +6827,9 @@ constexpr vector3_T<T> plane_T<T>::unproject(
 	const auto invTBN =
 	    matrix3_T<T>::rows(tangent, bitangent, normal).get_inversed();
 
-	const auto plane_space_point = vector3_T<T>{point, T(0)};
+	const auto pointInPlaneSpace = vector3_T<T>{point, T(0)};
 
-	return (invTBN * plane_space_point) + origin;
+	return (invTBN * pointInPlaneSpace) + origin;
 }
 
 template <arithmetic T>
@@ -7011,39 +6850,6 @@ constexpr direction3_T<T> plane_T<T>::computeTangent(T epsilon_) const
 		return direction3_T<T>(
 		    project3d(vector3_T{T(0), T(1), T(0)} + origin) - origin);
 	return direction3_T<T>(tangent);
-}
-
-template <arithmetic T>
-bool collides(const plane_T<T>& plane,
-              ray3_T<T> r,
-              vector3_T<T>& collision_point)
-{
-	const T denom = dot(*plane.normal, r.direction);
-	if (abs(denom) > T(0.0001))
-	{
-		const T t = -dot(plane.origin - r.origin, plane.normal) / denom;
-		if (t >= T(0))
-		{
-			collision_point = r.origin + r.direction * t;
-			return true;
-		}
-	}
-	return false;
-}
-template <arithmetic T>
-bool collides_bidirectional(const plane_T<T>& plane,
-                            ray3_T<T> r,
-                            vector3_T<T>& collision_point)
-{
-	const T denom = dot(plane.normal, r.direction);
-	if (abs(denom) > T(0.0001))
-	{
-		const T t = -dot(plane.origin - r.origin, plane.normal) / denom;
-
-		collision_point = r.origin + r.direction * t;
-		return true;
-	}
-	return false;
 }
 #pragma endregion
 
@@ -7066,20 +6872,6 @@ constexpr oriented_plane_T<T>::oriented_plane_T(
 {
 }
 
-template <arithmetic T>
-constexpr T oriented_plane_T<T>::evaluate(const vector3_T<T>& point) const
-{
-	return normal.x() * (point.x - origin.x) +  //
-	       normal.y() * (point.y - origin.y) +  //
-	       normal.z() * (point.z - origin.z);   //
-}
-template <arithmetic T>
-constexpr vector3_T<T> oriented_plane_T<T>::project3d(
-    const vector3_T<T>& point) const
-{
-	T distance = evaluate(point);
-	return point - normal * distance;
-}
 template <arithmetic T>
 constexpr vector2_T<T> oriented_plane_T<T>::project2d(
     const vector3_T<T>& point) const
@@ -7105,97 +6897,13 @@ constexpr vector3_T<T> oriented_plane_T<T>::unproject(
 
 	return (invTBN * pointInPlaneSpace) + origin;
 }
-
-template <arithmetic T>
-constexpr vector3_T<T> oriented_plane_T<T>::symmetry(
-    const vector3_T<T>& point) const
-{
-	auto projP = project3d(point);
-	auto projP2P = cdm::from_to(projP, point);
-	auto symP = point - T(2) * projP2P;
-	return symP;
-}
-
-template <arithmetic T>
-bool collides(const oriented_plane_T<T>& plane,
-              ray3_T<T> r,
-              vector3_T<T>& collision_point)
-{
-	const T denom = dot(plane.normal, r.direction);
-	if (abs(denom) > T(0.0001))
-	{
-		const T t = -dot(plane.origin - r.origin, plane.normal) / denom;
-		if (t >= T(0))
-		{
-			collision_point = r.origin + r.direction * t;
-			return true;
-		}
-	}
-	return false;
-}
-template <arithmetic T>
-bool collides_bidirectional(const oriented_plane_T<T>& plane,
-                            ray3_T<T> r,
-                            vector3_T<T>& collision_point)
-{
-	const T denom = dot(plane.normal, r.direction);
-	if (abs(denom) > T(0.0001))
-	{
-		const T t = -dot(plane.origin - r.origin, plane.normal) / denom;
-
-		collision_point = r.origin + r.direction * t;
-		return true;
-	}
-	return false;
-}
 #pragma endregion
 
-#pragma region definition_ray2_t
-// https://rootllama.wordpress.com/2014/06/20/ray-line-segment-intersection-test-in-2d/
+#pragma region definition circle
 template <arithmetic T>
-constexpr bool collides(const ray2_T<T>& r, const segment2_T<T>& s)
+constexpr bool circle_T<T>::contains(vector2_T<T> p) const
 {
-	const vector2_T<T> v1 = r.origin - s.origin;
-	const vector2_T<T> v2 = s.end - s.origin;
-	const vector2_T<T> v3 = {-r.direction.y(), r.direction.x()};
-
-	const float V2DotV3 = dot(v2, v3);
-	const float t1 = cross(v2, v1) / V2DotV3;
-	const float t2 = dot(v1, v3) / V2DotV3;
-
-	return t1 >= T(0) && t2 >= T(0) && t2 <= T(1);
-}
-
-// https://rootllama.wordpress.com/2014/06/20/ray-line-segment-intersection-test-in-2d/
-template <arithmetic T>
-constexpr std::optional<vector2_T<T>> intersection(const ray2_T<T>& r,
-                                                   const segment2_T<T>& s)
-{
-	const vector2_T<T> v1 = r.origin - s.origin;
-	const vector2_T<T> v2 = s.end - s.origin;
-	const vector2_T<T> v3 = {-r.direction.y(), r.direction.x()};
-
-	const float V2DotV3 = dot(v2, v3);
-	const float t1 = cross(v2, v1) / V2DotV3;
-	const float t2 = dot(v1, v3) / V2DotV3;
-
-	if (t1 >= T(0) && t2 >= T(0) && t2 <= T(1))
-		return r.origin + r.direction * t1;
-	else
-		return std::nullopt;
-}
-#pragma endregion
-
-#pragma region definition_circle_t
-template <arithmetic T>
-bool collides(circle_T<T> c, vector2_T<T> p)
-{
-	return distance_between(c.origin, p) <= c.radius;
-}
-template <arithmetic T>
-bool collides(vector2_T<T> p, circle_T<T> c)
-{
-	return collides(c, p);
+	return distance_between(origin, p) <= radius;
 }
 #pragma endregion
 
@@ -7295,15 +7003,6 @@ template <arithmetic T>
 constexpr aabb2_T<T> operator+(vector2_T<T> lhs, const aabb2_T<T>& rhs)
 {
 	return rhs + lhs;
-}
-
-template <arithmetic T>
-constexpr bool collides(const aabb2_T<T>& b0, const aabb2_T<T>& b1)
-{
-	return collides(b0, b1.origin) ||
-	       collides(b0, b1.origin + vector2_T<T>(b1.dimension.x, T(0))) ||
-	       collides(b0, b1.origin + vector2_T<T>(T(0), b1.dimension.y)) ||
-	       collides(b0, b1.origin + b1.dimension);
 }
 #pragma endregion
 
@@ -7406,98 +7105,6 @@ template <arithmetic T>
 constexpr aabb3_T<T> operator+(vector3_T<T> lhs, const aabb3_T<T>& rhs)
 {
 	return rhs + lhs;
-}
-
-template <arithmetic T>
-constexpr bool collides(const aabb3_T<T>& b, const ray3_T<T>& r)
-{
-	constexpr vector3_T<T> inv{
-	    T(1) / r.direction.x(),  //
-	    T(1) / r.direction.y(),  //
-	    T(1) / r.direction.z()   //
-	};
-
-	T t1 = (b.min.x - r.origin.x) * inv.x;
-	T t2 = (b.max.x - r.origin.x) * inv.x;
-
-	T tmin = std::min(t1, t2);
-	T tmax = std::max(t1, t2);
-
-	t1 = (b.min.y - r.origin.y) * inv.y;
-	t2 = (b.max.y - r.origin.y) * inv.y;
-
-	tmin = std::max(tmin, std::min(t1, t2));
-	tmax = std::min(tmax, std::max(t1, t2));
-
-	t1 = (b.min.z - r.origin.z) * inv.z;
-	t2 = (b.max.z - r.origin.z) * inv.z;
-
-	tmin = std::max(tmin, std::min(t1, t2));
-	tmax = std::min(tmax, std::max(t1, t2));
-
-	return tmax >= tmin;
-}
-
-template <arithmetic T>
-constexpr bool collides(const aabb3_T<T>& b, const plane_T<T>& p)
-{
-	int evals = 0;
-	for (const auto& point : b.get_points())
-	{
-		const T eval = p.evaluate(point);
-		evals += -int(eval < T(0)) + int(eval > T(0));
-	}
-
-	return std::abs(evals) != 8;
-}
-
-template <arithmetic T>
-constexpr bool collides(const aabb3_T<T>& b, const oriented_plane_T<T>& p)
-{
-	int evals = 0;
-	for (const auto& point : b.get_points())
-	{
-		const T eval = p.evaluate(point);
-		evals += -int(eval < T(0)) + int(eval > T(0));
-	}
-
-	return std::abs(evals) != 8;
-}
-
-template <arithmetic T>
-constexpr bool collides(const aabb3_T<T>& b0, const aabb3_T<T>& b1)
-{
-	/// TODO this is wrong!
-	///
-	///         +--------------+
-	///         |              |
-	///         |              |
-	///     +---|--------------|---+
-	///     |   |              |   |
-	///     |   |              |   |
-	///     |   |              |   |
-	///     |   |              |   |
-	///     +---|--------------|---+
-	///         |              |
-	///         |              |
-	///         +--------------+
-	///
-	/// ^ this return false
-	///
-
-	std::array<vector3_T<T>, 8> points = b0.get_points();
-
-	for (auto& p : points)
-		if (b1.contains(p))
-			return true;
-
-	points = b1.get_points();
-
-	for (auto& p : points)
-		if (b0.contains(p))
-			return true;
-
-	return false;
 }
 #pragma endregion
 
@@ -7871,6 +7478,229 @@ constexpr unnormalized_value_T<T>& unnormalized_value_T<T>::operator=(
 #pragma endregion
 
 #pragma region definition_normalized_value
+#pragma endregion
+
+#pragma region definition collisions
+template <arithmetic T>
+constexpr std::pair<std::optional<vector2_T<T>>, std::optional<vector2_T<T>>>
+collides(const segment2_T<T>& s0, const segment2_T<T>& s1, T e)
+{
+	auto det = [](T a, T b, T c, T d) -> T { return a * d - b * c; };
+
+	auto betw = [&](T l, T r, T x) -> T
+	{ return std::min(l, r) <= x + e && x <= std::max(l, r) + e; };
+
+	auto intersect_1d = [&](T a, T b, T c, T d) -> bool
+	{
+		if (a > b)
+			std::swap(a, b);
+		if (c > d)
+			std::swap(c, d);
+		return std::max(a, c) <= std::min(b, d) + e;
+	};
+
+	auto compareP = [&](const cdm::vector2_T<T>& l,
+	                    const cdm::vector2_T<T>& r) -> bool
+	{ return l.x < r.x - e || (std::abs(l.x - r.x) < e && l.y < r.y - e); };
+
+	vector2_T<T> a = s0.origin;
+	vector2_T<T> b = s0.end;
+	vector2_T<T> c = s1.origin;
+	vector2_T<T> d = s1.end;
+	if (!intersect_1d(a.x, b.x, c.x, d.x) || !intersect_1d(a.y, b.y, c.y, d.y))
+		return {std::nullopt, std::nullopt};
+
+	struct line
+	{
+		T a, b, c;
+
+		line() = default;
+		line(const cdm::vector2_T<T>& p, const cdm::vector2_T<T>& q)
+		{
+			a = p.y - q.y;
+			b = q.x - p.x;
+			c = -a * p.x - b * p.y;
+			norm();
+		}
+
+		void norm()
+		{
+			T z = sqrt(a * a + b * b);
+			if (nearly_equal(std::abs(z), T(0)))
+			{
+				a /= z;
+				b /= z;
+				c /= z;
+			}
+		}
+
+		T dist(const cdm::vector2_T<T>& p) const
+		{
+			return a * p.x + b * p.y + c;
+		}
+	};
+
+	vector2_T<T> outPoint0;
+	vector2_T<T> outPoint1;
+
+	line m(a, b);
+	line n(c, d);
+	T zn = det(m.a, m.b, n.a, n.b);
+	if (abs(zn) < e)
+	{
+		if (abs(m.dist(c)) > e || abs(n.dist(a)) > e)
+			return {std::nullopt, std::nullopt};
+
+		if (compareP(b, a))
+			std::swap(a, b);
+		if (compareP(d, c))
+			std::swap(c, d);
+
+		if (compareP(a, c))
+			outPoint0 = c;
+		else
+			outPoint0 = a;
+
+		if (compareP(b, d))
+			outPoint1 = b;
+		else
+			outPoint1 = d;
+
+		if (outPoint0 == outPoint1)
+			return {outPoint0, std::nullopt};
+		else
+			return {outPoint0, outPoint1};
+	}
+	else
+	{
+		outPoint0.x = outPoint1.x = -det(m.c, m.b, n.c, n.b) / zn;
+		outPoint0.y = outPoint1.y = -det(m.a, m.c, n.a, n.c) / zn;
+
+		if (int(betw(a.x, b.x, outPoint0.x) &&  //
+		        betw(a.y, b.y, outPoint0.y) &&  //
+		        betw(c.x, d.x, outPoint0.x) &&  //
+		        betw(c.y, d.y, outPoint0.y)))
+			return {outPoint0, std::nullopt};
+	}
+
+	return {std::nullopt, std::nullopt};
+}
+
+// I feel like there's a simpler and more efficient way to do this...
+template <arithmetic T>
+constexpr std::optional<vector3_T<T>> collides(const segment3_T<T>& s,
+                                               const plane_T<T>& p,
+                                               T e) noexcept
+{
+	const T p0 = p.evaluate(s.origin);
+	if (nearly_equal(p0, T(0), e))  // is considered on the plane
+		return s.origin;
+
+	const T p1 = p.evaluate(s.end);
+	if (nearly_equal(p1, T(0), e))
+		return s.end;
+
+	// if both points are on the same side of the plane
+	if ((p0 > T(0) && p1 > T(0)) ||  //
+	    (p0 < T(0) && p1 < T(0)))
+		return std::nullopt;  // no collision
+
+	const value_domain_T<T> d{p0, p1};
+	const unnormalized_value_T<T> v{d, T(0)};
+	const normalized_value_T<T> n{v};
+
+	return lerp(s.origin, s.end, n.value());
+}
+
+template <arithmetic T>
+constexpr std::optional<vector3_T<T>> collides(const plane_T<T>& p,
+                                               ray3_T<T> r,
+                                               T e)
+{
+	const T denom = dot(p.normal, r.direction);
+	if (abs(denom) > e)
+	{
+		const T t = -dot(p.origin - r.origin, p.normal) / denom;
+		if (t >= T(0))
+			return r.origin + r.direction * t;
+	}
+	return std::nullopt;
+}
+
+template <arithmetic T>
+constexpr std::optional<vector3_T<T>>
+collides_bidirectional(const plane_T<T>& plane, ray3_T<T> r, T e)
+{
+	const T denom = dot(plane.normal, r.direction);
+	if (abs(denom) > e)
+	{
+		const T t = -dot(plane.origin - r.origin, plane.normal) / denom;
+		return r.origin + r.direction * t;
+	}
+	return std::nullopt;
+}
+
+// https://rootllama.wordpress.com/2014/06/20/ray-line-segment-intersection-test-in-2d/
+template <arithmetic T>
+constexpr std::optional<vector2_T<T>> intersection(const ray2_T<T>& r,
+                                                   const segment2_T<T>& s)
+{
+	const vector2_T<T> v1 = r.origin - s.origin;
+	const vector2_T<T> v2 = s.end - s.origin;
+	const vector2_T<T> v3 = {-r.direction.y(), r.direction.x()};
+
+	const float V2DotV3 = dot(v2, v3);
+	const float t1 = cross(v2, v1) / V2DotV3;
+	const float t2 = dot(v1, v3) / V2DotV3;
+
+	if (t1 >= T(0) && t2 >= T(0) && t2 <= T(1))
+		return r.origin + r.direction * t1;
+	else
+		return std::nullopt;
+}
+
+template <arithmetic T>
+constexpr bool collides(const aabb3_T<T>& b, const plane_T<T>& p)
+{
+	int evals = 0;
+	for (const auto& point : b.get_points())
+	{
+		const T eval = p.evaluate(point);
+		evals += -int(eval < T(0)) + int(eval > T(0));
+	}
+
+	return std::abs(evals) != 8;
+}
+
+template <arithmetic T>
+constexpr bool collides(const aabb3_T<T>& b, const ray3_T<T>& r)
+{
+	constexpr vector3_T<T> inv{
+	    T(1) / r.direction.x(),  //
+	    T(1) / r.direction.y(),  //
+	    T(1) / r.direction.z()   //
+	};
+
+	T t1 = (b.min.x - r.origin.x) * inv.x;
+	T t2 = (b.max.x - r.origin.x) * inv.x;
+
+	T tmin = std::min(t1, t2);
+	T tmax = std::max(t1, t2);
+
+	t1 = (b.min.y - r.origin.y) * inv.y;
+	t2 = (b.max.y - r.origin.y) * inv.y;
+
+	tmin = std::max(tmin, std::min(t1, t2));
+	tmax = std::min(tmax, std::max(t1, t2));
+
+	t1 = (b.min.z - r.origin.z) * inv.z;
+	t2 = (b.max.z - r.origin.z) * inv.z;
+
+	tmin = std::max(tmin, std::min(t1, t2));
+	tmax = std::min(tmax, std::max(t1, t2));
+
+	return tmax >= tmin;
+}
 #pragma endregion
 
 #pragma region definition_streams

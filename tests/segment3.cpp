@@ -15,28 +15,28 @@ TEST_CASE("collides(segment3, plane)", "[working][unittest][segment3]")
 		    {0.0f, 0.0f, 0.0f},
 		    {0.0f, 1.0f, 0.0f},
 		};
-		CHECK(cdm::collides(s, p) == true);
+		CHECK(cdm::collides(s, p).has_value() == true);
 	}
 	{
 		cdm::segment3 s{
 		    {0.0f, 0.1f, 0.0f},
 		    {0.0f, 1.0f, 0.0f},
 		};
-		CHECK(cdm::collides(s, p) == false);
+		CHECK(cdm::collides(s, p).has_value() == false);
 	}
 	{
 		cdm::segment3 s{
 		    {0.0f, -1.0f, 0.0f},
 		    {0.0f, 1.0f, 0.0f},
 		};
-		CHECK(cdm::collides(s, p) == true);
+		CHECK(cdm::collides(s, p).has_value() == true);
 	}
 	{
 		cdm::segment3 s{
 		    {-1.0f, -1.0f, -1.0f},
 		    {1.0f, 1.0f, 1.0f},
 		};
-		CHECK(cdm::collides(s, p) == true);
+		CHECK(cdm::collides(s, p).has_value() == true);
 	}
 }
 
@@ -53,33 +53,33 @@ TEST_CASE("collides(segment3, plane, vector3)",
 		    {0.0f, 0.0f, 0.0f},
 		    {0.0f, 1.0f, 0.0f},
 		};
-		cdm::vector3 v;
-		CHECK(cdm::collides(s, p, v) == true);
-		CHECK(v == s.origin);
+		std::optional<cdm::vector3> v = cdm::collides(s, p);
+		REQUIRE(v.has_value() == true);
+		CHECK(v.value() == s.origin);
 	}
 	{
 		cdm::segment3 s{
 		    {0.0f, 0.1f, 0.0f},
 		    {0.0f, 1.0f, 0.0f},
 		};
-		CHECK(cdm::collides(s, p) == false);
+		CHECK(cdm::collides(s, p).has_value() == false);
 	}
 	{
 		cdm::segment3 s{
 		    {0.0f, -1.0f, 0.0f},
 		    {0.0f, 1.0f, 0.0f},
 		};
-		cdm::vector3 v;
-		CHECK(cdm::collides(s, p, v) == true);
-		CHECK(v == cdm::vector3{0.0f, 0.0f, 0.0f});
+		std::optional<cdm::vector3> v = cdm::collides(s, p);
+		REQUIRE(v.has_value() == true);
+		CHECK(v.value() == cdm::vector3{0.0f, 0.0f, 0.0f});
 	}
 	{
 		cdm::segment3 s{
 		    {-1.0f, -1.0f, -1.0f},
 		    {1.0f, 1.0f, 1.0f},
 		};
-		cdm::vector3 v;
-		CHECK(cdm::collides(s, p, v) == true);
-		CHECK(v == cdm::vector3{0.0f, 0.0f, 0.0f});
+		std::optional<cdm::vector3> v = cdm::collides(s, p);
+		REQUIRE(v.has_value() == true);
+		CHECK(v.value() == cdm::vector3{0.0f, 0.0f, 0.0f});
 	}
 }

@@ -3225,8 +3225,8 @@ constexpr std::optional<vector3_T<T>>
 collides_bidirectional(const plane_T<T>& plane, ray3_T<T> r, T e = T(epsilon));
 
 template <arithmetic T>
-constexpr std::optional<vector2_T<T>> intersection(const ray2_T<T>& r,
-                                                   const segment2_T<T>& s);
+constexpr std::optional<vector2_T<T>> collides(const ray2_T<T>& r,
+                                               const segment2_T<T>& s);
 
 template <arithmetic T>
 constexpr bool collides(const aabb3_T<T>& b, const plane_T<T>& p);
@@ -7642,8 +7642,8 @@ collides_bidirectional(const plane_T<T>& plane, ray3_T<T> r, T e)
 
 // https://rootllama.wordpress.com/2014/06/20/ray-line-segment-intersection-test-in-2d/
 template <arithmetic T>
-constexpr std::optional<vector2_T<T>> intersection(const ray2_T<T>& r,
-                                                   const segment2_T<T>& s)
+constexpr std::optional<vector2_T<T>> collides(const ray2_T<T>& r,
+                                               const segment2_T<T>& s)
 {
 	const vector2_T<T> v1 = r.origin - s.origin;
 	const vector2_T<T> v2 = s.end - s.origin;

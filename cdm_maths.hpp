@@ -8137,15 +8137,12 @@ using unscaled_transform2 = unscaled_transform2_T<float>;
 using unscaled_transform2d = unscaled_transform2_T<double>;
 using unscaled_transform3 = unscaled_transform3_T<float>;
 using unscaled_transform3d = unscaled_transform3_T<double>;
+using float_domain = value_domain_T<float>;
+using double_domain = value_domain_T<double>;
 using unnormalized_float = unnormalized_value_T<float>;
 using unnormalized_double = unnormalized_value_T<double>;
 using normalized_float = normalized_value_T<float>;
 using normalized_double = normalized_value_T<double>;
 }  // namespace cdm
-
-namespace cdm_literals
-{
-using namespace cdm::literals;
-}
 
 #endif  // CDM_MATHS_HPP

@@ -6859,7 +6859,7 @@ constexpr oriented_plane_T<T>::oriented_plane_T(
     const vector3_T<T>& origin_,
     const direction3_T<T>& normal_,
     const direction3_T<T>& tangent_)
-    : origin(origin_), normal(normal_)
+    : plane_T<T>(origin_, normal_)
 {
 	const auto bitangent = direction3_T<T>(cross(normal, tangent_));
 	tangent = direction3_T<T>(cross(bitangent, normal));

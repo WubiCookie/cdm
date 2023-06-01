@@ -32,7 +32,8 @@ TEST_CASE("line<SlopeIntercept>::line(T, T)", "[working][unittest][line]")
 	}
 }
 
-TEST_CASE("line<SlopeIntercept>::line(vector2_t<T>)", "[working][unittest][line]")
+TEST_CASE("line<SlopeIntercept>::line(vector2_t<T>)",
+          "[working][unittest][line]")
 {
 	using line_type = line<line_representation::SlopeIntercept>;
 	{

@@ -192,7 +192,7 @@ class normalized_value_T;
 namespace detail
 {
 template <int x, int y, arithmetic T>
-T get_quaternion_t_matrix_element(quaternion_T<T> q)
+constexpr T get_quaternion_t_matrix_element(quaternion_T<T> q)
 {
 	static_assert(x < 3, "x must be [0;2]");
 	static_assert(y < 3, "y must be [0;2]");
@@ -227,10 +227,10 @@ T get_quaternion_t_matrix_element(quaternion_T<T> q)
 }  // namespace detail
 
 template <typename Functor, arithmetic T>
-std::vector<vector3_T<T>> function2D_sampler(const Functor& functor,
-                                             T min,
-                                             T max,
-                                             T step)
+constexpr std::vector<vector3_T<T>> function2D_sampler(const Functor& functor,
+                                                       T min,
+                                                       T max,
+                                                       T step)
 {
 	std::vector<vector3_T<T>> res;
 
@@ -249,7 +249,7 @@ std::vector<vector3_T<T>> function2D_sampler(const Functor& functor,
 }
 
 template <typename Functor, arithmetic T>
-std::vector<std::vector<vector3_T<T>>> function3D_sampler(
+constexpr std::vector<std::vector<vector3_T<T>>> function3D_sampler(
     const Functor& functor,
     vector2_T<T> min,
     vector2_T<T> max,
@@ -309,7 +309,9 @@ constexpr T clamp(T value, T min, T max)
 template <arithmetic T>
 bool nearly_equal(T f1, T f2, T e = T(epsilon))
 {
-	return std::abs(f1 - f2) < e;
+	T f = f1 - f2;
+	f = f < T(0) ? -f : f;
+	return f < e;
 }
 
 template <arithmetic T>
@@ -404,48 +406,48 @@ struct complex_T
 	complex_T& operator=(complex_T&&) = default;
 
 	T norm() const;
-	T norm_squared() const;
+	constexpr T norm_squared() const;
 
 	complex_T& normalize();
 	complex_T get_normalized() const;
 
-	complex_T& conjugate();
-	complex_T get_conjugated() const;
+	constexpr complex_T& conjugate();
+	constexpr complex_T get_conjugated() const;
 
-	complex_T operator+(complex_T c) const;
-	complex_T operator-(complex_T c) const;
+	constexpr complex_T operator+(complex_T c) const;
+	constexpr complex_T operator-(complex_T c) const;
 
-	complex_T& operator+=(complex_T c);
-	complex_T& operator-=(complex_T c);
-	complex_T& operator*=(complex_T c);
+	constexpr complex_T& operator+=(complex_T c);
+	constexpr complex_T& operator-=(complex_T c);
+	constexpr complex_T& operator*=(complex_T c);
 
-	static complex_T identity();
+	static constexpr complex_T identity();
 
 	using underlying_type = T;
 };
 
 template <arithmetic T>
-complex_T<T> operator*(complex_T<T> c1, complex_T<T> c2);
+constexpr complex_T<T> operator*(complex_T<T> c1, complex_T<T> c2);
 template <arithmetic T>
-complex_T<T> operator*(complex_T<T> c, T f);
+constexpr complex_T<T> operator*(complex_T<T> c, T f);
 template <arithmetic T>
-complex_T<T> operator*(normalized<complex_T<T>> c1, complex_T<T> c2);
+constexpr complex_T<T> operator*(normalized<complex_T<T>> c1, complex_T<T> c2);
 template <arithmetic T>
-complex_T<T> operator*(complex_T<T> c1, normalized<complex_T<T>> c2);
+constexpr complex_T<T> operator*(complex_T<T> c1, normalized<complex_T<T>> c2);
 template <arithmetic T>
-normalized<complex_T<T>> operator*(normalized<complex_T<T>> c1,
+constexpr normalized<complex_T<T>> operator*(normalized<complex_T<T>> c1,
                                    normalized<complex_T<T>> c2);
 template <arithmetic T>
-vector2_T<T> operator*(normalized<complex_T<T>> c, vector2_T<T> v);
+constexpr vector2_T<T> operator*(normalized<complex_T<T>> c, vector2_T<T> v);
 
 template <arithmetic T>
 T norm(complex_T<T> c);
 template <arithmetic T>
-T norm_squared(complex_T<T> c);
+constexpr T norm_squared(complex_T<T> c);
 template <arithmetic T>
 complex_T<T> normalize(complex_T<T> c);
 template <arithmetic T>
-complex_T<T> conjugate(complex_T<T> c);
+constexpr complex_T<T> conjugate(complex_T<T> c);
 #pragma endregion
 
 #pragma region declaration_radian_T
@@ -457,63 +459,63 @@ private:
 
 public:
 	radian_T() = default;
-	constexpr explicit radian_T(T f);
-	radian_T(const radian_T& r) = default;
-	radian_T(radian_T&& r) = default;
+	explicit constexpr radian_T(T f);
+	radian_T(const radian_T&) = default;
+	radian_T(radian_T&&) = default;
 	constexpr radian_T(degree_T<T> d);
 
-	explicit operator T() const;
+	explicit constexpr operator T() const;
 
 	template <arithmetic U>
-	explicit operator radian_T<U>() const
+	explicit constexpr operator radian_T<U>() const
 	{
 		return radian_T<U>{U(angle)};
 	}
 
-	radian_T& operator+=(radian_T r);
-	radian_T& operator-=(radian_T r);
-	radian_T& operator*=(radian_T r);
-	radian_T& operator/=(radian_T r);
+	constexpr radian_T& operator+=(radian_T r);
+	constexpr radian_T& operator-=(radian_T r);
+	constexpr radian_T& operator*=(radian_T r);
+	constexpr radian_T& operator/=(radian_T r);
 
-	radian_T operator-() const;
+	constexpr radian_T operator-() const;
 
-	radian_T& operator=(const radian_T& r) = default;
-	radian_T& operator=(degree_T<T> d);
+	constexpr radian_T& operator=(const radian_T&) = default;
+	constexpr radian_T& operator=(degree_T<T> d);
 
 	using underlying_type = T;
 };
 
 template <arithmetic T>
-radian_T<T> operator+(radian_T<T>, radian_T<T>);
+constexpr radian_T<T> operator+(radian_T<T>, radian_T<T>);
 template <arithmetic T>
-radian_T<T> operator-(radian_T<T>, radian_T<T>);
+constexpr radian_T<T> operator-(radian_T<T>, radian_T<T>);
 template <arithmetic T>
-radian_T<T> operator*(T, radian_T<T>);
+constexpr radian_T<T> operator*(T, radian_T<T>);
 template <arithmetic T>
-radian_T<T> operator*(radian_T<T>, T);
+constexpr radian_T<T> operator*(radian_T<T>, T);
 template <arithmetic T>
-radian_T<T> operator/(radian_T<T>, T);
+constexpr radian_T<T> operator/(radian_T<T>, T);
 template <arithmetic T>
-radian_T<T>& operator+=(radian_T<T>&, T);
+constexpr radian_T<T>& operator+=(radian_T<T>&, T);
 template <arithmetic T>
-radian_T<T>& operator-=(radian_T<T>&, T);
+constexpr radian_T<T>& operator-=(radian_T<T>&, T);
 template <arithmetic T>
-radian_T<T>& operator*=(radian_T<T>&, T);
+constexpr radian_T<T>& operator*=(radian_T<T>&, T);
 template <arithmetic T>
-radian_T<T>& operator/=(radian_T<T>&, T);
+constexpr radian_T<T>& operator/=(radian_T<T>&, T);
 
 template <arithmetic T>
-bool operator<(radian_T<T>, radian_T<T>);
+constexpr bool operator<(radian_T<T>, radian_T<T>);
 template <arithmetic T>
-bool operator>(radian_T<T>, radian_T<T>);
+constexpr bool operator>(radian_T<T>, radian_T<T>);
 template <arithmetic T>
-bool operator==(radian_T<T>, radian_T<T>);
+constexpr bool operator==(radian_T<T>, radian_T<T>);
 template <arithmetic T>
-bool operator!=(radian_T<T>, radian_T<T>);
+constexpr bool operator!=(radian_T<T>, radian_T<T>);
 template <arithmetic T>
-bool operator>=(radian_T<T>, radian_T<T>);
+constexpr bool operator>=(radian_T<T>, radian_T<T>);
 template <arithmetic T>
-bool operator<=(radian_T<T>, radian_T<T>);
+constexpr bool operator<=(radian_T<T>, radian_T<T>);
 
 template <arithmetic T>
 T sin(radian_T<T>);
@@ -550,63 +552,63 @@ private:
 
 public:
 	degree_T() = default;
-	constexpr explicit degree_T(T f);
-	degree_T(const degree_T& d) = default;
-	degree_T(degree_T&& d) = default;
+	explicit constexpr degree_T(T f);
+	degree_T(const degree_T&) = default;
+	degree_T(degree_T&&) = default;
 	constexpr degree_T(radian_T<T> r);
 
-	explicit operator T() const;
+	explicit constexpr operator T() const;
 
 	template <arithmetic U>
-	explicit operator degree_T<U>() const
+	explicit constexpr operator degree_T<U>() const
 	{
 		return degree_T<U>{U(angle)};
 	}
 
-	degree_T& operator+=(degree_T d);
-	degree_T& operator-=(degree_T d);
-	degree_T& operator*=(degree_T d);
-	degree_T& operator/=(degree_T d);
+	constexpr degree_T& operator+=(degree_T d);
+	constexpr degree_T& operator-=(degree_T d);
+	constexpr degree_T& operator*=(degree_T d);
+	constexpr degree_T& operator/=(degree_T d);
 
-	degree_T operator-() const;
+	constexpr degree_T operator-() const;
 
-	degree_T& operator=(const degree_T& d) = default;
-	degree_T& operator=(radian_T<T> r);
+	constexpr degree_T& operator=(const degree_T&) = default;
+	constexpr degree_T& operator=(radian_T<T> r);
 
 	using underlying_type = T;
 };
 
 template <arithmetic T>
-degree_T<T> operator+(degree_T<T>, degree_T<T>);
+constexpr degree_T<T> operator+(degree_T<T>, degree_T<T>);
 template <arithmetic T>
-degree_T<T> operator-(degree_T<T>, degree_T<T>);
+constexpr degree_T<T> operator-(degree_T<T>, degree_T<T>);
 template <arithmetic T>
-degree_T<T> operator*(T, degree_T<T>);
+constexpr degree_T<T> operator*(T, degree_T<T>);
 template <arithmetic T>
-degree_T<T> operator*(degree_T<T>, T);
+constexpr degree_T<T> operator*(degree_T<T>, T);
 template <arithmetic T>
-degree_T<T> operator/(degree_T<T>, T);
+constexpr degree_T<T> operator/(degree_T<T>, T);
 template <arithmetic T>
-degree_T<T>& operator+=(degree_T<T>&, T);
+constexpr degree_T<T>& operator+=(degree_T<T>&, T);
 template <arithmetic T>
-degree_T<T>& operator-=(degree_T<T>&, T);
+constexpr degree_T<T>& operator-=(degree_T<T>&, T);
 template <arithmetic T>
-degree_T<T>& operator*=(degree_T<T>&, T);
+constexpr degree_T<T>& operator*=(degree_T<T>&, T);
 template <arithmetic T>
-degree_T<T>& operator/=(degree_T<T>&, T);
+constexpr degree_T<T>& operator/=(degree_T<T>&, T);
 
 template <arithmetic T>
-bool operator<(degree_T<T>, degree_T<T>);
+constexpr bool operator<(degree_T<T>, degree_T<T>);
 template <arithmetic T>
-bool operator>(degree_T<T>, degree_T<T>);
+constexpr bool operator>(degree_T<T>, degree_T<T>);
 template <arithmetic T>
-bool operator==(degree_T<T>, degree_T<T>);
+constexpr bool operator==(degree_T<T>, degree_T<T>);
 template <arithmetic T>
-bool operator!=(degree_T<T>, degree_T<T>);
+constexpr bool operator!=(degree_T<T>, degree_T<T>);
 template <arithmetic T>
-bool operator>=(degree_T<T>, degree_T<T>);
+constexpr bool operator>=(degree_T<T>, degree_T<T>);
 template <arithmetic T>
-bool operator<=(degree_T<T>, degree_T<T>);
+constexpr bool operator<=(degree_T<T>, degree_T<T>);
 
 template <arithmetic T>
 T sin(degree_T<T>);
@@ -642,25 +644,25 @@ struct pi_fraction_T
 	T denominator;
 
 	pi_fraction_T() = default;
-	pi_fraction_T(T num, T den) : numerator{num}, denominator{den} {}
-	pi_fraction_T(const pi_fraction_T& d) = default;
-	pi_fraction_T(pi_fraction_T&& d) = default;
+	constexpr pi_fraction_T(T num, T den) : numerator{num}, denominator{den} {}
+	pi_fraction_T(const pi_fraction_T&) = default;
+	pi_fraction_T(pi_fraction_T&&) = default;
 
 	pi_fraction_T& operator=(const pi_fraction_T&) = default;
 	pi_fraction_T& operator=(pi_fraction_T&&) = default;
 
 	template <arithmetic U>
-	operator radian_T<U>() const
+	constexpr operator radian_T<U>() const
 	{
 		return radian_T<U>((U(numerator) * U(pi)) / U(denominator));
 	}
 	template <arithmetic U>
-	operator degree_T<U>() const
+	constexpr operator degree_T<U>() const
 	{
 		return operator radian_T<U>();
 	}
 
-	pi_fraction_T operator-() const
+	constexpr pi_fraction_T operator-() const
 	{
 		return pi_fraction_T{-numerator, denominator};
 	}
@@ -955,7 +957,7 @@ struct static_pi_fraction_T
 		return {numerator, denominator};
 	}
 
-	static_pi_fraction_T<T, -numerator, denominator> operator-() const
+	constexpr static_pi_fraction_T<T, -numerator, denominator> operator-() const
 	{
 		return {};
 	}
@@ -1203,21 +1205,21 @@ struct vector2_T
 	constexpr vector2_T(std::array<T, 2> a) : vector2_T(a[0], a[1]) {}
 
 	template <arithmetic U>
-	explicit operator vector2_T<U>() const
+	explicit constexpr operator vector2_T<U>() const
 	{
 		return vector2_T<U>{static_cast<U>(x), static_cast<U>(y)};
 	}
 
-	operator std::array<T, 2>() const { return {x, y}; }
+	constexpr operator std::array<T, 2>() const { return {x, y}; }
 
 	template <arithmetic U = T>
-	std::array<U, 2> to_array() const
+	constexpr std::array<U, 2> to_array() const
 	{
 		return {static_cast<U>(x), static_cast<U>(y)};
 	}
 
 	T norm() const { return std::sqrt(norm_squared()); }
-	T norm_squared() const { return x * x + y * y; }
+	constexpr T norm_squared() const { return x * x + y * y; }
 	vector2_T& normalize()
 	{
 		T n{norm()};
@@ -1244,14 +1246,14 @@ struct vector2_T
 		return res;
 	}
 
-	T& operator[](size_t i)
+	constexpr T& operator[](size_t i)
 	{
 		if (i == 0)
 			return x;
 		else
 			return y;
 	}
-	const T& operator[](size_t i) const
+	constexpr const T& operator[](size_t i) const
 	{
 		if (i == 0)
 			return x;
@@ -1259,16 +1261,16 @@ struct vector2_T
 			return y;
 	}
 
-	vector2_T operator+(vector2_T v) const;
-	vector2_T operator-(vector2_T v) const;
+	constexpr vector2_T operator+(vector2_T v) const;
+	constexpr vector2_T operator-(vector2_T v) const;
 
-	vector2_T& operator+=(vector2_T v);
-	vector2_T& operator-=(vector2_T v);
+	constexpr vector2_T& operator+=(vector2_T v);
+	constexpr vector2_T& operator-=(vector2_T v);
 
-	vector2_T operator-() const;
+	constexpr vector2_T operator-() const;
 
-	bool operator==(vector2_T v) const;
-	bool operator!=(vector2_T v) const;
+	constexpr bool operator==(vector2_T v) const;
+	constexpr bool operator!=(vector2_T v) const;
 
 	static constexpr vector2_T zero() { return { T(0), T(0) }; }
 	static constexpr vector2_T one() { return { T(1), T(1) }; }
@@ -1277,15 +1279,15 @@ struct vector2_T
 };
 
 template <arithmetic T>
-vector2_T<T> operator*(T f, vector2_T<T> v);
+constexpr vector2_T<T> operator*(T f, vector2_T<T> v);
 template <arithmetic T>
-vector2_T<T> operator*(vector2_T<T> v, T f);
+constexpr vector2_T<T> operator*(vector2_T<T> v, T f);
 template <arithmetic T>
-vector2_T<T> operator/(vector2_T<T> v, T f);
+constexpr vector2_T<T> operator/(vector2_T<T> v, T f);
 template <arithmetic T>
-vector2_T<T>& operator*=(vector2_T<T>& v, T f);
+constexpr vector2_T<T>& operator*=(vector2_T<T>& v, T f);
 template <arithmetic T>
-vector2_T<T>& operator/=(vector2_T<T>& v, T f);
+constexpr vector2_T<T>& operator/=(vector2_T<T>& v, T f);
 
 template <arithmetic T>
 constexpr T dot(vector2_T<T> lhs, vector2_T<T> rhs);
@@ -1304,13 +1306,13 @@ vector2_T<T> slerp(vector2_T<T> begin, vector2_T<T> end, T percent);
 template <arithmetic T>
 T distance_between(vector2_T<T> v1, vector2_T<T> v2);
 template <arithmetic T>
-T distance_squared_between(vector2_T<T> v1, vector2_T<T> v2);
+constexpr T distance_squared_between(vector2_T<T> v1, vector2_T<T> v2);
 template <arithmetic T>
-vector2_T<T> from_to(vector2_T<T> from, vector2_T<T> to);
+constexpr vector2_T<T> from_to(vector2_T<T> from, vector2_T<T> to);
 template <arithmetic T>
 radian_T<T> angle_between(vector2_T<T> v1, vector2_T<T> v2);
 template <arithmetic T>
-bool nearly_equal(vector2_T<T> v1, vector2_T<T> v2, T e = T(epsilon));
+constexpr bool nearly_equal(vector2_T<T> v1, vector2_T<T> v2, T e = T(epsilon));
 template <arithmetic T>
 constexpr vector2_T<T> element_wise_min(vector2_T<T> v0, vector2_T<T> v1);
 template <arithmetic T>
@@ -1338,24 +1340,24 @@ struct vector3_T
 	constexpr vector3_T(std::array<T, 3> a) : vector3_T(a[0], a[1], a[2]) {}
 
 	template <arithmetic U>
-	explicit operator vector3_T<U>() const
+	explicit constexpr operator vector3_T<U>() const
 	{
 		return vector3_T<U>{static_cast<U>(x), static_cast<U>(y),
 		                    static_cast<U>(z)};
 	}
 
-	operator std::array<T, 3>() const { return {x, y, z}; }
+	constexpr operator std::array<T, 3>() const { return {x, y, z}; }
 
 	template <arithmetic U = T>
-	std::array<U, 3> to_array() const
+	constexpr std::array<U, 3> to_array() const
 	{
 		return {static_cast<U>(x), static_cast<U>(y), static_cast<U>(z)};
 	}
 
-	vector2_T<T> xy() const;
+	constexpr vector2_T<T> xy() const;
 
 	T norm() const { return std::sqrt(norm_squared()); }
-	T norm_squared() const { return x * x + y * y + z * z; }
+	constexpr T norm_squared() const { return x * x + y * y + z * z; }
 	vector3_T& normalize()
 	{
 		T n = norm();
@@ -1384,16 +1386,16 @@ struct vector3_T
 		return res;
 	}
 
-	vector3_T operator+(vector3_T v) const;
-	vector3_T operator-(vector3_T v) const;
+	constexpr vector3_T operator+(vector3_T v) const;
+	constexpr vector3_T operator-(vector3_T v) const;
 
-	vector3_T& operator+=(vector3_T v);
-	vector3_T& operator-=(vector3_T v);
+	constexpr vector3_T& operator+=(vector3_T v);
+	constexpr vector3_T& operator-=(vector3_T v);
 
-	vector3_T operator-() const;
+	constexpr vector3_T operator-() const;
 
-	bool operator==(vector3_T v) const;
-	bool operator!=(vector3_T v) const;
+	constexpr bool operator==(vector3_T v) const;
+	constexpr bool operator!=(vector3_T v) const;
 
 	static constexpr vector3_T zero() { return { T(0), T(0), T(0) }; }
 	static constexpr vector3_T one() { return { T(1), T(1), T(1) }; }
@@ -1402,20 +1404,20 @@ struct vector3_T
 };
 
 template <arithmetic T>
-vector3_T<T> operator*(T f, vector3_T<T> v);
+constexpr vector3_T<T> operator*(T f, vector3_T<T> v);
 template <arithmetic T>
-vector3_T<T> operator*(vector3_T<T> v, T f);
+constexpr vector3_T<T> operator*(vector3_T<T> v, T f);
 template <arithmetic T>
-vector3_T<T> operator/(vector3_T<T> v, T f);
+constexpr vector3_T<T> operator/(vector3_T<T> v, T f);
 template <arithmetic T>
-vector3_T<T>& operator*=(vector3_T<T>& v, T f);
+constexpr vector3_T<T>& operator*=(vector3_T<T>& v, T f);
 template <arithmetic T>
-vector3_T<T>& operator/=(vector3_T<T>& v, T f);
+constexpr vector3_T<T>& operator/=(vector3_T<T>& v, T f);
 
 template <arithmetic T>
 T norm(vector3_T<T> v);
 template <arithmetic T>
-T norm_squared(vector3_T<T> v);
+constexpr T norm_squared(vector3_T<T> v);
 template <arithmetic T>
 vector3_T<T> normalize(vector3_T<T> v);
 //template <arithmetic T>
@@ -1427,19 +1429,19 @@ constexpr T dot(vector3_T<T> lhs, vector3_T<T> rhs);
 template <arithmetic T>
 constexpr vector3_T<T> cross(vector3_T<T> lhs, vector3_T<T> rhs);
 template <arithmetic T>
-vector3_T<T> lerp(vector3_T<T> begin, vector3_T<T> end, T percent);
+constexpr vector3_T<T> lerp(vector3_T<T> begin, vector3_T<T> end, T percent);
 template <arithmetic T>
 vector3_T<T> nlerp(vector3_T<T> begin, vector3_T<T> end, T percent);
 template <arithmetic T>
 T distance_between(vector3_T<T> v1, vector3_T<T> v2);
 template <arithmetic T>
-T distance_squared_between(vector3_T<T> v1, vector3_T<T> v2);
+constexpr T distance_squared_between(vector3_T<T> v1, vector3_T<T> v2);
 template <arithmetic T>
-vector3_T<T> from_to(vector3_T<T> from, vector3_T<T> to);
+constexpr vector3_T<T> from_to(vector3_T<T> from, vector3_T<T> to);
 template <arithmetic T>
 radian_T<T> angle_between(vector3_T<T> v1, vector3_T<T> v2);
 template <arithmetic T>
-bool nearly_equal(vector3_T<T> v1, vector3_T<T> v2, T e = epsilon);
+constexpr bool nearly_equal(vector3_T<T> v1, vector3_T<T> v2, T e = epsilon);
 template <arithmetic T>
 constexpr vector3_T<T> element_wise_min(vector3_T<T> v0, vector3_T<T> v1);
 template <arithmetic T>
@@ -1467,26 +1469,26 @@ struct vector4_T
 	constexpr vector4_T(std::array<T, 4> a) : vector4_T(a[0], a[1], a[2], a[3]) {}
 
 	template <arithmetic U>
-	explicit operator vector4_T<U>() const
+	explicit constexpr operator vector4_T<U>() const
 	{
 		return vector4_T<U>{static_cast<U>(x), static_cast<U>(y),
 		                    static_cast<U>(z), static_cast<U>(w)};
 	}
 
-	operator std::array<T, 4>() const { return {x, y, z, w}; }
+	constexpr operator std::array<T, 4>() const { return {x, y, z, w}; }
 
 	template <arithmetic U = T>
-	std::array<U, 4> to_array() const
+	constexpr std::array<U, 4> to_array() const
 	{
 		return {static_cast<U>(x), static_cast<U>(y), static_cast<U>(z),
 		        static_cast<U>(w)};
 	}
 
-	vector2_T<T> xy() const;
-	vector3_T<T> xyz() const;
+	constexpr vector2_T<T> xy() const;
+	constexpr vector3_T<T> xyz() const;
 
 	T norm() const { return std::sqrt(norm_squared()); }
-	T norm_squared() const { return x * x + y * y + z * z + w * w; }
+	constexpr T norm_squared() const { return x * x + y * y + z * z + w * w; }
 	vector4_T& normalize()
 	{
 		T n = norm();
@@ -1517,16 +1519,16 @@ struct vector4_T
 		return res;
 	}
 
-	vector4_T operator+(vector4_T v) const;
-	vector4_T operator-(vector4_T v) const;
+	constexpr vector4_T operator+(vector4_T v) const;
+	constexpr vector4_T operator-(vector4_T v) const;
 
-	vector4_T& operator+=(vector4_T v);
-	vector4_T& operator-=(vector4_T v);
+	constexpr vector4_T& operator+=(vector4_T v);
+	constexpr vector4_T& operator-=(vector4_T v);
 
-	vector4_T operator-() const;
+	constexpr vector4_T operator-() const;
 
-	bool operator==(vector4_T v) const;
-	bool operator!=(vector4_T v) const;
+	constexpr bool operator==(vector4_T v) const;
+	constexpr bool operator!=(vector4_T v) const;
 
 	static constexpr vector4_T zero() { return { T(0), T(0), T(0), T(0) }; }
 	static constexpr vector4_T one() { return { T(1), T(1), T(1), T(1) }; }
@@ -1535,20 +1537,20 @@ struct vector4_T
 };
 
 template <arithmetic T>
-vector4_T<T> operator*(T f, vector4_T<T> v);
+constexpr vector4_T<T> operator*(T f, vector4_T<T> v);
 template <arithmetic T>
-vector4_T<T> operator*(vector4_T<T> v, T f);
+constexpr vector4_T<T> operator*(vector4_T<T> v, T f);
 template <arithmetic T>
-vector4_T<T> operator/(vector4_T<T> v, T f);
+constexpr vector4_T<T> operator/(vector4_T<T> v, T f);
 template <arithmetic T>
-vector4_T<T>& operator*=(vector4_T<T>& v, T f);
+constexpr vector4_T<T>& operator*=(vector4_T<T>& v, T f);
 template <arithmetic T>
-vector4_T<T>& operator/=(vector4_T<T>& v, T f);
+constexpr vector4_T<T>& operator/=(vector4_T<T>& v, T f);
 
 template <arithmetic T>
 T norm(vector4_T<T> v);
 template <arithmetic T>
-T norm_squared(vector4_T<T> v);
+constexpr T norm_squared(vector4_T<T> v);
 template <arithmetic T>
 vector4_T<T> normalize(vector4_T<T> v);
 //template <arithmetic T>
@@ -1556,19 +1558,19 @@ vector4_T<T> normalize(vector4_T<T> v);
 //                             vector4_T<T> min,
 //                             vector4_T<T> max);
 template <arithmetic T>
-T dot(vector4_T<T> lhs, vector4_T<T> rhs);
+constexpr T dot(vector4_T<T> lhs, vector4_T<T> rhs);
 template <arithmetic T>
-vector4_T<T> lerp(vector4_T<T> begin, vector4_T<T> end, T percent);
+constexpr vector4_T<T> lerp(vector4_T<T> begin, vector4_T<T> end, T percent);
 template <arithmetic T>
 vector4_T<T> nlerp(vector4_T<T> begin, vector4_T<T> end, T percent);
 template <arithmetic T>
 T distance_between(vector4_T<T> v1, vector4_T<T> v2);
 template <arithmetic T>
-T distance_squared_between(vector4_T<T> v1, vector4_T<T> v2);
+constexpr T distance_squared_between(vector4_T<T> v1, vector4_T<T> v2);
 template <arithmetic T>
-vector4_T<T> from_to(vector4_T<T> from, vector4_T<T> to);
+constexpr vector4_T<T> from_to(vector4_T<T> from, vector4_T<T> to);
 template <arithmetic T>
-bool nearly_equal(vector4_T<T> v1, vector4_T<T> v2, T e = epsilon);
+constexpr bool nearly_equal(vector4_T<T> v1, vector4_T<T> v2, T e = epsilon);
 template <arithmetic T>
 constexpr vector4_T<T> element_wise_min(vector4_T<T> v0, vector4_T<T> v1);
 template <arithmetic T>
@@ -1595,19 +1597,19 @@ public:
 	{
 	}
 
-	static normalized already_normalized(const T& t);
-	static normalized already_normalized(T&& t) noexcept;
+	static constexpr normalized already_normalized(const T& t);
+	static constexpr normalized already_normalized(T&& t) noexcept;
 
-	const T& operator*() const;
-	const T* operator->() const;
-	operator const T&() const;
+	constexpr const T& operator*() const;
+	constexpr const T* operator->() const;
+	constexpr operator const T&() const;
 
-	normalized operator-() const;
+	constexpr normalized operator-() const;
 
-	bool operator==(const normalized& n) const;
-	bool operator!=(const normalized& n) const;
-	bool operator==(const T& v) const;
-	bool operator!=(const T& v) const;
+	constexpr bool operator==(const normalized& n) const;
+	constexpr bool operator!=(const normalized& n) const;
+	constexpr bool operator==(const T& v) const;
+	constexpr bool operator!=(const T& v) const;
 
 	normalized& operator=(const normalized&) = default;
 	normalized& operator=(normalized&&) = default;
@@ -1630,11 +1632,11 @@ struct matrix2_T
 private:
 	T m00, m01, m10, m11;
 
-	matrix2_T(T m00, T m10, T m01, T m11);
+	constexpr matrix2_T(T m00, T m10, T m01, T m11);
 
 public:
 	matrix2_T() = default;
-	explicit matrix2_T(const std::array<T, 4>& a);
+	explicit constexpr matrix2_T(const std::array<T, 4>& a);
 	matrix2_T(const matrix2_T&) = default;
 	matrix2_T(matrix2_T&&) = default;
 
@@ -1642,27 +1644,26 @@ public:
 	matrix2_T& operator=(matrix2_T&&) = default;
 
 	template <arithmetic U = T>
-	std::array<U, 4> to_array() const
+	constexpr std::array<U, 4> to_array() const
 	{
 		return {static_cast<U>(m00), static_cast<U>(m10), static_cast<U>(m01),
 		        static_cast<U>(m11)};
 	}
 
 	template <arithmetic U>
-	explicit operator matrix2_T<U>() const
+	explicit constexpr operator matrix2_T<U>() const
 	{
 		return {U(m00), U(m10), U(m01), U(m11)};
 	}
 
-	static matrix2_T zero();
-	static matrix2_T identity();
-	static matrix2_T rows(vector2_T<T> row0, vector2_T<T> row1);
-	static matrix2_T columns(vector2_T<T> column0, vector2_T<T> column1);
+	static constexpr matrix2_T zero();
+	static constexpr matrix2_T identity();
+	static constexpr matrix2_T rows(vector2_T<T> row0, vector2_T<T> row1);
+	static constexpr matrix2_T columns(vector2_T<T> column0, vector2_T<T> column1);
 	static matrix2_T rotation(radian_T<T> angle);
-	static matrix2_T rotation(normalized<complex_T<T>> angle);
-	matrix2_T& transpose();
-	matrix2_T get_transposed() const;
-	T determinant() const;
+	static constexpr matrix2_T rotation(normalized<complex_T<T>> angle);
+	constexpr matrix2_T& transpose();
+	constexpr matrix2_T get_transposed() const;
 
 	template <bool IsConstT>
 	struct proxy
@@ -1786,14 +1787,14 @@ public:
 		}[i];
 	}
 
-	vector2_T<T> operator*(vector2_T<T> v) const;
-	matrix2_T operator*(matrix2_T m) const;
+	constexpr vector2_T<T> operator*(vector2_T<T> v) const;
+	constexpr matrix2_T operator*(matrix2_T m) const;
 
 	using underlying_type = T;
 };
 
 template <arithmetic T>
-matrix2_T<T> transpose(matrix2_T<T> m);
+constexpr matrix2_T<T> transpose(matrix2_T<T> m);
 #pragma endregion
 
 #pragma region declaration_matrix3_t
@@ -1810,12 +1811,12 @@ struct matrix3_T
 private:
 	T m00, m01, m02, m10, m11, m12, m20, m21, m22;
 
-	matrix3_T(T m00, T m10, T m20, T m01, T m11, T m21, T m02, T m12, T m22);
+	constexpr matrix3_T(T m00, T m10, T m20, T m01, T m11, T m21, T m02, T m12, T m22);
 
 public:
 	matrix3_T() = default;
-	explicit matrix3_T(matrix2_T<T> m);
-	matrix3_T(const std::array<T, 9>& a);
+	explicit constexpr matrix3_T(matrix2_T<T> m);
+	constexpr matrix3_T(const std::array<T, 9>& a);
 	matrix3_T(const matrix3_T&) = default;
 	matrix3_T(matrix3_T&&) = default;
 
@@ -1823,13 +1824,15 @@ public:
 	matrix3_T& operator=(matrix3_T&&) = default;
 
 	template <arithmetic U>
-	explicit operator matrix3_T<U>() const
+	explicit constexpr operator matrix3_T<U>() const
 	{
-		return {U(m00), U(m10), U(m20), U(m01), U(m11),
-		        U(m21), U(m02), U(m12), U(m22)};
+		return {U(m00), U(m10), U(m20), //
+		U(m01), U(m11),U(m21),//
+		 U(m02), U(m12), U(m22),//
+		};
 	}
 
-	operator std::array<T, 9>() const
+	constexpr operator std::array<T, 9>() const
 	{
 		return {
 		    m00, m10, m20,  //
@@ -1839,24 +1842,24 @@ public:
 	}
 
 	template <arithmetic U = T>
-	std::array<U, 9> to_array() const
+	constexpr std::array<U, 9> to_array() const
 	{
 		return {static_cast<U>(m00), static_cast<U>(m10), static_cast<U>(m20),
 		        static_cast<U>(m01), static_cast<U>(m11), static_cast<U>(m21),
 		        static_cast<U>(m02), static_cast<U>(m12), static_cast<U>(m22)};
 	}
 
-	static matrix3_T zero();
-	static matrix3_T identity();
-	static matrix3_T rows(vector3_T<T> row0,
+	static constexpr matrix3_T zero();
+	static constexpr matrix3_T identity();
+	static constexpr matrix3_T rows(vector3_T<T> row0,
 	                      vector3_T<T> row1,
 	                      vector3_T<T> row2);
-	static matrix3_T columns(vector3_T<T> column0,
+	static constexpr matrix3_T columns(vector3_T<T> column0,
 	                         vector3_T<T> column1,
 	                         vector3_T<T> column2);
 
 private:
-	static matrix3_T rotation(direction3_T<T> axis, T sinAngle, T cosAngle);
+	static constexpr matrix3_T rotation(direction3_T<T> axis, T sinAngle, T cosAngle);
 
 public:
 	static matrix3_T rotation(direction3_T<T> axis, radian_T<T> angle);
@@ -1867,20 +1870,20 @@ public:
 	    direction3_T<T> axis,
 	    static_pi_fraction_T<U, NumeratorT, DenominatorT> angle);
 	static matrix3_T rotation(euler_angles_T<T> r);
-	static matrix3_T rotation(quaternion_T<T> q);
+	static constexpr matrix3_T rotation(quaternion_T<T> q);
 
 private:
-	static matrix3_T rotation_around_x(T sinAngle, T cosAngle);
-	static matrix3_T rotation_around_y(T sinAngle, T cosAngle);
-	static matrix3_T rotation_around_z(T sinAngle, T cosAngle);
+	static constexpr matrix3_T rotation_around_x(T sinAngle, T cosAngle);
+	static constexpr matrix3_T rotation_around_y(T sinAngle, T cosAngle);
+	static constexpr matrix3_T rotation_around_z(T sinAngle, T cosAngle);
 
 public:
 	static matrix3_T rotation_around_x(radian_T<T> angle);
 	static matrix3_T rotation_around_y(radian_T<T> angle);
 	static matrix3_T rotation_around_z(radian_T<T> angle);
-	static matrix3_T rotation_around_x(normalized<complex_T<T>> angle);
-	static matrix3_T rotation_around_y(normalized<complex_T<T>> angle);
-	static matrix3_T rotation_around_z(normalized<complex_T<T>> angle);
+	static constexpr matrix3_T rotation_around_x(normalized<complex_T<T>> angle);
+	static constexpr matrix3_T rotation_around_y(normalized<complex_T<T>> angle);
+	static constexpr matrix3_T rotation_around_z(normalized<complex_T<T>> angle);
 	template <std::signed_integral U, U NumeratorT, U DenominatorT>
 	static matrix3_T rotation_around_x(
 	    static_pi_fraction_T<U, NumeratorT, DenominatorT> angle);
@@ -1890,15 +1893,15 @@ public:
 	template <std::signed_integral U, U NumeratorT, U DenominatorT>
 	static matrix3_T rotation_around_z(
 	    static_pi_fraction_T<U, NumeratorT, DenominatorT> angle);
-	static matrix3_T scale(vector3_T<T> t);
-	static matrix3_T scale(T x, T y, T z);
-	static matrix3_T scale(T s);
-	matrix3_T& inverse();
-	matrix3_T get_inversed() const;
-	matrix3_T& transpose();
-	matrix3_T get_transposed() const;
-	T determinant() const;
-	bool is_orthogonal() const;
+	static constexpr matrix3_T scale(vector3_T<T> t);
+	static constexpr matrix3_T scale(T x, T y, T z);
+	static constexpr matrix3_T scale(T s);
+	constexpr matrix3_T& inverse();
+	constexpr matrix3_T get_inversed() const;
+	constexpr matrix3_T& transpose();
+	constexpr matrix3_T get_transposed() const;
+	constexpr T determinant() const;
+	constexpr bool is_orthogonal() const;
 
 	euler_angles_T<T> to_euler_angles() const;
 
@@ -2043,11 +2046,11 @@ public:
 		}[i];
 	}
 
-	matrix3_T operator*(T f) const;
-	vector3_T<T> operator*(vector3_T<T> v) const;
-	matrix3_T operator*(const matrix3_T& m) const;
+	constexpr matrix3_T operator*(T f) const;
+	constexpr vector3_T<T> operator*(vector3_T<T> v) const;
+	constexpr matrix3_T operator*(const matrix3_T& m) const;
 
-	bool operator==(const matrix3_T& m) const
+	constexpr bool operator==(const matrix3_T& m) const
 	{
 		return m00 == m.m00 && m01 == m.m01 && m02 == m.m02 && m10 == m.m10 &&
 		       m11 == m.m11 && m12 == m.m12 && m20 == m.m20 && m21 == m.m21 &&
@@ -2075,7 +2078,7 @@ private:
 	    m20, m21, m22, m23,  //
 	    m30, m31, m32, m33;
 
-	matrix4_T(T m00,
+	constexpr matrix4_T(T m00,
 	          T m10,
 	          T m20,
 	          T m30,
@@ -2094,13 +2097,13 @@ private:
 
 public:
 	matrix4_T() = default;
-	explicit matrix4_T(matrix2_T<T> m);
-	explicit matrix4_T(const matrix3_T<T>& m);
-	explicit matrix4_T(const perspective_T<T>& p);
-	explicit matrix4_T(const transform3_T<T>& t);
-	explicit matrix4_T(const uniform_transform3_T<T>& t);
-	explicit matrix4_T(const unscaled_transform3_T<T>& t);
-	explicit matrix4_T(const std::array<T, 16>& a);
+	explicit constexpr matrix4_T(matrix2_T<T> m);
+	explicit constexpr matrix4_T(const matrix3_T<T>& m);
+	explicit constexpr matrix4_T(const perspective_T<T>& p);
+	explicit constexpr matrix4_T(const transform3_T<T>& t);
+	explicit constexpr matrix4_T(const uniform_transform3_T<T>& t);
+	explicit constexpr matrix4_T(const unscaled_transform3_T<T>& t);
+	explicit constexpr matrix4_T(const std::array<T, 16>& a);
 	matrix4_T(const matrix4_T&) = default;
 	matrix4_T(matrix4_T&&) = default;
 
@@ -2108,14 +2111,14 @@ public:
 	matrix4_T& operator=(matrix4_T&&) = default;
 
 	template <arithmetic U>
-	explicit operator matrix4_T<U>() const
+	explicit constexpr operator matrix4_T<U>() const
 	{
 		return {U(m00), U(m10), U(m20), U(m30), U(m01), U(m11),
 		        U(m21), U(m31), U(m02), U(m12), U(m22), U(m32),
 		        U(m03), U(m13), U(m23), U(m33)};
 	}
 
-	operator std::array<T, 16>() const
+	constexpr operator std::array<T, 16>() const
 	{
 		return {
 		    m00, m10, m20, m30,  //
@@ -2126,7 +2129,7 @@ public:
 	}
 
 	template <arithmetic U = T>
-	std::array<U, 16> to_array() const
+	constexpr std::array<U, 16> to_array() const
 	{
 		return {
 		    static_cast<U>(m00),  //
@@ -2148,36 +2151,36 @@ public:
 		};
 	}
 
-	static matrix4_T zero();
-	static matrix4_T identity();
-	static matrix4_T rows(vector4_T<T> row0,
+	static constexpr matrix4_T zero();
+	static constexpr matrix4_T identity();
+	static constexpr matrix4_T rows(vector4_T<T> row0,
 	                      vector4_T<T> row1,
 	                      vector4_T<T> row2,
 	                      vector4_T<T> row3);
-	static matrix4_T columns(vector4_T<T> column0,
+	static constexpr matrix4_T columns(vector4_T<T> column0,
 	                         vector4_T<T> column1,
 	                         vector4_T<T> column2,
 	                         vector4_T<T> column3);
 	static matrix4_T rotation(direction3_T<T> axis, radian_T<T> angle);
-	static matrix4_T rotation(direction3_T<T> axis,
+	static constexpr matrix4_T rotation(direction3_T<T> axis,
 	                          normalized<complex_T<T>> angle);
 	template <std::signed_integral U, U NumeratorT, U DenominatorT>
 	static matrix4_T rotation(
 	    direction3_T<T> axis,
 	    static_pi_fraction_T<U, NumeratorT, DenominatorT> angle);
 	static matrix4_T rotation(euler_angles_T<T> r);
-	static matrix4_T rotation(quaternion_T<T> q);
-	static matrix4_T translation(vector3_T<T> t);
-	static matrix4_T translation(T x, T y, T z);
-	static matrix4_T scale(vector3_T<T> t);
-	static matrix4_T scale(T x, T y, T z);
-	static matrix4_T scale(T s);
+	static constexpr matrix4_T rotation(quaternion_T<T> q);
+	static constexpr matrix4_T translation(vector3_T<T> t);
+	static constexpr matrix4_T translation(T x, T y, T z);
+	static constexpr matrix4_T scale(vector3_T<T> t);
+	static constexpr matrix4_T scale(T x, T y, T z);
+	static constexpr matrix4_T scale(T s);
 	static matrix4_T look_at(
 	    vector3_T<T> from,
 	    vector3_T<T> to,
 	    direction3_T<T> up = direction3_T<T>::already_normalized(
 	        vector3_T<T>(T(0), T(1), T(0))));
-	static matrix4_T orthographic(T left,
+	static constexpr matrix4_T orthographic(T left,
 	                              T right,
 	                              T top,
 	                              T bottom,
@@ -2198,20 +2201,20 @@ public:
 	template <std::signed_integral T, T NumeratorT, T DenominatorT>
 	static matrix4_T rotation_around_z(
 	    static_pi_fraction_T<T, NumeratorT, DenominatorT> angle);
-	bool is_orthogonal() const;
-	bool is_homogenous() const;
-	matrix4_T& inverse();
-	matrix4_T get_inversed() const;
-	matrix4_T& transpose();
-	matrix4_T get_transposed() const;
-	T determinant() const;
+	constexpr bool is_orthogonal() const;
+	constexpr bool is_homogenous() const;
+	constexpr matrix4_T& inverse();
+	constexpr matrix4_T get_inversed() const;
+	constexpr matrix4_T& transpose();
+	constexpr matrix4_T get_transposed() const;
+	constexpr T determinant() const;
 
-	matrix3_T<T> extractRotationMatrix() const;
+	matrix3_T<T> extract_rotation_matrix() const;
 
-	vector3_T<T> transform_position(vector3_T<T> pos) const;
-	vector3_T<T> transform_direction(vector3_T<T> dir) const;
+	constexpr vector3_T<T> transform_position(vector3_T<T> pos) const;
+	constexpr vector3_T<T> transform_direction(vector3_T<T> dir) const;
 	direction3_T<T> transform_direction(direction3_T<T> dir) const;
-	vector3_T<T> transform_position_perspective(vector3_T<T> pos) const;
+	constexpr vector3_T<T> transform_position_perspective(vector3_T<T> pos) const;
 
 	template <bool IsConstT>
 	struct proxy
@@ -2369,12 +2372,12 @@ public:
 		}[i];
 	}
 
-	matrix4_T operator*(T f) const;
-	matrix4_T operator/(T f) const;
-	vector4_T<T> operator*(vector4_T<T> v) const;
-	matrix4_T operator*(const matrix4_T& m) const;
+	constexpr matrix4_T operator*(T f) const;
+	constexpr matrix4_T operator/(T f) const;
+	constexpr vector4_T<T> operator*(vector4_T<T> v) const;
+	constexpr matrix4_T operator*(const matrix4_T& m) const;
 
-	bool operator==(const matrix4_T& m) const
+	constexpr bool operator==(const matrix4_T& m) const
 	{
 		return m00 == m.m00 && m01 == m.m01 && m02 == m.m02 && m03 == m.m03 &&
 		       m10 == m.m10 && m11 == m.m11 && m12 == m.m12 && m13 == m.m13 &&
@@ -2386,20 +2389,20 @@ public:
 };
 
 template <arithmetic T>
-matrix4_T<T> operator*(const transform3_T<T>& t, const matrix4_T<T>& m);
+constexpr matrix4_T<T> operator*(const transform3_T<T>& t, const matrix4_T<T>& m);
 template <arithmetic T>
-matrix4_T<T> operator*(const matrix4_T<T>& m, const transform3_T<T>& t);
+constexpr matrix4_T<T> operator*(const matrix4_T<T>& m, const transform3_T<T>& t);
 template <arithmetic T>
-matrix4_T<T> operator*(const uniform_transform3_T<T>& t,
+constexpr matrix4_T<T> operator*(const uniform_transform3_T<T>& t,
                        const matrix4_T<T>& m);
 template <arithmetic T>
-matrix4_T<T> operator*(const matrix4_T<T>& m,
+constexpr matrix4_T<T> operator*(const matrix4_T<T>& m,
                        const uniform_transform3_T<T>& t);
 template <arithmetic T>
-matrix4_T<T> operator*(const unscaled_transform3_T<T>& t,
+constexpr matrix4_T<T> operator*(const unscaled_transform3_T<T>& t,
                        const matrix4_T<T>& m);
 template <arithmetic T>
-matrix4_T<T> operator*(const matrix4_T<T>& m,
+constexpr matrix4_T<T> operator*(const matrix4_T<T>& m,
                        const unscaled_transform3_T<T>& t);
 #pragma endregion
 
@@ -2433,34 +2436,34 @@ public:
 	void set_angle(radian_T<T> angle);
 	template <std::signed_integral U, U NumeratorT, U DenominatorT>
 	void set_angle(static_pi_fraction_T<U, NumeratorT, DenominatorT> angle);
-	radian_T<T> get_angle() const;
+	constexpr radian_T<T> get_angle() const;
 
-	void set_ratio(T ratio);
-	T get_ratio() const;
+	constexpr void set_ratio(T ratio);
+	constexpr T get_ratio() const;
 
-	void set_near(T near_plane_t);
-	T get_near() const;
+	constexpr void set_near(T near_plane);
+	constexpr T get_near() const;
 
-	void set_far(T far_plane_t);
-	T get_far() const;
+	constexpr void set_far(T far_plane);
+	constexpr T get_far() const;
 
-	matrix4_T<T> to_matrix4() const;
-	matrix4_T<T> to_inverse_matrix4() const;
+	constexpr matrix4_T<T> to_matrix4() const;
+	constexpr matrix4_T<T> to_inverse_matrix4() const;
 
 	template <arithmetic U>
-	friend matrix4_T<U> operator*(const matrix4_T<U>& m,
+	friend constexpr matrix4_T<U> operator*(const matrix4_T<U>& m,
 	                              const perspective_T<U>& p);
 	template <arithmetic U>
-	friend matrix4_T<U> operator*(const perspective_T<U>& p,
+	friend constexpr matrix4_T<U> operator*(const perspective_T<U>& p,
 	                              const matrix4_T<U>& m);
 	template <arithmetic U>
-	friend vector4_T<U> operator*(const perspective_T<U>& p,
+	friend constexpr vector4_T<U> operator*(const perspective_T<U>& p,
 	                              const vector4_T<U>& v);
 	template <arithmetic U>
-	friend matrix4_T<U> operator*(const unscaled_transform3_T<U>& t,
+	friend constexpr matrix4_T<U> operator*(const unscaled_transform3_T<U>& t,
 	                              const perspective_T<U>& p);
 	template <arithmetic U>
-	friend matrix4_T<U> operator*(const perspective_T<U>& p,
+	friend constexpr matrix4_T<U> operator*(const perspective_T<U>& p,
 	                              const unscaled_transform3_T<U>& t);
 
 	using underlying_type = T;
@@ -2624,61 +2627,61 @@ struct quaternion_T
 	             static_pi_fraction_T<U, NumeratorT, DenominatorT> angle);
 
 	template <arithmetic U>
-	explicit operator quaternion_T<U>() const
+	explicit constexpr operator quaternion_T<U>() const
 	{
 		return quaternion_T<U>{static_cast<U>(x), static_cast<U>(y),
 		                       static_cast<U>(z), static_cast<U>(w)};
 	}
 
-	operator std::array<T, 4>() const { return {x, y, z, w}; }
+	constexpr operator std::array<T, 4>() const { return {x, y, z, w}; }
 
 	template <arithmetic U = T>
-	std::array<U, 4> to_array() const
+	constexpr std::array<U, 4> to_array() const
 	{
 		return {static_cast<U>(x), static_cast<U>(y), static_cast<U>(z),
 		        static_cast<U>(w)};
 	}
 
-	static quaternion_T identity();
+	static constexpr quaternion_T identity();
 	static quaternion_T from_rotation_matrix(const matrix3_T<T>& m);
 	static quaternion_T look_at(direction3_T<T> forward, direction3_T<T> upward = direction3_T<T>::posY());
 
 	T norm() const;
-	T norm_squared() const;
+	constexpr T norm_squared() const;
 
 	quaternion_T& inverse();
-	quaternion_T& conjugate();
+	constexpr quaternion_T& conjugate();
 	quaternion_T& normalize();
 	constexpr quaternion_T& clamp(quaternion_T min, quaternion_T max);
 
 	quaternion_T get_inversed() const;
-	quaternion_T get_conjugated() const;
+	constexpr quaternion_T get_conjugated() const;
 	quaternion_T get_normalized() const;
 	constexpr quaternion_T get_clamped(quaternion_T min, quaternion_T max) const;
 
 	euler_angles_T<T> to_euler_angles() const;
 
-	quaternion_T operator+(quaternion_T q) const;
-	quaternion_T operator-(quaternion_T q) const;
+	constexpr quaternion_T operator+(quaternion_T q) const;
+	constexpr quaternion_T operator-(quaternion_T q) const;
 
 	// TODO: implement operator* for normalized<>
 	// if result is normalized too
-	quaternion_T operator*(quaternion_T q) const;
+	constexpr quaternion_T operator*(quaternion_T q) const;
 
-	vector3_T<T> operator*(vector3_T<T> v) const;
-	quaternion_T operator*(T f) const;
-	quaternion_T operator/(T f) const;
+	constexpr vector3_T<T> operator*(vector3_T<T> v) const;
+	constexpr quaternion_T operator*(T f) const;
+	constexpr quaternion_T operator/(T f) const;
 
-	quaternion_T& operator+=(quaternion_T q);
-	quaternion_T& operator-=(quaternion_T q);
-	quaternion_T& operator*=(quaternion_T q);
-	quaternion_T& operator*=(T f);
-	quaternion_T& operator/=(T f);
+	constexpr quaternion_T& operator+=(quaternion_T q);
+	constexpr quaternion_T& operator-=(quaternion_T q);
+	constexpr quaternion_T& operator*=(quaternion_T q);
+	constexpr quaternion_T& operator*=(T f);
+	constexpr quaternion_T& operator/=(T f);
 
-	quaternion_T operator-() const;
+	constexpr quaternion_T operator-() const;
 
-	bool operator==(quaternion_T v) const;
-	bool operator!=(quaternion_T v) const;
+	constexpr bool operator==(quaternion_T v) const;
+	constexpr bool operator!=(quaternion_T v) const;
 
 	using underlying_type = T;
 };
@@ -2688,7 +2691,7 @@ constexpr T dot(quaternion_T<T> lhs, quaternion_T<T> rhs);
 template <arithmetic T>
 constexpr quaternion_T<T> cross(quaternion_T<T> lhs, quaternion_T<T> rhs);
 template <arithmetic T>
-quaternion_T<T> lerp(quaternion_T<T> begin, quaternion_T<T> end, T percent);
+constexpr quaternion_T<T> lerp(quaternion_T<T> begin, quaternion_T<T> end, T percent);
 template <arithmetic T>
 quaternion_T<T> nlerp(quaternion_T<T> begin, quaternion_T<T> end, T percent);
 template <arithmetic T>
@@ -2707,12 +2710,12 @@ struct line_T<T, line_representation::SlopeIntercept>
 	T y_intercept;
 
 	line_T() = default;
-	line_T(T s, T yi);
+	constexpr line_T(T s, T yi);
 	line_T(vector2_T<T> direction, T e = T(epsilon));
-	line_T(vector2_T<T> point1, vector2_T<T> point2);
+	constexpr line_T(vector2_T<T> point1, vector2_T<T> point2);
 
-	vector2_T<T> resolve_for_x(T x) const;
-	vector2_T<T> resolve_for_y(T y) const;
+	constexpr vector2_T<T> resolve_for_x(T x) const;
+	constexpr vector2_T<T> resolve_for_y(T y) const;
 
 	using underlying_type = T;
 };
@@ -2726,7 +2729,7 @@ struct line_T<T, line_representation::Points>
 	vector2_T<T> p2;
 
 	line_T() = default;
-	line_T(vector2_T<T> point1, vector2_T<T> point2);
+	constexpr line_T(vector2_T<T> point1, vector2_T<T> point2);
 
 	//vector2_T<T> resolve_for_x(T x) const;
 	//vector2_T<T> resolve_for_y(T y) const;
@@ -2744,9 +2747,9 @@ struct segment2_T
 	vector2_T<T> end;
 
 	T length() const;
-	T length_squared() const;
+	constexpr T length_squared() const;
 
-	segment2_T& invert();
+	constexpr segment2_T& invert();
 
 	using underlying_type = T;
 };
@@ -2771,7 +2774,7 @@ struct plane_T
 	direction3_T<T> normal;
 
 	template <arithmetic U>
-	explicit operator plane_T<U>() const
+	explicit constexpr operator plane_T<U>() const
 	{
 		return plane_T<U>{static_cast<vector3_T<U>>(origin),
 		                  static_cast<direction3_T<U>>(normal)};
@@ -2810,7 +2813,7 @@ struct oriented_plane_T : public plane_T<T>
 	constexpr oriented_plane_T(const plane_T<T>& plane, const direction3_T<T>& tangent_);
 
 	template <arithmetic U>
-	explicit operator oriented_plane_T<U>() const
+	explicit constexpr operator oriented_plane_T<U>() const
 	{
 		return oriented_plane_T<U>{
 		    static_cast<vector3_T<U>>(origin),
@@ -2859,7 +2862,7 @@ struct circle_T
 {
 	vector2_T<T> origin;
 	T radius;
-	
+
 	constexpr bool contains(vector2_T<T> p) const;
 
 	using underlying_type = T;
@@ -2938,10 +2941,10 @@ struct transform2_T
 	normalized<complex_T<T>> rotation;
 	vector2_T<T> scale;
 
-	transform2_T operator*(const transform2_T& t) const;
-	vector2_T<T> operator*(vector2_T<T> v) const;
+	constexpr transform2_T operator*(const transform2_T& t) const;
+	constexpr vector2_T<T> operator*(vector2_T<T> v) const;
 
-	static transform2_T identity();
+	static constexpr transform2_T identity();
 
 	using underlying_type = T;
 };
@@ -2955,17 +2958,17 @@ struct transform3_T
 	quaternion_T<T> rotation;
 	vector3_T<T> scale;
 
-	transform3_T& translate_absolute(vector3_T<T> t);
-	transform3_T& translate_relative(vector3_T<T> t);
-	transform3_T& rotate(quaternion_T<T> r);
+	constexpr transform3_T& translate_absolute(vector3_T<T> t);
+	constexpr transform3_T& translate_relative(vector3_T<T> t);
+	constexpr transform3_T& rotate(quaternion_T<T> r);
 
 	matrix4_T<T> to_matrix4() const;
 
-	transform3_T operator*(const transform3_T& t) const;
-	vector3_T<T> operator*(vector3_T<T> v) const;
-	quaternion_T<T> operator*(quaternion_T<T> q) const;
+	constexpr transform3_T operator*(const transform3_T& t) const;
+	constexpr vector3_T<T> operator*(vector3_T<T> v) const;
+	constexpr quaternion_T<T> operator*(quaternion_T<T> q) const;
 
-	static transform3_T identity();
+	static constexpr transform3_T identity();
 
 	using underlying_type = T;
 };
@@ -2982,7 +2985,7 @@ struct uniform_transform2_T
 	uniform_transform2_T operator*(uniform_transform2_T t) const;
 	vector2_T<T> operator*(vector2_T<T> v) const;
 
-	static uniform_transform2_T identity();
+	static constexpr uniform_transform2_T identity();
 
 	using underlying_type = T;
 };
@@ -2998,11 +3001,11 @@ struct uniform_transform3_T
 
 	matrix4_T<T> to_matrix4() const;
 
-	uniform_transform3_T operator*(const uniform_transform3_T& t) const;
-	vector3_T<T> operator*(vector3_T<T> v) const;
-	quaternion_T<T> operator*(quaternion_T<T> q) const;
+	constexpr uniform_transform3_T operator*(const uniform_transform3_T& t) const;
+	constexpr vector3_T<T> operator*(vector3_T<T> v) const;
+	constexpr quaternion_T<T> operator*(quaternion_T<T> q) const;
 
-	static uniform_transform3_T identity();
+	static constexpr uniform_transform3_T identity();
 
 	using underlying_type = T;
 };
@@ -3018,7 +3021,7 @@ struct unscaled_transform2_T
 	unscaled_transform2_T operator*(unscaled_transform2_T t) const;
 	vector2_T<T> operator*(vector2_T<T> v) const;
 
-	static unscaled_transform2_T identity();
+	static constexpr unscaled_transform2_T identity();
 
 	using underlying_type = T;
 };
@@ -3031,26 +3034,26 @@ struct unscaled_transform3_T
 	vector3_T<T> position;
 	quaternion_T<T> rotation;
 
-	unscaled_transform3_T& translate_absolute(vector3_T<T> t);
-	unscaled_transform3_T& translate_relative(vector3_T<T> t);
-	unscaled_transform3_T& rotate(quaternion_T<T> r);
+	constexpr unscaled_transform3_T& translate_absolute(vector3_T<T> t);
+	constexpr unscaled_transform3_T& translate_relative(vector3_T<T> t);
+	constexpr unscaled_transform3_T& rotate(quaternion_T<T> r);
 
-	unscaled_transform3_T& inverse();
-	unscaled_transform3_T get_inversed() const;
+	constexpr unscaled_transform3_T& inverse();
+	constexpr unscaled_transform3_T get_inversed() const;
 
 	matrix4_T<T> to_matrix4() const;
 
-	unscaled_transform3_T operator*(const unscaled_transform3_T& t) const;
-	vector3_T<T> operator*(vector3_T<T> v) const;
-	quaternion_T<T> operator*(quaternion_T<T> q) const;
+	constexpr unscaled_transform3_T operator*(const unscaled_transform3_T& t) const;
+	constexpr vector3_T<T> operator*(vector3_T<T> v) const;
+	constexpr quaternion_T<T> operator*(quaternion_T<T> q) const;
 
-	static unscaled_transform3_T identity();
+	static constexpr unscaled_transform3_T identity();
 
 	using underlying_type = T;
 };
 
 template <arithmetic T>
-unscaled_transform3_T<T> inverse(unscaled_transform3_T<T> tr);
+constexpr unscaled_transform3_T<T> inverse(unscaled_transform3_T<T> tr);
 #pragma endregion
 
 #pragma region declaration_value_domain
@@ -3251,7 +3254,7 @@ T complex_T<T>::norm() const
 	return std::sqrt(norm_squared());
 }
 template <arithmetic T>
-T complex_T<T>::norm_squared() const
+constexpr T complex_T<T>::norm_squared() const
 {
 	return r * r + i * i;
 }
@@ -3273,13 +3276,13 @@ complex_T<T> complex_T<T>::get_normalized() const
 }
 
 template <arithmetic T>
-complex_T<T>& complex_T<T>::conjugate()
+constexpr complex_T<T>& complex_T<T>::conjugate()
 {
 	i = -i;
 	return *this;
 }
 template <arithmetic T>
-complex_T<T> complex_T<T>::get_conjugated() const
+constexpr complex_T<T> complex_T<T>::get_conjugated() const
 {
 	complex_T<T> res{*this};
 	res.conjugate();
@@ -3287,69 +3290,80 @@ complex_T<T> complex_T<T>::get_conjugated() const
 }
 
 template <arithmetic T>
-complex_T<T> complex_T<T>::operator+(complex_T<T> c) const
+constexpr complex_T<T> complex_T<T>::operator+(complex_T<T> c) const
 {
 	return {r + c.r, i + c.i};
 }
 template <arithmetic T>
-complex_T<T> complex_T<T>::operator-(complex_T<T> c) const
+constexpr complex_T<T> complex_T<T>::operator-(complex_T<T> c) const
 {
 	return {r - c.r, i - c.i};
 }
 
 template <arithmetic T>
-complex_T<T>& complex_T<T>::operator+=(complex_T<T> c)
+constexpr complex_T<T>& complex_T<T>::operator+=(complex_T<T> c)
 {
 	return *this = *this + c;
 }
 template <arithmetic T>
-complex_T<T>& complex_T<T>::operator-=(complex_T<T> c)
+constexpr complex_T<T>& complex_T<T>::operator-=(complex_T<T> c)
 {
 	return *this = *this - c;
 }
 template <arithmetic T>
-complex_T<T>& complex_T<T>::operator*=(complex_T<T> c)
+constexpr complex_T<T>& complex_T<T>::operator*=(complex_T<T> c)
 {
 	return *this = *this * c;
 }
 
 template <arithmetic T>
-complex_T<T> complex_T<T>::identity()
+constexpr complex_T<T> complex_T<T>::identity()
 {
 	return {T(1), T(0)};
 }
 
 template <arithmetic T>
-complex_T<T> operator*(complex_T<T> c1, complex_T<T> c2)
+constexpr complex_T<T> operator*(complex_T<T> c1, complex_T<T> c2)
 {
-	return {c1.r * c2.r - c1.i * c2.i, c1.r * c2.i + c1.i * c2.r};
+	return {
+	    c1.r * c2.r - c1.i * c2.i,
+	    c1.r * c2.i + c1.i * c2.r,
+	};
 }
 template <arithmetic T>
-complex_T<T> operator*(complex_T<T> c, T f)
+constexpr complex_T<T> operator*(complex_T<T> c, T f)
 {
-	return {c.r * f, c.i * f};
+	return {
+	    c.r * f,
+	    c.i * f,
+	};
 }
 template <arithmetic T>
-complex_T<T> operator*(normalized<complex_T<T>> c1, complex_T<T> c2)
+constexpr complex_T<T> operator*(normalized<complex_T<T>> c1, complex_T<T> c2)
 {
 	return *c1 * c2;
 }
 template <arithmetic T>
-complex_T<T> operator*(complex_T<T> c1, normalized<complex_T<T>> c2)
+constexpr complex_T<T> operator*(complex_T<T> c1, normalized<complex_T<T>> c2)
 {
 	return c1 * *c2;
 }
 template <arithmetic T>
-normalized<complex_T<T>> operator*(normalized<complex_T<T>> c1,
-                                   normalized<complex_T<T>> c2)
+constexpr normalized<complex_T<T>> operator*(normalized<complex_T<T>> c1,
+                                             normalized<complex_T<T>> c2)
 {
 	return normalized<complex_T<T>>::already_normalized(complex_T<T>{
-	    c1->r * c2->r - c1->i * c2->i, c1->r * c2->i + c1->i * c2->r});
+	    c1->r * c2->r - c1->i * c2->i,
+	    c1->r * c2->i + c1->i * c2->r,
+	});
 }
 template <arithmetic T>
-vector2_T<T> operator*(normalized<complex_T<T>> c, vector2_T<T> v)
+constexpr vector2_T<T> operator*(normalized<complex_T<T>> c, vector2_T<T> v)
 {
-	return {c->r * v.x - c->i * v.y, c->r * v.y + c->i * v.x};
+	return {
+	    c->r * v.x - c->i * v.y,
+	    c->r * v.y + c->i * v.x,
+	};
 }
 
 template <arithmetic T>
@@ -3358,7 +3372,7 @@ T norm(complex_T<T> c)
 	return c.norm_squared();
 }
 template <arithmetic T>
-T norm_squared(complex_T<T> c)
+constexpr T norm_squared(complex_T<T> c)
 {
 	return c.norm();
 }
@@ -3369,7 +3383,7 @@ complex_T<T> normalize(complex_T<T> c)
 	return c;
 }
 template <arithmetic T>
-complex_T<T> conjugate(complex_T<T> c)
+constexpr complex_T<T> conjugate(complex_T<T> c)
 {
 	c.conjugate();
 	return c;
@@ -3388,126 +3402,126 @@ constexpr radian_T<T>::radian_T(degree_T<T> d)
 }
 
 template <arithmetic T>
-radian_T<T>::operator T() const
+constexpr radian_T<T>::operator T() const
 {
 	return angle;
 }
 
 template <arithmetic T>
-radian_T<T>& radian_T<T>::operator+=(radian_T<T> r)
+constexpr radian_T<T>& radian_T<T>::operator+=(radian_T<T> r)
 {
 	angle += r.angle;
 	return *this;
 }
 template <arithmetic T>
-radian_T<T>& radian_T<T>::operator-=(radian_T<T> r)
+constexpr radian_T<T>& radian_T<T>::operator-=(radian_T<T> r)
 {
 	angle -= r.angle;
 	return *this;
 }
 template <arithmetic T>
-radian_T<T>& radian_T<T>::operator*=(radian_T<T> r)
+constexpr radian_T<T>& radian_T<T>::operator*=(radian_T<T> r)
 {
 	angle *= r.angle;
 	return *this;
 }
 template <arithmetic T>
-radian_T<T>& radian_T<T>::operator/=(radian_T<T> r)
+constexpr radian_T<T>& radian_T<T>::operator/=(radian_T<T> r)
 {
 	angle /= r.angle;
 	return *this;
 }
 
 template <arithmetic T>
-radian_T<T> radian_T<T>::operator-() const
+constexpr radian_T<T> radian_T<T>::operator-() const
 {
 	return radian_T<T>{-angle};
 }
 
 template <arithmetic T>
-radian_T<T>& radian_T<T>::operator=(degree_T<T> d)
+constexpr radian_T<T>& radian_T<T>::operator=(degree_T<T> d)
 {
 	angle = d.angle * T(deg_to_rad);
 	return *this;
 }
 
 template <arithmetic T>
-radian_T<T> operator+(radian_T<T> r1, radian_T<T> r2)
+constexpr radian_T<T> operator+(radian_T<T> r1, radian_T<T> r2)
 {
 	return radian_T<T>{static_cast<T>(r1) + static_cast<T>(r2)};
 }
 template <arithmetic T>
-radian_T<T> operator-(radian_T<T> r1, radian_T<T> r2)
+constexpr radian_T<T> operator-(radian_T<T> r1, radian_T<T> r2)
 {
 	return radian_T<T>{static_cast<T>(r1) - static_cast<T>(r2)};
 }
 template <arithmetic T>
-radian_T<T> operator*(T f, radian_T<T> r)
+constexpr radian_T<T> operator*(T f, radian_T<T> r)
 {
 	return radian_T<T>{static_cast<T>(r) * f};
 }
 template <arithmetic T>
-radian_T<T> operator*(radian_T<T> r, T f)
+constexpr radian_T<T> operator*(radian_T<T> r, T f)
 {
 	return radian_T<T>{f * static_cast<T>(r)};
 }
 template <arithmetic T>
-radian_T<T> operator/(radian_T<T> r, T f)
+constexpr radian_T<T> operator/(radian_T<T> r, T f)
 {
 	return radian_T<T>{static_cast<T>(r) / f};
 }
 template <arithmetic T>
-radian_T<T>& operator+=(radian_T<T>& r, T f)
+constexpr radian_T<T>& operator+=(radian_T<T>& r, T f)
 {
 	r = r + f;
 	return r;
 }
 template <arithmetic T>
-radian_T<T>& operator-=(radian_T<T>& r, T f)
+constexpr radian_T<T>& operator-=(radian_T<T>& r, T f)
 {
 	r = r - f;
 	return r;
 }
 template <arithmetic T>
-radian_T<T>& operator*=(radian_T<T>& r, T f)
+constexpr radian_T<T>& operator*=(radian_T<T>& r, T f)
 {
 	r = r * f;
 	return r;
 }
 template <arithmetic T>
-radian_T<T>& operator/=(radian_T<T>& r, T f)
+constexpr radian_T<T>& operator/=(radian_T<T>& r, T f)
 {
 	r = r / f;
 	return r;
 }
 
 template <arithmetic T>
-bool operator<(radian_T<T> lhs, radian_T<T> rhs)
+constexpr bool operator<(radian_T<T> lhs, radian_T<T> rhs)
 {
 	return T(lhs) < T(rhs);
 }
 template <arithmetic T>
-bool operator>(radian_T<T> lhs, radian_T<T> rhs)
+constexpr bool operator>(radian_T<T> lhs, radian_T<T> rhs)
 {
 	return T(lhs) > T(rhs);
 }
 template <arithmetic T>
-bool operator==(radian_T<T> lhs, radian_T<T> rhs)
+constexpr bool operator==(radian_T<T> lhs, radian_T<T> rhs)
 {
 	return T(lhs) == T(rhs);
 }
 template <arithmetic T>
-bool operator!=(radian_T<T> lhs, radian_T<T> rhs)
+constexpr bool operator!=(radian_T<T> lhs, radian_T<T> rhs)
 {
 	return T(lhs) != T(rhs);
 }
 template <arithmetic T>
-bool operator>=(radian_T<T> lhs, radian_T<T> rhs)
+constexpr bool operator>=(radian_T<T> lhs, radian_T<T> rhs)
 {
 	return T(lhs) >= T(rhs);
 }
 template <arithmetic T>
-bool operator<=(radian_T<T> lhs, radian_T<T> rhs)
+constexpr bool operator<=(radian_T<T> lhs, radian_T<T> rhs)
 {
 	return T(lhs) <= T(rhs);
 }
@@ -3586,119 +3600,119 @@ constexpr degree_T<T>::degree_T(radian_T<T> r)
 }
 
 template <arithmetic T>
-degree_T<T>::operator T() const
+constexpr degree_T<T>::operator T() const
 {
 	return angle;
 }
 
 template <arithmetic T>
-degree_T<T>& degree_T<T>::operator+=(degree_T d)
+constexpr degree_T<T>& degree_T<T>::operator+=(degree_T d)
 {
 	angle += d.angle;
 	return *this;
 }
 template <arithmetic T>
-degree_T<T>& degree_T<T>::operator-=(degree_T d)
+constexpr degree_T<T>& degree_T<T>::operator-=(degree_T d)
 {
 	angle -= d.angle;
 	return *this;
 }
 template <arithmetic T>
-degree_T<T>& degree_T<T>::operator*=(degree_T d)
+constexpr degree_T<T>& degree_T<T>::operator*=(degree_T d)
 {
 	angle *= d.angle;
 	return *this;
 }
 template <arithmetic T>
-degree_T<T>& degree_T<T>::operator/=(degree_T d)
+constexpr degree_T<T>& degree_T<T>::operator/=(degree_T d)
 {
 	angle /= d.angle;
 	return *this;
 }
 
 template <arithmetic T>
-degree_T<T> degree_T<T>::operator-() const
+constexpr degree_T<T> degree_T<T>::operator-() const
 {
 	return degree_T(-angle);
 }
 
 template <arithmetic T>
-degree_T<T> operator+(degree_T<T> d1, degree_T<T> d2)
+constexpr degree_T<T> operator+(degree_T<T> d1, degree_T<T> d2)
 {
 	return degree_T<T>{static_cast<T>(d1) + static_cast<T>(d2)};
 }
 template <arithmetic T>
-degree_T<T> operator-(degree_T<T> d1, degree_T<T> d2)
+constexpr degree_T<T> operator-(degree_T<T> d1, degree_T<T> d2)
 {
 	return degree_T<T>{static_cast<T>(d1) - static_cast<T>(d2)};
 }
 template <arithmetic T>
-degree_T<T> operator*(T f, degree_T<T> d)
+constexpr degree_T<T> operator*(T f, degree_T<T> d)
 {
 	return degree_T<T>{static_cast<T>(d) * f};
 }
 template <arithmetic T>
-degree_T<T> operator*(degree_T<T> d, T f)
+constexpr degree_T<T> operator*(degree_T<T> d, T f)
 {
 	return degree_T<T>{f * static_cast<T>(d)};
 }
 template <arithmetic T>
-degree_T<T> operator/(degree_T<T> d, T f)
+constexpr degree_T<T> operator/(degree_T<T> d, T f)
 {
 	return degree_T<T>{static_cast<T>(d) / f};
 }
 template <arithmetic T>
-degree_T<T>& operator+=(degree_T<T>& d, T f)
+constexpr degree_T<T>& operator+=(degree_T<T>& d, T f)
 {
 	d = d + f;
 	return d;
 }
 template <arithmetic T>
-degree_T<T>& operator-=(degree_T<T>& d, T f)
+constexpr degree_T<T>& operator-=(degree_T<T>& d, T f)
 {
 	d = d - f;
 	return d;
 }
 template <arithmetic T>
-degree_T<T>& operator*=(degree_T<T>& d, T f)
+constexpr degree_T<T>& operator*=(degree_T<T>& d, T f)
 {
 	d = d * f;
 	return d;
 }
 template <arithmetic T>
-degree_T<T>& operator/=(degree_T<T>& d, T f)
+constexpr degree_T<T>& operator/=(degree_T<T>& d, T f)
 {
 	d = d / f;
 	return d;
 }
 
 template <arithmetic T>
-bool operator<(degree_T<T> lhs, degree_T<T> rhs)
+constexpr bool operator<(degree_T<T> lhs, degree_T<T> rhs)
 {
 	return T(lhs) < T(rhs);
 }
 template <arithmetic T>
-bool operator>(degree_T<T> lhs, degree_T<T> rhs)
+constexpr bool operator>(degree_T<T> lhs, degree_T<T> rhs)
 {
 	return T(lhs) > T(rhs);
 }
 template <arithmetic T>
-bool operator==(degree_T<T> lhs, degree_T<T> rhs)
+constexpr bool operator==(degree_T<T> lhs, degree_T<T> rhs)
 {
 	return T(lhs) == T(rhs);
 }
 template <arithmetic T>
-bool operator!=(degree_T<T> lhs, degree_T<T> rhs)
+constexpr bool operator!=(degree_T<T> lhs, degree_T<T> rhs)
 {
 	return T(lhs) != T(rhs);
 }
 template <arithmetic T>
-bool operator>=(degree_T<T> lhs, degree_T<T> rhs)
+constexpr bool operator>=(degree_T<T> lhs, degree_T<T> rhs)
 {
 	return T(lhs) >= T(rhs);
 }
 template <arithmetic T>
-bool operator<=(degree_T<T> lhs, degree_T<T> rhs)
+constexpr bool operator<=(degree_T<T> lhs, degree_T<T> rhs)
 {
 	return T(lhs) <= T(rhs);
 }
@@ -3773,69 +3787,75 @@ constexpr vector2_T<T>::vector2_T(const direction2_T<T>& d)
 }
 
 template <arithmetic T>
-vector2_T<T> vector2_T<T>::operator+(vector2_T<T> v) const
+constexpr vector2_T<T> vector2_T<T>::operator+(vector2_T<T> v) const
 {
 	return {x + v.x, y + v.y};
 }
 template <arithmetic T>
-vector2_T<T> vector2_T<T>::operator-(vector2_T<T> v) const
+constexpr vector2_T<T> vector2_T<T>::operator-(vector2_T<T> v) const
 {
 	return {x - v.x, y - v.y};
 }
 
 template <arithmetic T>
-vector2_T<T>& vector2_T<T>::operator+=(vector2_T<T> v)
+constexpr vector2_T<T>& vector2_T<T>::operator+=(vector2_T<T> v)
 {
 	*this = *this + v;
 	return *this;
 }
 template <arithmetic T>
-vector2_T<T>& vector2_T<T>::operator-=(vector2_T<T> v)
+constexpr vector2_T<T>& vector2_T<T>::operator-=(vector2_T<T> v)
 {
 	*this = *this - v;
 	return *this;
 }
 
 template <arithmetic T>
-vector2_T<T> vector2_T<T>::operator-() const
+constexpr vector2_T<T> vector2_T<T>::operator-() const
 {
 	return {-x, -y};
 }
 
 template <arithmetic T>
-bool vector2_T<T>::operator==(vector2_T<T> v) const
+constexpr bool vector2_T<T>::operator==(vector2_T<T> v) const
 {
 	return x == v.x && y == v.y;
 }
 template <arithmetic T>
-bool vector2_T<T>::operator!=(vector2_T<T> v) const
+constexpr bool vector2_T<T>::operator!=(vector2_T<T> v) const
 {
 	return !operator==(v);
 }
 
 template <arithmetic T>
-vector2_T<T> operator*(T f, vector2_T<T> v)
+constexpr vector2_T<T> operator*(T f, vector2_T<T> v)
 {
 	return v * f;
 }
 template <arithmetic T>
-vector2_T<T> operator*(vector2_T<T> v, T f)
+constexpr vector2_T<T> operator*(vector2_T<T> v, T f)
 {
-	return {v.x * f, v.y * f};
+	return {
+	    v.x * f,
+	    v.y * f,
+	};
 }
 template <arithmetic T>
-vector2_T<T> operator/(vector2_T<T> v, T f)
+constexpr vector2_T<T> operator/(vector2_T<T> v, T f)
 {
-	return {v.x / f, v.y / f};
+	return {
+	    v.x / f,
+	    v.y / f,
+	};
 }
 template <arithmetic T>
-vector2_T<T>& operator*=(vector2_T<T>& v, T f)
+constexpr vector2_T<T>& operator*=(vector2_T<T>& v, T f)
 {
 	v = v * f;
 	return v;
 }
 template <arithmetic T>
-vector2_T<T>& operator/=(vector2_T<T>& v, T f)
+constexpr vector2_T<T>& operator/=(vector2_T<T>& v, T f)
 {
 	v = v / f;
 	return v;
@@ -3847,7 +3867,7 @@ T norm(vector2_T<T> v)
 	return std::sqrt(norm_squared(v));
 }
 template <arithmetic T>
-T norm_squared(vector2_T<T> v)
+constexpr T norm_squared(vector2_T<T> v)
 {
 	return v.x * v.x + v.y * v.y;
 }
@@ -3910,14 +3930,17 @@ T distance_between(vector2_T<T> v1, vector2_T<T> v2)
 	return norm(v1 - v2);
 }
 template <arithmetic T>
-T distance_squared_between(vector2_T<T> v1, vector2_T<T> v2)
+constexpr T distance_squared_between(vector2_T<T> v1, vector2_T<T> v2)
 {
 	return norm_squared(v1 - v2);
 }
 template <arithmetic T>
-vector2_T<T> from_to(vector2_T<T> from, vector2_T<T> to)
+constexpr vector2_T<T> from_to(vector2_T<T> from, vector2_T<T> to)
 {
-	return {to.x - from.x, to.y - from.y};
+	return {
+	    to.x - from.x,
+	    to.y - from.y,
+	};
 }
 template <arithmetic T>
 radian_T<T> angle_between(vector2_T<T> v1, vector2_T<T> v2)
@@ -3925,7 +3948,7 @@ radian_T<T> angle_between(vector2_T<T> v1, vector2_T<T> v2)
 	return radian_T{atan2(v2.y, v2.x) - atan2(v1.y, v1.x)};
 }
 template <arithmetic T>
-bool nearly_equal(vector2_T<T> v1, vector2_T<T> v2, T e)
+constexpr bool nearly_equal(vector2_T<T> v1, vector2_T<T> v2, T e)
 {
 	return cdm::nearly_equal(v1.x, v2.x, e) &&
 	       cdm::nearly_equal(v1.y, v2.y, e);
@@ -3974,13 +3997,13 @@ constexpr vector3_T<T>::vector3_T(const direction3_T<T>& d)
 }
 
 template <arithmetic T>
-vector2_T<T> vector3_T<T>::xy() const
+constexpr vector2_T<T> vector3_T<T>::xy() const
 {
 	return {x, y};
 }
 
 template <arithmetic T>
-vector3_T<T> vector3_T<T>::operator+(vector3_T<T> v) const
+constexpr vector3_T<T> vector3_T<T>::operator+(vector3_T<T> v) const
 {
 	return {
 	    x + v.x,
@@ -3989,7 +4012,7 @@ vector3_T<T> vector3_T<T>::operator+(vector3_T<T> v) const
 	};
 }
 template <arithmetic T>
-vector3_T<T> vector3_T<T>::operator-(vector3_T<T> v) const
+constexpr vector3_T<T> vector3_T<T>::operator-(vector3_T<T> v) const
 {
 	return {
 	    x - v.x,
@@ -3999,20 +4022,20 @@ vector3_T<T> vector3_T<T>::operator-(vector3_T<T> v) const
 }
 
 template <arithmetic T>
-vector3_T<T>& vector3_T<T>::operator+=(vector3_T<T> v)
+constexpr vector3_T<T>& vector3_T<T>::operator+=(vector3_T<T> v)
 {
 	*this = *this + v;
 	return *this;
 }
 template <arithmetic T>
-vector3_T<T>& vector3_T<T>::operator-=(vector3_T<T> v)
+constexpr vector3_T<T>& vector3_T<T>::operator-=(vector3_T<T> v)
 {
 	*this = *this - v;
 	return *this;
 }
 
 template <arithmetic T>
-vector3_T<T> vector3_T<T>::operator-() const
+constexpr vector3_T<T> vector3_T<T>::operator-() const
 {
 	return {
 	    -x,
@@ -4022,23 +4045,23 @@ vector3_T<T> vector3_T<T>::operator-() const
 }
 
 template <arithmetic T>
-bool vector3_T<T>::operator==(vector3_T<T> v) const
+constexpr bool vector3_T<T>::operator==(vector3_T<T> v) const
 {
 	return x == v.x && y == v.y && z == v.z;
 }
 template <arithmetic T>
-bool vector3_T<T>::operator!=(vector3_T<T> v) const
+constexpr bool vector3_T<T>::operator!=(vector3_T<T> v) const
 {
 	return !operator==(v);
 }
 
 template <arithmetic T>
-vector3_T<T> operator*(T f, vector3_T<T> v)
+constexpr vector3_T<T> operator*(T f, vector3_T<T> v)
 {
 	return v * f;
 }
 template <arithmetic T>
-vector3_T<T> operator*(vector3_T<T> v, T f)
+constexpr vector3_T<T> operator*(vector3_T<T> v, T f)
 {
 	return {
 	    v.x * f,
@@ -4047,7 +4070,7 @@ vector3_T<T> operator*(vector3_T<T> v, T f)
 	};
 }
 template <arithmetic T>
-vector3_T<T> operator/(vector3_T<T> v, T f)
+constexpr vector3_T<T> operator/(vector3_T<T> v, T f)
 {
 	return {
 	    v.x / f,
@@ -4056,13 +4079,13 @@ vector3_T<T> operator/(vector3_T<T> v, T f)
 	};
 }
 template <arithmetic T>
-vector3_T<T>& operator*=(vector3_T<T>& v, T f)
+constexpr vector3_T<T>& operator*=(vector3_T<T>& v, T f)
 {
 	v = v * f;
 	return v;
 }
 template <arithmetic T>
-vector3_T<T>& operator/=(vector3_T<T>& v, T f)
+constexpr vector3_T<T>& operator/=(vector3_T<T>& v, T f)
 {
 	v = v / f;
 	return v;
@@ -4074,7 +4097,7 @@ T norm(vector3_T<T> v)
 	return std::sqrt(norm_squared(v));
 }
 template <arithmetic T>
-T norm_squared(vector3_T<T> v)
+constexpr T norm_squared(vector3_T<T> v)
 {
 	return v.x * v.x + v.y * v.y + v.z * v.z;
 }
@@ -4110,7 +4133,7 @@ constexpr vector3_T<T> cross(vector3_T<T> lhs, vector3_T<T> rhs)
 	};
 }
 template <arithmetic T>
-vector3_T<T> lerp(vector3_T<T> begin, vector3_T<T> end, T percent)
+constexpr vector3_T<T> lerp(vector3_T<T> begin, vector3_T<T> end, T percent)
 {
 	return (end - begin) * percent + begin;
 }
@@ -4125,12 +4148,12 @@ T distance_between(vector3_T<T> v1, vector3_T<T> v2)
 	return norm(v1 - v2);
 }
 template <arithmetic T>
-T distance_squared_between(vector3_T<T> v1, vector3_T<T> v2)
+constexpr T distance_squared_between(vector3_T<T> v1, vector3_T<T> v2)
 {
 	return norm_squared(v1 - v2);
 }
 template <arithmetic T>
-vector3_T<T> from_to(vector3_T<T> from, vector3_T<T> to)
+constexpr vector3_T<T> from_to(vector3_T<T> from, vector3_T<T> to)
 {
 	return {to.x - from.x, to.y - from.y, to.z - from.z};
 }
@@ -4145,7 +4168,7 @@ radian_T<T> angle_between(vector3_T<T> v1, vector3_T<T> v2)
 	return radian_T<T>(std::acos(cdm::clamp(alpha, T(-1), T(1))));
 }
 template <arithmetic T>
-bool nearly_equal(vector3_T<T> v1, vector3_T<T> v2, T e)
+constexpr bool nearly_equal(vector3_T<T> v1, vector3_T<T> v2, T e)
 {
 	return nearly_equal(v1.x, v2.x, e) && nearly_equal(v1.y, v2.y, e) &&
 	       nearly_equal(v1.z, v2.z, e);
@@ -4202,80 +4225,80 @@ radian_T<T> angle_around_axis(vector3_T<T> v0,
 
 #pragma region definition_vector4_t
 template <arithmetic T>
-vector2_T<T> vector4_T<T>::xy() const
+constexpr vector2_T<T> vector4_T<T>::xy() const
 {
 	return {x, y};
 }
 template <arithmetic T>
-vector3_T<T> vector4_T<T>::xyz() const
+constexpr vector3_T<T> vector4_T<T>::xyz() const
 {
 	return {x, y, z};
 }
 
 template <arithmetic T>
-vector4_T<T> vector4_T<T>::operator+(vector4_T<T> v) const
+constexpr vector4_T<T> vector4_T<T>::operator+(vector4_T<T> v) const
 {
 	return {x + v.x, y + v.y, z + v.z, w + v.w};
 }
 template <arithmetic T>
-vector4_T<T> vector4_T<T>::operator-(vector4_T<T> v) const
+constexpr vector4_T<T> vector4_T<T>::operator-(vector4_T<T> v) const
 {
 	return {x - v.x, y - v.y, z - v.z, w - v.w};
 }
 
 template <arithmetic T>
-vector4_T<T>& vector4_T<T>::operator+=(vector4_T<T> v)
+constexpr vector4_T<T>& vector4_T<T>::operator+=(vector4_T<T> v)
 {
 	*this = *this + v;
 	return *this;
 }
 template <arithmetic T>
-vector4_T<T>& vector4_T<T>::operator-=(vector4_T<T> v)
+constexpr vector4_T<T>& vector4_T<T>::operator-=(vector4_T<T> v)
 {
 	*this = *this - v;
 	return *this;
 }
 
 template <arithmetic T>
-vector4_T<T> vector4_T<T>::operator-() const
+constexpr vector4_T<T> vector4_T<T>::operator-() const
 {
 	return {-x, -y, -z, -w};
 }
 
 template <arithmetic T>
-bool vector4_T<T>::operator==(vector4_T<T> v) const
+constexpr bool vector4_T<T>::operator==(vector4_T<T> v) const
 {
 	return x == v.x && y == v.y && z == v.z && w == v.w;
 }
 template <arithmetic T>
-bool vector4_T<T>::operator!=(vector4_T<T> v) const
+constexpr bool vector4_T<T>::operator!=(vector4_T<T> v) const
 {
 	return !operator==(v);
 }
 
 template <arithmetic T>
-vector4_T<T> operator*(T f, vector4_T<T> v)
+constexpr vector4_T<T> operator*(T f, vector4_T<T> v)
 {
 	return v * f;
 }
 template <arithmetic T>
-vector4_T<T> operator*(vector4_T<T> v, T f)
+constexpr vector4_T<T> operator*(vector4_T<T> v, T f)
 {
 	return {v.x * f, v.y * f, v.z * f, v.w * f};
 }
 template <arithmetic T>
-vector4_T<T> operator/(vector4_T<T> v, T f)
+constexpr vector4_T<T> operator/(vector4_T<T> v, T f)
 {
 	return {v.x / f, v.y / f, v.z / f, v.w / f};
 }
 template <arithmetic T>
-vector4_T<T>& operator*=(vector4_T<T>& v, T f)
+constexpr vector4_T<T>& operator*=(vector4_T<T>& v, T f)
 {
 	v = v * f;
 	return v;
 }
 template <arithmetic T>
-vector4_T<T>& operator/=(vector4_T<T>& v, T f)
+constexpr vector4_T<T>& operator/=(vector4_T<T>& v, T f)
 {
 	v = v / f;
 	return v;
@@ -4287,7 +4310,7 @@ T norm(vector4_T<T> v)
 	return v.norm();
 }
 template <arithmetic T>
-T norm_squared(vector4_T<T> v)
+constexpr T norm_squared(vector4_T<T> v)
 {
 	return v.norm_squared();
 }
@@ -4306,12 +4329,12 @@ vector4_T<T> normalize(vector4_T<T> v)
 //	return v;
 // }
 template <arithmetic T>
-T dot(vector4_T<T> lhs, vector4_T<T> rhs)
+constexpr T dot(vector4_T<T> lhs, vector4_T<T> rhs)
 {
 	return lhs.x * rhs.x + lhs.y * rhs.y + lhs.z * rhs.z + lhs.w * rhs.w;
 }
 template <arithmetic T>
-vector4_T<T> lerp(vector4_T<T> begin, vector4_T<T> end, T percent)
+constexpr vector4_T<T> lerp(vector4_T<T> begin, vector4_T<T> end, T percent)
 {
 	return (end - begin) * percent + begin;
 }
@@ -4326,17 +4349,17 @@ T distance_between(vector4_T<T> v1, vector4_T<T> v2)
 	return norm(v1 - v2);
 }
 template <arithmetic T>
-T distance_squared_between(vector4_T<T> v1, vector4_T<T> v2)
+constexpr T distance_squared_between(vector4_T<T> v1, vector4_T<T> v2)
 {
 	return norm_squared(v1 - v2);
 }
 template <arithmetic T>
-vector4_T<T> from_to(vector4_T<T> from, vector4_T<T> to)
+constexpr vector4_T<T> from_to(vector4_T<T> from, vector4_T<T> to)
 {
 	return to - from;
 }
 template <arithmetic T>
-bool nearly_equal(vector4_T<T> v1, vector4_T<T> v2, T e)
+constexpr bool nearly_equal(vector4_T<T> v1, vector4_T<T> v2, T e)
 {
 	return nearly_equal(v1.x, v2.x, e) && nearly_equal(v1.y, v2.y, e) &&
 	       nearly_equal(v1.z, v2.z, e) && nearly_equal(v1.w, v2.w, e);
@@ -4393,7 +4416,7 @@ normalized<T>::normalized(const T& t) : vector(normalize(t))
 }
 
 template <normalizable T>
-normalized<T> normalized<T>::already_normalized(const T& t)
+constexpr normalized<T> normalized<T>::already_normalized(const T& t)
 {
 	assert(t.norm_squared() != 0);
 	normalized<T> res;
@@ -4401,7 +4424,7 @@ normalized<T> normalized<T>::already_normalized(const T& t)
 	return res;
 }
 template <normalizable T>
-normalized<T> normalized<T>::already_normalized(T&& t) noexcept
+constexpr normalized<T> normalized<T>::already_normalized(T&& t) noexcept
 {
 	assert(t.norm_squared() != 0);
 	normalized<T> res;
@@ -4410,76 +4433,77 @@ normalized<T> normalized<T>::already_normalized(T&& t) noexcept
 }
 
 template <normalizable T>
-const T& normalized<T>::operator*() const
+constexpr const T& normalized<T>::operator*() const
 {
 	return vector;
 }
 template <normalizable T>
-const T* normalized<T>::operator->() const
+constexpr const T* normalized<T>::operator->() const
 {
 	return &vector;
 }
 template <normalizable T>
-normalized<T>::operator const T&() const
+constexpr normalized<T>::operator const T&() const
 {
 	return vector;
 }
 
 template <normalizable T>
-normalized<T> normalized<T>::operator-() const
+constexpr normalized<T> normalized<T>::operator-() const
 {
 	return -vector;
 }
 
 template <normalizable T>
-bool normalized<T>::operator==(const normalized<T>& v) const
+constexpr bool normalized<T>::operator==(const normalized<T>& v) const
 {
 	return vector == v.vector;
 }
 template <normalizable T>
-bool normalized<T>::operator!=(const normalized<T>& v) const
+constexpr bool normalized<T>::operator!=(const normalized<T>& v) const
 {
 	return vector != v.vector;
 }
 template <normalizable T>
-bool normalized<T>::operator==(const T& v) const
+constexpr bool normalized<T>::operator==(const T& v) const
 {
 	return vector == v;
 }
 template <normalizable T>
-bool normalized<T>::operator!=(const T& v) const
+constexpr bool normalized<T>::operator!=(const T& v) const
 {
 	return vector != v;
 }
 
 template <arithmetic T>
-vector3_T<T> cross(normalized<vector3_T<T>> lhs, normalized<vector3_T<T>> rhs)
+constexpr vector3_T<T> cross(normalized<vector3_T<T>> lhs,
+                             normalized<vector3_T<T>> rhs)
 {
 	return cross(*lhs, *rhs);
 }
 template <arithmetic T>
-vector3_T<T> cross(vector3_T<T> lhs, normalized<vector3_T<T>> rhs)
+constexpr vector3_T<T> cross(vector3_T<T> lhs, normalized<vector3_T<T>> rhs)
 {
 	return cross(lhs, *rhs);
 }
 template <arithmetic T>
-vector3_T<T> cross(normalized<vector3_T<T>> lhs, vector3_T<T> rhs)
+constexpr vector3_T<T> cross(normalized<vector3_T<T>> lhs, vector3_T<T> rhs)
 {
 	return cross(*lhs, rhs);
 }
 
 template <arithmetic T>
-T dot(normalized<vector3_T<T>> lhs, normalized<vector3_T<T>> rhs)
+constexpr T dot(normalized<vector3_T<T>> lhs, normalized<vector3_T<T>> rhs)
 {
 	return dot(*lhs, *rhs);
 }
 template <arithmetic T>
-T dot(vector3_T<T> lhs, normalized<vector3_T<T>> rhs)
+constexpr T dot(vector3_T<T> lhs, normalized<vector3_T<T>> rhs)
 {
 	return dot(lhs, *rhs);
 }
 template <arithmetic T>
-T dot(normalized<vector3_T<T>> lhs, vector3_T<T> rhs)
+constexpr T dot(normalized<vector3_T<T>> lhs, vector3_T<T> rhs)
 {
 	return dot(*lhs, rhs);
 }
@@ -4487,63 +4511,84 @@ T dot(normalized<vector3_T<T>> lhs, vector3_T<T> rhs)
 
 #pragma region definition_matrix2_t
 template <arithmetic T>
-matrix2_T<T>::matrix2_T(T e00, T e10, T e01, T e11)
+constexpr matrix2_T<T>::matrix2_T(T e00, T e10, T e01, T e11)
     : m00{e00}, m10{e10}, m01{e01}, m11{e11}
 {
 }
 template <arithmetic T>
-matrix2_T<T>::matrix2_T(const std::array<T, 4>& a)
+constexpr matrix2_T<T>::matrix2_T(const std::array<T, 4>& a)
     : matrix2_T(a[0], a[1], a[2], a[3])
 {
 }
 template <arithmetic T>
-matrix2_T<T> matrix2_T<T>::zero()
+constexpr matrix2_T<T> matrix2_T<T>::zero()
 {
-	return {T(0), T(0), T(0), T(0)};
+	return {
+	    T(0), T(0),  //
+	    T(0), T(0),  //
+	};
 }
 template <arithmetic T>
-matrix2_T<T> matrix2_T<T>::identity()
+constexpr matrix2_T<T> matrix2_T<T>::identity()
 {
-	return {T(1), T(0), T(0), T(1)};
+	return {
+	    T(1), T(0),  //
+	    T(0), T(1),  //
+	};
 }
 template <arithmetic T>
-matrix2_T<T> matrix2_T<T>::rows(vector2_T<T> row0, vector2_T<T> row1)
+constexpr matrix2_T<T> matrix2_T<T>::rows(vector2_T<T> row0, vector2_T<T> row1)
 {
-	return {row0.x, row0.y, row1.x, row1.y};
+	return {
+	    row0.x, row0.y,  //
+	    row1.x, row1.y,  //
+	};
 }
 template <arithmetic T>
-matrix2_T<T> matrix2_T<T>::columns(vector2_T<T> column0, vector2_T<T> column1)
+constexpr matrix2_T<T> matrix2_T<T>::columns(vector2_T<T> column0,
+                                             vector2_T<T> column1)
 {
-	return {column0.x, column1.x, column0.y, column1.y};
+	return {
+	    column0.x, column1.x,  //
+	    column0.y, column1.y,  //
+	};
 }
 template <arithmetic T>
 matrix2_T<T> matrix2_T<T>::rotation(radian_T<T> angle)
 {
 	T c = cos(angle);
 	T s = sin(angle);
-	return {c, -s, s, c};
+	return {
+	    c, -s,  //
+	    s, c,   //
+	};
 }
 template <arithmetic T>
-matrix2_T<T> matrix2_T<T>::rotation(normalized<complex_T<T>> angle)
+constexpr matrix2_T<T> matrix2_T<T>::rotation(normalized<complex_T<T>> angle)
 {
-	return {angle->r, -angle->i, angle->i, angle->r};
+	return {
+	    angle->r, -angle->i,  //
+	    angle->i, angle->r,   //
+	};
 }
 
 template <arithmetic T>
-vector2_T<T> matrix2_T<T>::operator*(vector2_T<T> v) const
+constexpr vector2_T<T> matrix2_T<T>::operator*(vector2_T<T> v) const
 {
-	return {m00 * v.x + m01 * v.y, m10 * v.x + m11 * v.y};
+	return {
+	    m00 * v.x + m01 * v.y,  //
+	    m10 * v.x + m11 * v.y,  //
+	};
 }
 template <arithmetic T>
-matrix2_T<T> matrix2_T<T>::operator*(matrix2_T<T> m) const
+constexpr matrix2_T<T> matrix2_T<T>::operator*(matrix2_T<T> m) const
 {
 	return {m00 * m.m00 + m01 * m.m10, m00 * m.m01 + m01 * m.m11,
-
 	        m10 * m.m00 + m11 * m.m10, m10 * m.m01 + m11 * m.m11};
 }
 
 template <arithmetic T>
-matrix2_T<T> transpose(matrix2_T<T> m)
+constexpr matrix2_T<T> transpose(matrix2_T<T> m)
 {
 	std::swap(m.m01, m.m10);
 	return m;
@@ -4552,15 +4597,15 @@ matrix2_T<T> transpose(matrix2_T<T> m)
 
 #pragma region definition_matrix3_t
 template <arithmetic T>
-matrix3_T<T>::matrix3_T(T e00,
-                        T e10,
-                        T e20,
-                        T e01,
-                        T e11,
-                        T e21,
-                        T e02,
-                        T e12,
-                        T e22)
+constexpr matrix3_T<T>::matrix3_T(T e00,
+                                  T e10,
+                                  T e20,
+                                  T e01,
+                                  T e11,
+                                  T e21,
+                                  T e02,
+                                  T e12,
+                                  T e22)
     : m00{e00},
       m10{e10},
       m20{e20},
@@ -4573,45 +4618,51 @@ matrix3_T<T>::matrix3_T(T e00,
 {
 }
 template <arithmetic T>
-matrix3_T<T>::matrix3_T(matrix2_T<T> m)
+constexpr matrix3_T<T>::matrix3_T(matrix2_T<T> m)
     : matrix3_T(m.m00, m.m10, T(0), m.m10, m.m11, T(0), T(0), T(0), T(1))
 {
 }
 template <arithmetic T>
-matrix3_T<T>::matrix3_T(const std::array<T, 9>& a)
+constexpr matrix3_T<T>::matrix3_T(const std::array<T, 9>& a)
     : matrix3_T(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8])
 {
 }
 template <arithmetic T>
-matrix3_T<T> matrix3_T<T>::zero()
+constexpr matrix3_T<T> matrix3_T<T>::zero()
 {
 	return {T(0), T(0), T(0), T(0), T(0), T(0), T(0), T(0), T(0)};
 }
 template <arithmetic T>
-matrix3_T<T> matrix3_T<T>::identity()
+constexpr matrix3_T<T> matrix3_T<T>::identity()
 {
 	return {T(1), T(0), T(0), T(0), T(1), T(0), T(0), T(0), T(1)};
 }
 template <arithmetic T>
-matrix3_T<T> matrix3_T<T>::rows(vector3_T<T> row0,
-                                vector3_T<T> row1,
-                                vector3_T<T> row2)
+constexpr matrix3_T<T> matrix3_T<T>::rows(vector3_T<T> row0,
+                                          vector3_T<T> row1,
+                                          vector3_T<T> row2)
 {
-	return {row0.x, row0.y, row0.z, row1.x, row1.y,
-	        row1.z, row2.x, row2.y, row2.z};
+	return {
+	    row0.x, row0.y, row0.z,  //
+	    row1.x, row1.y, row1.z,  //
+	    row2.x, row2.y, row2.z,  //
+	};
 }
 template <arithmetic T>
-matrix3_T<T> matrix3_T<T>::columns(vector3_T<T> column0,
-                                   vector3_T<T> column1,
-                                   vector3_T<T> column2)
+constexpr matrix3_T<T> matrix3_T<T>::columns(vector3_T<T> column0,
+                                             vector3_T<T> column1,
+                                             vector3_T<T> column2)
 {
-	return {column0.x, column1.x, column2.x, column0.y, column1.y,
-	        column2.y, column0.z, column1.z, column2.z};
+	return {
+	    column0.x, column1.x, column2.x,  //
+	    column0.y, column1.y, column2.y,  //
+	    column0.z, column1.z, column2.z,  //
+	};
 }
 template <arithmetic T>
-matrix3_T<T> matrix3_T<T>::rotation(direction3_T<T> axis,
-                                    T sinAngle,
-                                    T cosAngle)
+constexpr matrix3_T<T> matrix3_T<T>::rotation(direction3_T<T> axis,
+                                              T sinAngle,
+                                              T cosAngle)
 {
 	const T l{axis.x()};
 	const T m{axis.y()};
@@ -4674,7 +4725,7 @@ matrix3_T<T> matrix3_T<T>::rotation(euler_angles_T<T> r)
 	return RY * RX * RZ;
 }
 template <arithmetic T>
-matrix3_T<T> matrix3_T<T>::rotation(quaternion_T<T> q)
+constexpr matrix3_T<T> matrix3_T<T>::rotation(quaternion_T<T> q)
 {
 	return {
 	    detail::get_quaternion_t_matrix_element<0, 0>(q),
@@ -4689,7 +4740,7 @@ matrix3_T<T> matrix3_T<T>::rotation(quaternion_T<T> q)
 	};
 }
 template <arithmetic T>
-matrix3_T<T> matrix3_T<T>::rotation_around_x(T sinAngle, T cosAngle)
+constexpr matrix3_T<T> matrix3_T<T>::rotation_around_x(T sinAngle, T cosAngle)
 {
 	return {
 	    T(1), T(0),     T(0),       //
@@ -4698,7 +4749,7 @@ matrix3_T<T> matrix3_T<T>::rotation_around_x(T sinAngle, T cosAngle)
 	};
 }
 template <arithmetic T>
-matrix3_T<T> matrix3_T<T>::rotation_around_y(T sinAngle, T cosAngle)
+constexpr matrix3_T<T> matrix3_T<T>::rotation_around_y(T sinAngle, T cosAngle)
 {
 	return {
 	    cosAngle,  T(0), sinAngle,  //
@@ -4707,7 +4758,7 @@ matrix3_T<T> matrix3_T<T>::rotation_around_y(T sinAngle, T cosAngle)
 	};
 }
 template <arithmetic T>
-matrix3_T<T> matrix3_T<T>::rotation_around_z(T sinAngle, T cosAngle)
+constexpr matrix3_T<T> matrix3_T<T>::rotation_around_z(T sinAngle, T cosAngle)
 {
 	return {
 	    cosAngle, -sinAngle, T(0),  //
@@ -4731,17 +4782,20 @@ matrix3_T<T> matrix3_T<T>::rotation_around_z(radian_T<T> angle)
 	return rotation_around_z(sin(angle), cos(angle));
 }
 template <arithmetic T>
-matrix3_T<T> matrix3_T<T>::rotation_around_x(normalized<complex_T<T>> angle)
+constexpr matrix3_T<T> matrix3_T<T>::rotation_around_x(
+    normalized<complex_T<T>> angle)
 {
 	return rotation_around_x(angle->i, angle->r);
 }
 template <arithmetic T>
-matrix3_T<T> matrix3_T<T>::rotation_around_y(normalized<complex_T<T>> angle)
+constexpr matrix3_T<T> matrix3_T<T>::rotation_around_y(
+    normalized<complex_T<T>> angle)
 {
 	return rotation_around_y(angle->i, angle->r);
 }
 template <arithmetic T>
-matrix3_T<T> matrix3_T<T>::rotation_around_z(normalized<complex_T<T>> angle)
+constexpr matrix3_T<T> matrix3_T<T>::rotation_around_z(
+    normalized<complex_T<T>> angle)
 {
 	return rotation_around_z(angle->i, angle->r);
 }
@@ -4767,12 +4821,12 @@ matrix3_T<T> matrix3_T<T>::rotation_around_z(
 	return rotation_around_z(sin<T>(angle), cos<T>(angle));
 }
 template <arithmetic T>
-matrix3_T<T> matrix3_T<T>::scale(vector3_T<T> s)
+constexpr matrix3_T<T> matrix3_T<T>::scale(vector3_T<T> s)
 {
 	return scale(s.x, s.y, s.z);
 }
 template <arithmetic T>
-matrix3_T<T> matrix3_T<T>::scale(T x, T y, T z)
+constexpr matrix3_T<T> matrix3_T<T>::scale(T x, T y, T z)
 {
 	return {
 	    x,    T(0), T(0),  //
@@ -4781,12 +4835,12 @@ matrix3_T<T> matrix3_T<T>::scale(T x, T y, T z)
 	};
 }
 template <arithmetic T>
-matrix3_T<T> matrix3_T<T>::scale(T s)
+constexpr matrix3_T<T> matrix3_T<T>::scale(T s)
 {
 	return scale(s, s, s);
 }
 template <arithmetic T>
-matrix3_T<T>& matrix3_T<T>::inverse()
+constexpr matrix3_T<T>& matrix3_T<T>::inverse()
 {
 	if (is_orthogonal())
 	{
@@ -4794,7 +4848,7 @@ matrix3_T<T>& matrix3_T<T>::inverse()
 	}
 
 	const T det = determinant();
-	assert(std::abs(det) > std::numeric_limits<T>::epsilon());
+	assert((det < T(0) ? -det : det) > std::numeric_limits<T>::epsilon());
 
 	const T invDet = T(1) / det;
 	const T recM00 = m00;
@@ -4816,14 +4870,14 @@ matrix3_T<T>& matrix3_T<T>::inverse()
 	return *this;
 }
 template <arithmetic T>
-matrix3_T<T> matrix3_T<T>::get_inversed() const
+constexpr matrix3_T<T> matrix3_T<T>::get_inversed() const
 {
 	matrix3_T<T> res = *this;
 	res.inverse();
 	return res;
 }
 template <arithmetic T>
-matrix3_T<T>& matrix3_T<T>::transpose()
+constexpr matrix3_T<T>& matrix3_T<T>::transpose()
 {
 	std::swap(m01, m10);
 	std::swap(m02, m20);
@@ -4831,7 +4885,7 @@ matrix3_T<T>& matrix3_T<T>::transpose()
 	return *this;
 }
 template <arithmetic T>
-matrix3_T<T> matrix3_T<T>::get_transposed() const
+constexpr matrix3_T<T> matrix3_T<T>::get_transposed() const
 {
 	return {
 	    m00, m01, m02,  //
@@ -4841,13 +4895,13 @@ matrix3_T<T> matrix3_T<T>::get_transposed() const
 }
 
 template <arithmetic T>
-T matrix3_T<T>::determinant() const
+constexpr T matrix3_T<T>::determinant() const
 {
 	return m00 * m11 * m22 + m01 * m12 * m20 + m02 * m10 * m21 -
 	       m20 * m11 * m02 - m21 * m12 * m00 - m22 * m10 * m01;
 }
 template <arithmetic T>
-bool matrix3_T<T>::is_orthogonal() const
+constexpr bool matrix3_T<T>::is_orthogonal() const
 {
 	return nearly_equal(m00 * m01 + m10 * m11 + m20 * m21, T(0)) &&
 	       nearly_equal(m00 * m02 + m10 * m12 + m20 * m22, T(0)) &&
@@ -4865,7 +4919,7 @@ euler_angles_T<T> matrix3_T<T>::to_euler_angles() const
 }
 
 template <arithmetic T>
-matrix3_T<T> matrix3_T<T>::operator*(T f) const
+constexpr matrix3_T<T> matrix3_T<T>::operator*(T f) const
 {
 	return {
 	    m00 * f, m10 * f, m20 * f,  //
@@ -4874,14 +4928,14 @@ matrix3_T<T> matrix3_T<T>::operator*(T f) const
 	};
 }
 template <arithmetic T>
-vector3_T<T> matrix3_T<T>::operator*(vector3_T<T> v) const
+constexpr vector3_T<T> matrix3_T<T>::operator*(vector3_T<T> v) const
 {
 	return {m00 * v.x + m10 * v.y + m20 * v.z,
 	        m01 * v.x + m11 * v.y + m21 * v.z,
 	        m02 * v.x + m12 * v.y + m22 * v.z};
 }
 template <arithmetic T>
-matrix3_T<T> matrix3_T<T>::operator*(const matrix3_T<T>& m) const
+constexpr matrix3_T<T> matrix3_T<T>::operator*(const matrix3_T<T>& m) const
 {
 	return {m00 * m.m00 + m10 * m.m01 + m20 * m.m02,
 	        m00 * m.m10 + m10 * m.m11 + m20 * m.m12,
@@ -4899,22 +4953,22 @@ matrix3_T<T> matrix3_T<T>::operator*(const matrix3_T<T>& m) const
 
 #pragma region definition_matrix4_t
 template <arithmetic T>
-matrix4_T<T>::matrix4_T(T e00,
-                        T e10,
-                        T e20,
-                        T e30,
-                        T e01,
-                        T e11,
-                        T e21,
-                        T e31,
-                        T e02,
-                        T e12,
-                        T e22,
-                        T e32,
-                        T e03,
-                        T e13,
-                        T e23,
-                        T e33)
+constexpr matrix4_T<T>::matrix4_T(T e00,
+                                  T e10,
+                                  T e20,
+                                  T e30,
+                                  T e01,
+                                  T e11,
+                                  T e21,
+                                  T e31,
+                                  T e02,
+                                  T e12,
+                                  T e22,
+                                  T e32,
+                                  T e03,
+                                  T e13,
+                                  T e23,
+                                  T e33)
     : m00{e00},
       m10{e10},
       m20{e20},
@@ -4934,7 +4988,7 @@ matrix4_T<T>::matrix4_T(T e00,
 {
 }
 template <arithmetic T>
-matrix4_T<T>::matrix4_T(matrix2_T<T> m)
+constexpr matrix4_T<T>::matrix4_T(matrix2_T<T> m)
     : matrix4_T(m.m00,
                 m.m10,
                 T(0),
@@ -4954,7 +5008,7 @@ matrix4_T<T>::matrix4_T(matrix2_T<T> m)
 {
 }
 template <arithmetic T>
-matrix4_T<T>::matrix4_T(const matrix3_T<T>& m)
+constexpr matrix4_T<T>::matrix4_T(const matrix3_T<T>& m)
     : matrix4_T(m.m00,
                 m.m10,
                 m.m20,
@@ -4974,25 +5028,27 @@ matrix4_T<T>::matrix4_T(const matrix3_T<T>& m)
 {
 }
 template <arithmetic T>
-matrix4_T<T>::matrix4_T(const perspective_T<T>& p) : matrix4_T(p.to_matrix4())
+constexpr matrix4_T<T>::matrix4_T(const perspective_T<T>& p)
+    : matrix4_T(p.to_matrix4())
 {
 }
 template <arithmetic T>
-matrix4_T<T>::matrix4_T(const transform3_T<T>& t) : matrix4_T(t.to_matrix4())
-{
-}
-template <arithmetic T>
-matrix4_T<T>::matrix4_T(const uniform_transform3_T<T>& t)
+constexpr matrix4_T<T>::matrix4_T(const transform3_T<T>& t)
     : matrix4_T(t.to_matrix4())
 {
 }
 template <arithmetic T>
-matrix4_T<T>::matrix4_T(const unscaled_transform3_T<T>& t)
+constexpr matrix4_T<T>::matrix4_T(const uniform_transform3_T<T>& t)
     : matrix4_T(t.to_matrix4())
 {
 }
 template <arithmetic T>
-matrix4_T<T>::matrix4_T(const std::array<T, 16>& a)
+constexpr matrix4_T<T>::matrix4_T(const unscaled_transform3_T<T>& t)
+    : matrix4_T(t.to_matrix4())
+{
+}
+template <arithmetic T>
+constexpr matrix4_T<T>::matrix4_T(const std::array<T, 16>& a)
     : matrix4_T(a[0],
                 a[1],
                 a[2],
@@ -5013,22 +5069,30 @@ matrix4_T<T>::matrix4_T(const std::array<T, 16>& a)
 }
 
 template <arithmetic T>
-matrix4_T<T> matrix4_T<T>::zero()
+constexpr matrix4_T<T> matrix4_T<T>::zero()
 {
-	return {T(0), T(0), T(0), T(0), T(0), T(0), T(0), T(0),
-	        T(0), T(0), T(0), T(0), T(0), T(0), T(0), T(0)};
+	return {
+	    T(0), T(0), T(0), T(0),  //
+	    T(0), T(0), T(0), T(0),  //
+	    T(0), T(0), T(0), T(0),  //
+	    T(0), T(0), T(0), T(0),  //
+	};
 }
 template <arithmetic T>
-matrix4_T<T> matrix4_T<T>::identity()
+constexpr matrix4_T<T> matrix4_T<T>::identity()
 {
-	return {T(1), T(0), T(0), T(0), T(0), T(1), T(0), T(0),
-	        T(0), T(0), T(1), T(0), T(0), T(0), T(0), T(1)};
+	return {
+	    T(1), T(0), T(0), T(0),  //
+	    T(0), T(1), T(0), T(0),  //
+	    T(0), T(0), T(1), T(0),  //
+	    T(0), T(0), T(0), T(1),  //
+	};
 }
 template <arithmetic T>
-matrix4_T<T> matrix4_T<T>::rows(vector4_T<T> row0,
-                                vector4_T<T> row1,
-                                vector4_T<T> row2,
-                                vector4_T<T> row3)
+constexpr matrix4_T<T> matrix4_T<T>::rows(vector4_T<T> row0,
+                                          vector4_T<T> row1,
+                                          vector4_T<T> row2,
+                                          vector4_T<T> row3)
 {
 	return {
 	    row0.x, row0.y, row0.z, row0.w,  //
@@ -5038,10 +5102,10 @@ matrix4_T<T> matrix4_T<T>::rows(vector4_T<T> row0,
 	};
 }
 template <arithmetic T>
-matrix4_T<T> matrix4_T<T>::columns(vector4_T<T> column0,
-                                   vector4_T<T> column1,
-                                   vector4_T<T> column2,
-                                   vector4_T<T> column3)
+constexpr matrix4_T<T> matrix4_T<T>::columns(vector4_T<T> column0,
+                                             vector4_T<T> column1,
+                                             vector4_T<T> column2,
+                                             vector4_T<T> column3)
 {
 	return {
 	    column0.x, column1.x, column2.x, column3.x,  //
@@ -5056,8 +5120,8 @@ matrix4_T<T> matrix4_T<T>::rotation(direction3_T<T> axis, radian_T<T> angle)
 	return matrix4_T<T>(matrix3_T<T>::rotation(axis, angle));
 }
 template <arithmetic T>
-matrix4_T<T> matrix4_T<T>::rotation(direction3_T<T> axis,
-                                    normalized<complex_T<T>> angle)
+constexpr matrix4_T<T> matrix4_T<T>::rotation(direction3_T<T> axis,
+                                              normalized<complex_T<T>> angle)
 {
 	return matrix4_T<T>(matrix3_T<T>::rotation(axis, angle));
 }
@@ -5075,12 +5139,12 @@ matrix4_T<T> matrix4_T<T>::rotation(euler_angles_T<T> r)
 	return matrix4_T<T>(matrix3_T<T>::rotation(r));
 }
 template <arithmetic T>
-matrix4_T<T> matrix4_T<T>::rotation(quaternion_T<T> q)
+constexpr matrix4_T<T> matrix4_T<T>::rotation(quaternion_T<T> q)
 {
 	return matrix4_T<T>(matrix3_T<T>::rotation(q));
 }
 template <arithmetic T>
-matrix4_T<T> matrix4_T<T>::translation(vector3_T<T> t)
+constexpr matrix4_T<T> matrix4_T<T>::translation(vector3_T<T> t)
 {
 	return {
 	    T(1), T(0), T(0), t.x,  //
@@ -5090,22 +5154,22 @@ matrix4_T<T> matrix4_T<T>::translation(vector3_T<T> t)
 	};
 }
 template <arithmetic T>
-matrix4_T<T> matrix4_T<T>::translation(T x, T y, T z)
+constexpr matrix4_T<T> matrix4_T<T>::translation(T x, T y, T z)
 {
 	return translation({x, y, z});
 }
 template <arithmetic T>
-matrix4_T<T> matrix4_T<T>::scale(vector3_T<T> s)
+constexpr matrix4_T<T> matrix4_T<T>::scale(vector3_T<T> s)
 {
 	return matrix4_T<T>(matrix3_T<T>::scale(s));
 }
 template <arithmetic T>
-matrix4_T<T> matrix4_T<T>::scale(T x, T y, T z)
+constexpr matrix4_T<T> matrix4_T<T>::scale(T x, T y, T z)
 {
 	return matrix4_T<T>(matrix3_T<T>::scale(x, y, z));
 }
 template <arithmetic T>
-matrix4_T<T> matrix4_T<T>::scale(T s)
+constexpr matrix4_T<T> matrix4_T<T>::scale(T s)
 {
 	return matrix4_T<T>(matrix3_T<T>::scale(s));
 }
@@ -5124,12 +5188,12 @@ matrix4_T<T> matrix4_T<T>::look_at(vector3_T<T> from,
 	        T(0),      T(0),        T(0),        T(1)};
 }
 template <arithmetic T>
-matrix4_T<T> matrix4_T<T>::orthographic(T left,
-                                        T right,
-                                        T top,
-                                        T bottom,
-                                        T near,
-                                        T far)
+constexpr matrix4_T<T> matrix4_T<T>::orthographic(T left,
+                                                  T right,
+                                                  T top,
+                                                  T bottom,
+                                                  T near,
+                                                  T far)
 {
 	T a = T(1) / (right - left);
 	T b = T(1) / (bottom - top);
@@ -5194,7 +5258,7 @@ matrix4_T<T> matrix4_T<T>::rotation_around_z(
 	return matrix4_T<T>(matrix3_T<T>::rotation_around_z(angle));
 }
 template <arithmetic T>
-bool matrix4_T<T>::is_orthogonal() const
+constexpr bool matrix4_T<T>::is_orthogonal() const
 {
 	return nearly_equal(m00 * m01 + m10 * m11 + m20 * m21 + m30 * m31, T(0)) &&
 	       nearly_equal(m00 * m02 + m10 * m12 + m20 * m22 + m30 * m32, T(0)) &&
@@ -5208,7 +5272,7 @@ bool matrix4_T<T>::is_orthogonal() const
 	       nearly_equal(m03 * m03 + m13 * m13 + m23 * m23 + m33 * m33, T(1));
 }
 template <arithmetic T>
-bool matrix4_T<T>::is_homogenous() const
+constexpr bool matrix4_T<T>::is_homogenous() const
 {
 	return nearly_equal(m03, T(0)) &&  //
 	       nearly_equal(m13, T(0)) &&  //
@@ -5219,7 +5283,7 @@ bool matrix4_T<T>::is_homogenous() const
 	       nearly_equal(m33, T(1));
 }
 template <arithmetic T>
-T matrix4_T<T>::determinant() const
+constexpr T matrix4_T<T>::determinant() const
 {
 	if (is_homogenous())
 	{
@@ -5243,7 +5307,7 @@ T matrix4_T<T>::determinant() const
 }
 
 template <arithmetic T>
-matrix3_T<T> matrix4_T<T>::extractRotationMatrix() const
+matrix3_T<T> matrix4_T<T>::extract_rotation_matrix() const
 {
 	const T sx = column(0).xyz().norm();
 	const T sy = column(1).xyz().norm();
@@ -5259,12 +5323,13 @@ matrix3_T<T> matrix4_T<T>::extractRotationMatrix() const
 }
 
 template <arithmetic T>
-vector3_T<T> matrix4_T<T>::transform_position(vector3_T<T> pos) const
+constexpr vector3_T<T> matrix4_T<T>::transform_position(vector3_T<T> pos) const
 {
 	return (*this * vector4_T<T>(pos, T(1))).xyz();
 }
 template <arithmetic T>
-vector3_T<T> matrix4_T<T>::transform_direction(vector3_T<T> dir) const
+constexpr vector3_T<T> matrix4_T<T>::transform_direction(
+    vector3_T<T> dir) const
 {
 	return (*this * vector4_T<T>(dir, T(0))).xyz();
 }
@@ -5274,7 +5339,7 @@ direction3_T<T> matrix4_T<T>::transform_direction(direction3_T<T> dir) const
 	return direction3_T<T>((*this * vector4_T<T>(*dir, T(0))).xyz());
 }
 template <arithmetic T>
-vector3_T<T> matrix4_T<T>::transform_position_perspective(
+constexpr vector3_T<T> matrix4_T<T>::transform_position_perspective(
     vector3_T<T> pos) const
 {
 	const vector4_T<T> tmp = *this * vector4_T<T>(pos, T(1));
@@ -5286,7 +5351,7 @@ vector3_T<T> matrix4_T<T>::transform_position_perspective(
 }
 
 template <arithmetic T>
-matrix4_T<T> matrix4_T<T>::operator*(T f) const
+constexpr matrix4_T<T> matrix4_T<T>::operator*(T f) const
 {
 	return {
 	    m00 * f, m10 * f, m20 * f, m30 * f,  //
@@ -5296,7 +5361,7 @@ matrix4_T<T> matrix4_T<T>::operator*(T f) const
 	};
 }
 template <arithmetic T>
-matrix4_T<T> matrix4_T<T>::operator/(T f) const
+constexpr matrix4_T<T> matrix4_T<T>::operator/(T f) const
 {
 	return {
 	    m00 / f, m10 / f, m20 / f, m30 / f,  //
@@ -5306,7 +5371,7 @@ matrix4_T<T> matrix4_T<T>::operator/(T f) const
 	};
 }
 template <arithmetic T>
-vector4_T<T> matrix4_T<T>::operator*(vector4_T<T> v) const
+constexpr vector4_T<T> matrix4_T<T>::operator*(vector4_T<T> v) const
 {
 	return {
 	    m00 * v.x + m10 * v.y + m20 * v.z + m30 * v.w,  //
@@ -5316,7 +5381,7 @@ vector4_T<T> matrix4_T<T>::operator*(vector4_T<T> v) const
 	};
 }
 template <arithmetic T>
-matrix4_T<T> matrix4_T<T>::operator*(const matrix4_T<T>& m) const
+constexpr matrix4_T<T> matrix4_T<T>::operator*(const matrix4_T<T>& m) const
 {
 	return {m.m00 * m00 + m.m01 * m10 + m.m02 * m20 + m.m03 * m30,
 	        m.m10 * m00 + m.m11 * m10 + m.m12 * m20 + m.m13 * m30,
@@ -5340,7 +5405,7 @@ matrix4_T<T> matrix4_T<T>::operator*(const matrix4_T<T>& m) const
 }
 
 template <arithmetic T>
-matrix4_T<T>& matrix4_T<T>::inverse()
+constexpr matrix4_T<T>& matrix4_T<T>::inverse()
 {
 	if (is_orthogonal())
 	{
@@ -5348,7 +5413,7 @@ matrix4_T<T>& matrix4_T<T>::inverse()
 	}
 
 	const T det = determinant();
-	assert(std::abs(det) > std::numeric_limits<T>::epsilon());
+	assert((det < T(0) ? -det : det) > std::numeric_limits<T>::epsilon());
 
 	const T invDet = T(1) / det;
 	const T recM00 = m00;
@@ -5447,14 +5512,14 @@ matrix4_T<T>& matrix4_T<T>::inverse()
 	return *this;
 }
 template <arithmetic T>
-matrix4_T<T> matrix4_T<T>::get_inversed() const
+constexpr matrix4_T<T> matrix4_T<T>::get_inversed() const
 {
 	matrix4_T<T> m{*this};
 	m.inverse();
 	return m;
 }
 template <arithmetic T>
-matrix4_T<T>& matrix4_T<T>::transpose()
+constexpr matrix4_T<T>& matrix4_T<T>::transpose()
 {
 	std::swap(m01, m10);
 	std::swap(m02, m20);
@@ -5465,7 +5530,7 @@ matrix4_T<T>& matrix4_T<T>::transpose()
 	return *this;
 }
 template <arithmetic T>
-matrix4_T<T> matrix4_T<T>::get_transposed() const
+constexpr matrix4_T<T> matrix4_T<T>::get_transposed() const
 {
 	matrix4_T<T> m{*this};
 	m.transpose();
@@ -5473,34 +5538,38 @@ matrix4_T<T> matrix4_T<T>::get_transposed() const
 }
 
 template <arithmetic T>
-matrix4_T<T> operator*(const transform3_T<T>& t, const matrix4_T<T>& m)
+constexpr matrix4_T<T> operator*(const transform3_T<T>& t,
+                                 const matrix4_T<T>& m)
 {
 	return t.to_matrix4() * m;
 }
 template <arithmetic T>
-matrix4_T<T> operator*(const matrix4_T<T>& m, const transform3_T<T>& t)
+constexpr matrix4_T<T> operator*(const matrix4_T<T>& m,
+                                 const transform3_T<T>& t)
 {
 	return m * t.to_matrix4();
 }
 template <arithmetic T>
-matrix4_T<T> operator*(const uniform_transform3_T<T>& t, const matrix4_T<T>& m)
+constexpr matrix4_T<T> operator*(const uniform_transform3_T<T>& t,
+                                 const matrix4_T<T>& m)
 {
 	return t.to_matrix4() * m;
 }
 template <arithmetic T>
-matrix4_T<T> operator*(const matrix4_T<T>& m, const uniform_transform3_T<T>& t)
+constexpr matrix4_T<T> operator*(const matrix4_T<T>& m,
+                                 const uniform_transform3_T<T>& t)
 {
 	return m * t.to_matrix4();
 }
 template <arithmetic T>
-matrix4_T<T> operator*(const unscaled_transform3_T<T>& t,
-                       const matrix4_T<T>& m)
+constexpr matrix4_T<T> operator*(const unscaled_transform3_T<T>& t,
+                                 const matrix4_T<T>& m)
 {
 	return t.to_matrix4() * m;
 }
 template <arithmetic T>
-matrix4_T<T> operator*(const matrix4_T<T>& m,
-                       const unscaled_transform3_T<T>& t)
+constexpr matrix4_T<T> operator*(const matrix4_T<T>& m,
+                                 const unscaled_transform3_T<T>& t)
 {
 	return m * t.to_matrix4();
 }
@@ -5570,45 +5639,45 @@ void perspective_T<T>::set_angle(
 	    tan<T>(static_pi_fraction_T<U, NumeratorT, DenominatorT * U(2)>{});
 }
 template <arithmetic T>
-radian_T<T> perspective_T<T>::get_angle() const
+constexpr radian_T<T> perspective_T<T>::get_angle() const
 {
 	return m_angle;
 }
 template <arithmetic T>
-void perspective_T<T>::set_ratio(T ratio)
+constexpr void perspective_T<T>::set_ratio(T ratio)
 {
 	m_ratio = ratio;
 	m_invRatio = T(1) / m_ratio;
 }
 template <arithmetic T>
-T perspective_T<T>::get_ratio() const
+constexpr T perspective_T<T>::get_ratio() const
 {
 	return m_ratio;
 }
 template <arithmetic T>
-void perspective_T<T>::set_near(T near_plane_t)
+constexpr void perspective_T<T>::set_near(T near_plane)
 {
-	m_near = near_plane_t;
+	m_near = near_plane;
 }
 template <arithmetic T>
-T perspective_T<T>::get_near() const
+constexpr T perspective_T<T>::get_near() const
 {
 	return m_near;
 }
 template <arithmetic T>
-void perspective_T<T>::set_far(T far_plane_t)
+constexpr void perspective_T<T>::set_far(T far_plane)
 {
-	m_far = far_plane_t;
+	m_far = far_plane;
 }
 template <arithmetic T>
-T perspective_T<T>::get_far() const
+constexpr T perspective_T<T>::get_far() const
 {
 	return m_far;
 }
 template <arithmetic T>
-matrix4_T<T> perspective_T<T>::to_matrix4() const
+constexpr matrix4_T<T> perspective_T<T>::to_matrix4() const
 {
-	matrix4_T<T> res{matrix4_T<T>::zero()};
+	matrix4_T<T> res = matrix4_T<T>::zero();
 	const T a = m_focalLength * m_invRatio;
 	const T b = m_focalLength;
 	const T farMinusNear = m_far - m_near;
@@ -5633,9 +5702,9 @@ matrix4_T<T> perspective_T<T>::to_matrix4() const
 	return res;
 }
 template <arithmetic T>
-matrix4_T<T> perspective_T<T>::to_inverse_matrix4() const
+constexpr matrix4_T<T> perspective_T<T>::to_inverse_matrix4() const
 {
-	matrix4_T<T> res{matrix4_T<T>::zero()};
+	matrix4_T<T> res = matrix4_T<T>::zero();
 	const T a = m_focalLength * m_invRatio;
 	const T b = m_focalLength;
 	const T farMinusNear = m_far - m_near;
@@ -5661,7 +5730,8 @@ matrix4_T<T> perspective_T<T>::to_inverse_matrix4() const
 }
 
 template <arithmetic T>
-matrix4_T<T> operator*(const matrix4_T<T>& m, const perspective_T<T>& p)
+constexpr matrix4_T<T> operator*(const matrix4_T<T>& m,
+                                 const perspective_T<T>& p)
 {
 	const T a = p.m_focalLength * p.m_invRatio;
 	const T b = p.m_focalLength;
@@ -5690,7 +5760,8 @@ matrix4_T<T> operator*(const matrix4_T<T>& m, const perspective_T<T>& p)
 	return res;
 }
 template <arithmetic T>
-matrix4_T<T> operator*(const perspective_T<T>& p, const matrix4_T<T>& m)
+constexpr matrix4_T<T> operator*(const perspective_T<T>& p,
+                                 const matrix4_T<T>& m)
 {
 	const T a = p.m_focalLength * p.m_invRatio;
 	const T b = p.m_focalLength;
@@ -5719,7 +5790,8 @@ matrix4_T<T> operator*(const perspective_T<T>& p, const matrix4_T<T>& m)
 	return res;
 }
 template <arithmetic T>
-vector4_T<T> operator*(const perspective_T<T>& p, const vector4_T<T>& v)
+constexpr vector4_T<T> operator*(const perspective_T<T>& p,
+                                 const vector4_T<T>& v)
 {
 	const T a = p.m_focalLength * p.m_invRatio;
 	const T b = p.m_focalLength;
@@ -5749,8 +5821,8 @@ vector4_T<T> operator*(const perspective_T<T>& p, const vector4_T<T>& v)
 	};
 }
 template <arithmetic T>
-matrix4_T<T> operator*(const unscaled_transform3_T<T>& t,
-                       const perspective_T<T>& p)
+constexpr matrix4_T<T> operator*(const unscaled_transform3_T<T>& t,
+                                 const perspective_T<T>& p)
 {
 	const T a = p.m_focalLength * p.m_invRatio;
 	const T b = p.m_focalLength;
@@ -5791,8 +5863,8 @@ matrix4_T<T> operator*(const unscaled_transform3_T<T>& t,
 	};
 }
 template <arithmetic T>
-matrix4_T<T> operator*(const perspective_T<T>& p,
-                       const unscaled_transform3_T<T>& t)
+constexpr matrix4_T<T> operator*(const perspective_T<T>& p,
+                                 const unscaled_transform3_T<T>& t)
 {
 	const T a = p.m_focalLength * p.m_invRatio;
 	const T b = p.m_focalLength;
@@ -6229,7 +6301,7 @@ quaternion_T<T>::quaternion_T(
 }
 
 template <arithmetic T>
-quaternion_T<T> quaternion_T<T>::identity()
+constexpr quaternion_T<T> quaternion_T<T>::identity()
 {
 	return {T(0), T(0), T(0), T(1)};
 }
@@ -6327,7 +6399,7 @@ T quaternion_T<T>::norm() const
 	return std::sqrt(norm_squared());
 }
 template <arithmetic T>
-T quaternion_T<T>::norm_squared() const
+constexpr T quaternion_T<T>::norm_squared() const
 {
 	return x * x + y * y + z * z + w * w;
 }
@@ -6346,7 +6418,7 @@ quaternion_T<T>& quaternion_T<T>::inverse()
 	return *this;
 }
 template <arithmetic T>
-quaternion_T<T>& quaternion_T<T>::conjugate()
+constexpr quaternion_T<T>& quaternion_T<T>::conjugate()
 {
 	x = -x;
 	y = -y;
@@ -6382,7 +6454,7 @@ quaternion_T<T> quaternion_T<T>::get_inversed() const
 	return res;
 }
 template <arithmetic T>
-quaternion_T<T> quaternion_T<T>::get_conjugated() const
+constexpr quaternion_T<T> quaternion_T<T>::get_conjugated() const
 {
 	quaternion_T<T> res = *this;
 	res.conjugate();
@@ -6418,7 +6490,7 @@ euler_angles_T<T> quaternion_T<T>::to_euler_angles() const
 }
 
 template <arithmetic T>
-quaternion_T<T> quaternion_T<T>::operator+(quaternion_T<T> q) const
+constexpr quaternion_T<T> quaternion_T<T>::operator+(quaternion_T<T> q) const
 {
 	return {
 	    x + q.x,
@@ -6428,7 +6500,7 @@ quaternion_T<T> quaternion_T<T>::operator+(quaternion_T<T> q) const
 	};
 }
 template <arithmetic T>
-quaternion_T<T> quaternion_T<T>::operator-(quaternion_T<T> q) const
+constexpr quaternion_T<T> quaternion_T<T>::operator-(quaternion_T<T> q) const
 {
 	return {
 	    x - q.x,
@@ -6438,7 +6510,7 @@ quaternion_T<T> quaternion_T<T>::operator-(quaternion_T<T> q) const
 	};
 }
 template <arithmetic T>
-vector3_T<T> quaternion_T<T>::operator*(vector3_T<T> v) const
+constexpr vector3_T<T> quaternion_T<T>::operator*(vector3_T<T> v) const
 {
 	const vector3_T<T> qvec{x, y, z};
 	vector3_T<T> uv{cross(qvec, v)};
@@ -6448,7 +6520,7 @@ vector3_T<T> quaternion_T<T>::operator*(vector3_T<T> v) const
 	return v + uv + uuv;
 }
 template <arithmetic T>
-quaternion_T<T> quaternion_T<T>::operator*(quaternion_T<T> q) const
+constexpr quaternion_T<T> quaternion_T<T>::operator*(quaternion_T<T> q) const
 {
 	return {
 	    x * q.w + y * q.z - z * q.y + w * q.x,
@@ -6458,7 +6530,7 @@ quaternion_T<T> quaternion_T<T>::operator*(quaternion_T<T> q) const
 	};
 }
 template <arithmetic T>
-quaternion_T<T> quaternion_T<T>::operator*(T f) const
+constexpr quaternion_T<T> quaternion_T<T>::operator*(T f) const
 {
 	return {
 	    x * f,
@@ -6468,7 +6540,7 @@ quaternion_T<T> quaternion_T<T>::operator*(T f) const
 	};
 }
 template <arithmetic T>
-quaternion_T<T> quaternion_T<T>::operator/(T f) const
+constexpr quaternion_T<T> quaternion_T<T>::operator/(T f) const
 {
 	return {
 	    x / f,
@@ -6479,38 +6551,38 @@ quaternion_T<T> quaternion_T<T>::operator/(T f) const
 }
 
 template <arithmetic T>
-quaternion_T<T>& quaternion_T<T>::operator+=(quaternion_T<T> q)
+constexpr quaternion_T<T>& quaternion_T<T>::operator+=(quaternion_T<T> q)
 {
 	*this = *this + q;
 	return *this;
 }
 template <arithmetic T>
-quaternion_T<T>& quaternion_T<T>::operator-=(quaternion_T<T> q)
+constexpr quaternion_T<T>& quaternion_T<T>::operator-=(quaternion_T<T> q)
 {
 	*this = *this - q;
 	return *this;
 }
 template <arithmetic T>
-quaternion_T<T>& quaternion_T<T>::operator*=(quaternion_T<T> q)
+constexpr quaternion_T<T>& quaternion_T<T>::operator*=(quaternion_T<T> q)
 {
 	*this = *this * q;
 	return *this;
 }
 template <arithmetic T>
-quaternion_T<T>& quaternion_T<T>::operator*=(T f)
+constexpr quaternion_T<T>& quaternion_T<T>::operator*=(T f)
 {
 	*this = *this * f;
 	return *this;
 }
 template <arithmetic T>
-quaternion_T<T>& quaternion_T<T>::operator/=(T f)
+constexpr quaternion_T<T>& quaternion_T<T>::operator/=(T f)
 {
 	*this = *this / f;
 	return *this;
 }
 
 template <arithmetic T>
-quaternion_T<T> quaternion_T<T>::operator-() const
+constexpr quaternion_T<T> quaternion_T<T>::operator-() const
 {
 	return {
 	    -x,
@@ -6521,7 +6593,7 @@ quaternion_T<T> quaternion_T<T>::operator-() const
 }
 
 template <arithmetic T>
-bool quaternion_T<T>::operator==(quaternion_T<T> q) const
+constexpr bool quaternion_T<T>::operator==(quaternion_T<T> q) const
 {
 	return x == q.x &&  //
 	       y == q.y &&  //
@@ -6529,13 +6601,14 @@ bool quaternion_T<T>::operator==(quaternion_T<T> q) const
 	       w == q.w;    //
 }
 template <arithmetic T>
-bool quaternion_T<T>::operator!=(quaternion_T<T> q) const
+constexpr bool quaternion_T<T>::operator!=(quaternion_T<T> q) const
 {
 	return !operator==(q);
 }
 
 template <arithmetic T>
-vector3_T<T> operator*(const normalized<quaternion_T<T>>& q, vector3_T<T> v)
+constexpr vector3_T<T> operator*(const normalized<quaternion_T<T>>& q,
+                                 vector3_T<T> v)
 {
 	return *q * v;
 }
@@ -6559,7 +6632,9 @@ constexpr quaternion_T<T> cross(quaternion_T<T> lhs, quaternion_T<T> rhs)
 	};
 }
 template <arithmetic T>
-quaternion_T<T> lerp(quaternion_T<T> begin, quaternion_T<T> end, T percent)
+constexpr quaternion_T<T> lerp(quaternion_T<T> begin,
+                               quaternion_T<T> end,
+                               T percent)
 {
 	return (end - begin) * percent + begin;
 }
@@ -6600,7 +6675,7 @@ quaternion_T<T> slerp(quaternion_T<T> begin, quaternion_T<T> end, T percent)
 #pragma region definition_line_t
 #pragma region slope_intercept
 template <arithmetic T>
-line_T<T, line_representation::SlopeIntercept>::line_T(T s, T yi)
+constexpr line_T<T, line_representation::SlopeIntercept>::line_T(T s, T yi)
     : slope(s), y_intercept(yi)
 {
 }
@@ -6650,45 +6725,46 @@ line_T<T, line_representation::SlopeIntercept>::line_T(vector2_T<T> direction,
 	slope = direction.y;
 }
 template <arithmetic T>
-line_T<T, line_representation::SlopeIntercept>::line_T(vector2_T<T> point1,
-                                                       vector2_T<T> point2)
+constexpr line_T<T, line_representation::SlopeIntercept>::line_T(
+    vector2_T<T> point1,
+    vector2_T<T> point2)
 {
 	slope = (point2.y - point1.y) / (point2.x - point1.x);
 	y_intercept = slope * (-point1.x) + point1.y;
 }
 
 template <arithmetic T>
-vector2_T<T> line_T<T, line_representation::SlopeIntercept>::resolve_for_x(
-    T x) const
+constexpr vector2_T<T>
+line_T<T, line_representation::SlopeIntercept>::resolve_for_x(T x) const
 {
 	return {x, slope * x + y_intercept};
 }
 template <arithmetic T>
-vector2_T<T> line_T<T, line_representation::SlopeIntercept>::resolve_for_y(
-    T y) const
+constexpr vector2_T<T>
+line_T<T, line_representation::SlopeIntercept>::resolve_for_y(T y) const
 {
 	return {(y - y_intercept) / slope, y};
 }
 
 template <arithmetic T>
-bool are_parallel(line_T<T, line_representation::SlopeIntercept> l1,
-                  line_T<T, line_representation::SlopeIntercept> l2,
-                  T e)
+constexpr bool are_parallel(line_T<T, line_representation::SlopeIntercept> l1,
+                            line_T<T, line_representation::SlopeIntercept> l2,
+                            T e)
 {
 	return nearly_equal(l1.coefficient, l2.coefficient, e);
 }
 
 template <arithmetic T>
-bool collides(line_T<T, line_representation::SlopeIntercept> l1,
-              line_T<T, line_representation::SlopeIntercept> l2)
+constexpr bool collides(line_T<T, line_representation::SlopeIntercept> l1,
+                        line_T<T, line_representation::SlopeIntercept> l2)
 {
 	return !are_parallel(l1, l2);
 }
 
 template <arithmetic T>
-bool collides(line_T<T, line_representation::SlopeIntercept> l1,
-              line_T<T, line_representation::SlopeIntercept> l2,
-              vector2_T<T>& intersection)
+constexpr bool collides(line_T<T, line_representation::SlopeIntercept> l1,
+                        line_T<T, line_representation::SlopeIntercept> l2,
+                        vector2_T<T>& intersection)
 {
 	bool collision = collides(l1, l2);
 
@@ -6709,8 +6785,8 @@ bool collides(line_T<T, line_representation::SlopeIntercept> l1,
 
 #pragma region points
 template <arithmetic T>
-line_T<T, line_representation::Points>::line_T(vector2_T<T> point1,
-                                               vector2_T<T> point2)
+constexpr line_T<T, line_representation::Points>::line_T(vector2_T<T> point1,
+                                                         vector2_T<T> point2)
     : p1(point1), p2(point2)
 {
 }
@@ -6730,9 +6806,9 @@ line_T<T, line_representation::Points>::line_T(vector2_T<T> point1,
 // }
 
 template <arithmetic T>
-void collides(line_T<T, line_representation::Points> l1,
-              line_T<T, line_representation::Points> l2,
-              vector2_T<T>& intersection)
+constexpr void collides(line_T<T, line_representation::Points> l1,
+                        line_T<T, line_representation::Points> l2,
+                        vector2_T<T>& intersection)
 {
 	const T x1 = l1.p1.x;
 	const T x2 = l1.p2.x;
@@ -6752,7 +6828,7 @@ void collides(line_T<T, line_representation::Points> l1,
 #pragma endregion
 
 template <arithmetic T>
-T distance_between(plane_T<T> p, vector3_T<T> point)
+constexpr T distance_between(plane_T<T> p, vector3_T<T> point)
 {
 	// clang-format off
 	return -point.x * p.normal.x()
@@ -6761,7 +6837,7 @@ T distance_between(plane_T<T> p, vector3_T<T> point)
 	// clang-format on
 }
 template <arithmetic T>
-T distance_between(vector3_T<T> v, plane_T<T> p)
+constexpr T distance_between(vector3_T<T> v, plane_T<T> p)
 {
 	return distance_between(p, v);
 }
@@ -6774,13 +6850,13 @@ T segment2_T<T>::length() const
 	return distance_between(origin, end);
 }
 template <arithmetic T>
-T segment2_T<T>::length_squared() const
+constexpr T segment2_T<T>::length_squared() const
 {
 	return distance_squared_between(origin, end);
 }
 
 template <arithmetic T>
-segment2_T<T>& segment2_T<T>::invert()
+constexpr segment2_T<T>& segment2_T<T>::invert()
 {
 	std::swap(origin, end);
 	return *this;
@@ -7110,7 +7186,8 @@ constexpr aabb3_T<T> operator+(vector3_T<T> lhs, const aabb3_T<T>& rhs)
 
 #pragma region definition_transform2_T
 template <arithmetic T>
-transform2_T<T> transform2_T<T>::operator*(const transform2_T<T>& t) const
+constexpr transform2_T<T> transform2_T<T>::operator*(
+    const transform2_T<T>& t) const
 {
 	transform2_T<T> res;
 	res.position =
@@ -7121,13 +7198,13 @@ transform2_T<T> transform2_T<T>::operator*(const transform2_T<T>& t) const
 	return res;
 }
 template <arithmetic T>
-vector2_T<T> transform2_T<T>::operator*(vector2_T<T> v) const
+constexpr vector2_T<T> transform2_T<T>::operator*(vector2_T<T> v) const
 {
 	return rotation * vector2_T(scale.x * v.x, scale.y * v.y) + position;
 }
 
 template <arithmetic T>
-transform2_T<T> transform2_T<T>::identity()
+constexpr transform2_T<T> transform2_T<T>::identity()
 {
 	return {
 	    .position = vector2_T<T>::zero(),
@@ -7163,26 +7240,27 @@ matrix4_T<T> transform3_T<T>::to_matrix4() const
 	return res;
 }
 template <arithmetic T>
-transform3_T<T>& transform3_T<T>::translate_absolute(vector3_T<T> t)
+constexpr transform3_T<T>& transform3_T<T>::translate_absolute(vector3_T<T> t)
 {
 	position += t;
 	return *this;
 }
 template <arithmetic T>
-transform3_T<T>& transform3_T<T>::translate_relative(vector3_T<T> t)
+constexpr transform3_T<T>& transform3_T<T>::translate_relative(vector3_T<T> t)
 {
 	position += rotation * t;
 	return *this;
 }
 template <arithmetic T>
-transform3_T<T>& transform3_T<T>::rotate(quaternion_T<T> r)
+constexpr transform3_T<T>& transform3_T<T>::rotate(quaternion_T<T> r)
 {
 	rotation = r * rotation;
 	return *this;
 }
 
 template <arithmetic T>
-transform3_T<T> transform3_T<T>::operator*(const transform3_T<T>& t) const
+constexpr transform3_T<T> transform3_T<T>::operator*(
+    const transform3_T<T>& t) const
 {
 	transform3_T<T> res{*this};
 	// res.position = rotation *
@@ -7215,7 +7293,7 @@ transform3_T<T> transform3_T<T>::operator*(const transform3_T<T>& t) const
 	return res;
 }
 template <arithmetic T>
-vector3_T<T> transform3_T<T>::operator*(vector3_T<T> v) const
+constexpr vector3_T<T> transform3_T<T>::operator*(vector3_T<T> v) const
 {
 	vector3_T<T> res = rotation * v;
 	res.x *= scale.x;
@@ -7224,13 +7302,13 @@ vector3_T<T> transform3_T<T>::operator*(vector3_T<T> v) const
 	return res + position;
 }
 template <arithmetic T>
-quaternion_T<T> transform3_T<T>::operator*(quaternion_T<T> q) const
+constexpr quaternion_T<T> transform3_T<T>::operator*(quaternion_T<T> q) const
 {
 	return rotation * q;
 }
 
 template <arithmetic T>
-transform3_T<T> transform3_T<T>::identity()
+constexpr transform3_T<T> transform3_T<T>::identity()
 {
 	return {
 	    .position = vector3_T<T>::zero(),
@@ -7260,7 +7338,7 @@ vector2_T<T> uniform_transform2_T<T>::operator*(vector2_T<T> v) const
 }
 
 template <arithmetic T>
-uniform_transform2_T<T> uniform_transform2_T<T>::identity()
+constexpr uniform_transform2_T<T> uniform_transform2_T<T>::identity()
 {
 	return {
 	    .position = vector2_T<T>::zero(),
@@ -7296,7 +7374,7 @@ matrix4_T<T> uniform_transform3_T<T>::to_matrix4() const
 	return res;
 }
 template <arithmetic T>
-uniform_transform3_T<T> uniform_transform3_T<T>::operator*(
+constexpr uniform_transform3_T<T> uniform_transform3_T<T>::operator*(
     const uniform_transform3_T<T>& t) const
 {
 	uniform_transform3_T<T> res;
@@ -7306,18 +7384,19 @@ uniform_transform3_T<T> uniform_transform3_T<T>::operator*(
 	return res;
 }
 template <arithmetic T>
-vector3_T<T> uniform_transform3_T<T>::operator*(vector3_T<T> v) const
+constexpr vector3_T<T> uniform_transform3_T<T>::operator*(vector3_T<T> v) const
 {
 	return rotation * (scale * v) + position;
 }
 template <arithmetic T>
-quaternion_T<T> uniform_transform3_T<T>::operator*(quaternion_T<T> q) const
+constexpr quaternion_T<T> uniform_transform3_T<T>::operator*(
+    quaternion_T<T> q) const
 {
 	return rotation * q;
 }
 
 template <arithmetic T>
-uniform_transform3_T<T> uniform_transform3_T<T>::identity()
+constexpr uniform_transform3_T<T> uniform_transform3_T<T>::identity()
 {
 	return {
 	    .position = vector3_T<T>::zero(),
@@ -7346,7 +7425,7 @@ vector2_T<T> unscaled_transform2_T<T>::operator*(vector2_T<T> v) const
 }
 
 template <arithmetic T>
-unscaled_transform2_T<T> unscaled_transform2_T<T>::identity()
+constexpr unscaled_transform2_T<T> unscaled_transform2_T<T>::identity()
 {
 	return {
 	    .position = vector2_T<T>::zero(),
@@ -7358,35 +7437,37 @@ unscaled_transform2_T<T> unscaled_transform2_T<T>::identity()
 
 #pragma region definition_unscaled_transform3_T
 template <arithmetic T>
-unscaled_transform3_T<T>& unscaled_transform3_T<T>::translate_absolute(
-    vector3_T<T> t)
+constexpr unscaled_transform3_T<T>&
+unscaled_transform3_T<T>::translate_absolute(vector3_T<T> t)
 {
 	position += t;
 	return *this;
 }
 template <arithmetic T>
-unscaled_transform3_T<T>& unscaled_transform3_T<T>::translate_relative(
-    vector3_T<T> t)
+constexpr unscaled_transform3_T<T>&
+unscaled_transform3_T<T>::translate_relative(vector3_T<T> t)
 {
 	position += rotation * t;
 	return *this;
 }
 template <arithmetic T>
-unscaled_transform3_T<T>& unscaled_transform3_T<T>::rotate(quaternion_T<T> r)
+constexpr unscaled_transform3_T<T>& unscaled_transform3_T<T>::rotate(
+    quaternion_T<T> r)
 {
 	rotation = r * rotation;
 	return *this;
 }
 
 template <arithmetic T>
-unscaled_transform3_T<T>& unscaled_transform3_T<T>::inverse()
+constexpr unscaled_transform3_T<T>& unscaled_transform3_T<T>::inverse()
 {
 	rotation.inverse();
 	position = rotation * -position;
 	return *this;
 }
 template <arithmetic T>
-unscaled_transform3_T<T> unscaled_transform3_T<T>::get_inversed() const
+constexpr unscaled_transform3_T<T> unscaled_transform3_T<T>::get_inversed()
+    const
 {
 	unscaled_transform3_T<T> res{*this};
 	res.inverse();
@@ -7406,7 +7487,7 @@ matrix4_T<T> unscaled_transform3_T<T>::to_matrix4() const
 }
 
 template <arithmetic T>
-unscaled_transform3_T<T> inverse(unscaled_transform3_T<T> t)
+constexpr unscaled_transform3_T<T> inverse(unscaled_transform3_T<T> t)
 {
 	t.rotation = inverse(t.rotation);
 	t.position = t.rotation * -t.position;
@@ -7414,7 +7495,7 @@ unscaled_transform3_T<T> inverse(unscaled_transform3_T<T> t)
 }
 
 template <arithmetic T>
-unscaled_transform3_T<T> unscaled_transform3_T<T>::operator*(
+constexpr unscaled_transform3_T<T> unscaled_transform3_T<T>::operator*(
     const unscaled_transform3_T<T>& t) const
 {
 	unscaled_transform3_T<T> res;
@@ -7423,18 +7504,20 @@ unscaled_transform3_T<T> unscaled_transform3_T<T>::operator*(
 	return res;
 }
 template <arithmetic T>
-vector3_T<T> unscaled_transform3_T<T>::operator*(vector3_T<T> v) const
+constexpr vector3_T<T> unscaled_transform3_T<T>::operator*(
+    vector3_T<T> v) const
 {
 	return rotation * v + position;
 }
 template <arithmetic T>
-quaternion_T<T> unscaled_transform3_T<T>::operator*(quaternion_T<T> q) const
+constexpr quaternion_T<T> unscaled_transform3_T<T>::operator*(
+    quaternion_T<T> q) const
 {
 	return rotation * q;
 }
 
 template <arithmetic T>
-unscaled_transform3_T<T> unscaled_transform3_T<T>::identity()
+constexpr unscaled_transform3_T<T> unscaled_transform3_T<T>::identity()
 {
 	return {
 	    .position = vector3_T<T>::zero(),
@@ -7849,51 +7932,53 @@ std::ostream& operator<<(std::ostream& os, segment3_T<T> t)
 namespace literals
 {
 #pragma region definition_literals
-inline cdm::radian_T<float> operator""_rad(long double d)
+inline constexpr cdm::radian_T<float> operator""_rad(long double d)
 {
 	return cdm::radian_T<float>(static_cast<float>(d));
 }
-inline cdm::radian_T<float> operator""_rad(unsigned long long int i)
+inline constexpr cdm::radian_T<float> operator""_rad(unsigned long long int i)
 {
 	return cdm::radian_T<float>(static_cast<float>(i));
 }
-inline cdm::radian_T<float> operator""_pi(long double d)
+inline constexpr cdm::radian_T<float> operator""_pi(long double d)
 {
 	return cdm::radian_T<float>(static_cast<float>(d) * cdm::pi);
 }
-inline cdm::radian_T<float> operator""_pi(unsigned long long int i)
+inline constexpr cdm::radian_T<float> operator""_pi(unsigned long long int i)
 {
 	return cdm::radian_T<float>(static_cast<float>(i) * cdm::pi);
 }
-inline cdm::degree_T<float> operator""_deg(long double d)
+inline constexpr cdm::degree_T<float> operator""_deg(long double d)
 {
 	return cdm::degree_T<float>(static_cast<float>(d));
 }
-inline cdm::degree_T<float> operator""_deg(unsigned long long int i)
+inline constexpr cdm::degree_T<float> operator""_deg(unsigned long long int i)
 {
 	return cdm::degree_T<float>(static_cast<float>(i));
 }
-inline cdm::radian_T<double> operator""_radd(long double d)
+inline constexpr cdm::radian_T<double> operator""_radd(long double d)
 {
 	return cdm::radian_T<double>(static_cast<double>(d));
 }
-inline cdm::radian_T<double> operator""_radd(unsigned long long int i)
+inline constexpr cdm::radian_T<double> operator""_radd(
+    unsigned long long int i)
 {
 	return cdm::radian_T<double>(static_cast<double>(i));
 }
-inline cdm::radian_T<double> operator""_pid(long double d)
+inline constexpr cdm::radian_T<double> operator""_pid(long double d)
 {
 	return cdm::radian_T<double>(static_cast<double>(d) * cdm::pi);
 }
-inline cdm::radian_T<double> operator""_pid(unsigned long long int i)
+inline constexpr cdm::radian_T<double> operator""_pid(unsigned long long int i)
 {
 	return cdm::radian_T<double>(static_cast<double>(i) * cdm::pi);
 }
-inline cdm::degree_T<double> operator""_degd(long double d)
+inline constexpr cdm::degree_T<double> operator""_degd(long double d)
 {
 	return cdm::degree_T<double>(static_cast<double>(d));
 }
-inline cdm::degree_T<double> operator""_degd(unsigned long long int i)
+inline constexpr cdm::degree_T<double> operator""_degd(
+    unsigned long long int i)
 {
 	return cdm::degree_T<double>(static_cast<double>(i));
 }

@@ -218,7 +218,8 @@ TEST_CASE("normalized_value_T::normalized_value_T(value)",
 	CHECK(normalized_value_T{2.0f}.value() == 1.0f);
 }
 
-TEST_CASE("normalized_value_T assignation", "[working][unittest][value_domain]")
+TEST_CASE("normalized_value_T assignation",
+          "[working][unittest][value_domain]")
 {
 	normalized_value_T v{0.0f};
 	CHECK(v.value() == 0.0f);

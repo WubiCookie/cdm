@@ -46,7 +46,7 @@ TEST_CASE("perspective::set_near(float)", "[working][unittest][perspective]")
 	CHECK_THAT(v0, Vector4Matcher({0, 0, 1, 1}, 0.001));
 
 	p.set_near(42.666f);
-	
+
 	v0 = p * vector4{0, 0, -42.666f, 1};
 	v0 /= v0.w;
 
@@ -63,7 +63,7 @@ TEST_CASE("perspective::set_far(float)", "[working][unittest][perspective]")
 	CHECK_THAT(v0, Vector4Matcher({0, 0, 0, 1}, 0.001));
 
 	p.set_far(42.666f);
-	
+
 	v0 = p * vector4{0, 0, -42.666f, 1};
 	v0 /= v0.w;
 
@@ -74,7 +74,8 @@ TEST_CASE("operator*(perspective, matrix4), perspective::to_inverse_matrix",
           "[working][unittest][perspective]")
 {
 	const perspective p{1_pi / 2.0f, 1.0f, 0.01f, 100.0f};
-	matrix4 m(std::array<float, 16>{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16});
+	matrix4 m(std::array<float, 16>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
+	                                14, 15, 16});
 
 	CHECK(p * m == p.to_matrix4() * m);
 }
@@ -83,7 +84,8 @@ TEST_CASE("operator*(matrix4, perspective), perspective::to_inverse_matrix",
           "[working][unittest][perspective]")
 {
 	const perspective p{1_pi / 2.0f, 1.0f, 0.01f, 100.0f};
-	matrix4 m(std::array<float, 16>{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16});
+	matrix4 m(std::array<float, 16>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
+	                                14, 15, 16});
 
 	CHECK(m * p == m * p.to_matrix4());
 }

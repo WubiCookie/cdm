@@ -34,8 +34,8 @@ Written by Charles Seizilles de Mazancourt
 namespace cdm
 {
 template <typename T>
-concept resizable = requires(T& t)
-{
+concept resizable = requires(T& t)  //
+{                                   //
 	t.resize(0);
 };
 

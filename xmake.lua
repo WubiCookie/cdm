@@ -29,6 +29,47 @@ task("dephash")
 	}
 task_end()
 
+rule("format_before_build")
+	before_build(function(target)
+		import("detect.sdks.find_vstudio")
+		import("lib.detect.find_program")
+
+		local vstudio = find_vstudio()
+		local vs = vstudio["2022"]
+		if vs == nil then
+			vs = vstudio["2019"]
+
+			if vs == nil then
+				raise("Visual Studio 2022 or 2019 is required")
+			end
+		end
+
+		local clangformat = find_program("clang-format.exe", {envs = {PATH = vs.vcvarsall.x64.PATH}})
+		if clangformat == nil or clangformat == "" then
+			print("clang-format.exe not found in", vs.vcvarsall.x64.PATH)
+			raise("clang-format is required. Please install the C++ Clang Compiler for Windows >= 15.0.1 in Visual Studio Install Individual components (Tools/Get Tools and Features...)")
+		end
+
+		local sourcefiles = target:sourcefiles()
+		local headerfiles = target:headerfiles()
+
+		for k, v in pairs(sourcefiles) do
+			os.exec(clangformat .. " --style=file -i " .. v)
+		end
+		for k, v in pairs(headerfiles) do
+			os.exec(clangformat .. " --style=file -i " .. v)
+		end
+	end)
+rule_end()
+
+target("cdm")
+	set_kind("phony")
+	set_languages("c++20")
+	add_rules("format_before_build")
+	add_headerfiles("*.hpp")
+	add_includedirs(".")
+target_end()
+
 local tests = {
 	"direction",
 	"line",
@@ -57,6 +98,8 @@ for _,v in pairs(tests) do
 	target("cdm_test_"..v)
 		set_kind("binary")
 		set_languages("c++20")
+		add_deps("cdm")
+		add_rules("format_before_build")
 		add_files("tests/"..v..".cpp")
 		add_headerfiles("*.hpp")
 		add_headerfiles("tests/*.hpp")
